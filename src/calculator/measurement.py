@@ -67,7 +67,7 @@ class Measurement:
         """
 
         def percentile(x):
-            return 100 * (0.5 + 0.5 * (1 + normal_cdf(x)))
+            return normal_cdf(x) if x is not None else None
 
         percentiles = {}
         if self.length_height_z is not None:
