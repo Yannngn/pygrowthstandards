@@ -373,11 +373,11 @@ def _choose_table(measurement: MEASUREMENTS, age_days: int) -> str:
 
     elif age_days <= 10 * YEAR:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "who_growth_2_to_10_height_for_age.json"
+            table = "who_growth_5_to_10_height_for_age.json"
         elif measurement == "weight":
-            table = "who_growth_2_to_10_weight_for_age.json"
+            table = "who_growth_5_to_10_weight_for_age.json"
         elif measurement == "bmi":
-            table = "who_growth_2_to_10_body_mass_index_for_age.json"
+            table = "who_growth_5_to_10_body_mass_index_for_age.json"
         elif measurement == "head_circumference":
             raise ValueError("No reference for head circumference after 5 years.")
 

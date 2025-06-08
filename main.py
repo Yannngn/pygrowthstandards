@@ -1,6 +1,7 @@
 import datetime
 
 from src import Calculator
+from src import functional as F
 
 
 def main():
@@ -14,14 +15,12 @@ def main():
         head_circumference=52.0,
         date=datetime.date(2025, 6, 1),
     )
-
     calculator.add_measurement(
         length_height=50.0,
         weight=3.5,
         head_circumference=37.0,
         date=datetime.date(2020, 1, 1),
     )
-
     calculator.add_measurement(
         length_height=55.0,
         weight=4.0,
@@ -100,6 +99,16 @@ def main():
     for m in ["height", "length", "weight", "head_circumference", "bmi"]:
         calculator.table_plot(m, output_path=f"results/{m}_plot.png")  # type: ignore
         calculator.plot_measurements(m, output_path=f"results/{m}_measurements_plot.png")  # type: ignore
+
+    print(
+        F.zscore(
+            "height",
+            115,
+            "M",
+            birth_date=datetime.date(2020, 1, 1),
+            measurement_date=datetime.date(2025, 6, 1),
+        )
+    )
 
 
 if __name__ == "__main__":

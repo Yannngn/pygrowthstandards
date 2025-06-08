@@ -36,6 +36,16 @@ print(calculator.display_results())
 calculator.plot_measurements(m, output_path=f"weight_measurements_plot.png")
 ```
 
+For functional
+
+```python
+import datetime
+
+from pygrowthstandards import functional as F
+
+print(F.zscore('height', 115, "M", birthday_date=datetime.date(2020, 1, 1), measurement_date=datetime.date(2025, 6, 1)))
+```
+
 ## Documentation
 
 [TODO]
