@@ -1,5 +1,3 @@
-from math import exp, pi, sqrt
-
 import numpy as np
 from scipy.optimize import curve_fit, minimize
 from scipy.stats import norm
@@ -7,24 +5,12 @@ from scipy.stats import norm
 
 def normal_cdf(z: float) -> float:
     """
-    Calculate the cumulative distribution function for a standard normal distribution.
+    Convert a z-score to its percentile (0-100).
 
     :param z: The z-score.
-    :return: The cumulative probability.
+    :return: The percentile (0-100).
     """
-
-    return 0.5 * (1 + (1 / sqrt(2 * pi)) * exp(-0.5 * z**2))
-
-
-def skewed_normal_cdf(x: float, alpha: float) -> float:
-    """
-    Compute the cumulative distribution function (CDF) of the skewed normal distribution.
-
-    :param x: The value to evaluate the CDF at.
-    :param alpha: The skewness parameter (alpha=0 gives standard normal).
-    :return: The cumulative probability.
-    """
-    return float(2 * norm.cdf(x) * norm.cdf(alpha * x))
+    return float(norm.cdf(z))
 
 
 def calculate_z_score(value: float, l: float, m: float, s: float) -> float:
