@@ -15,7 +15,7 @@ MEASUREMENTS = Literal[
     "bmi",
     "head_circumference",
     "height",
-    "lenght",
+    "length",
     "height_length",
     "weight",
     "body_mass_index",
@@ -142,13 +142,13 @@ def zscore(
     kwargs = locals().copy()
 
     if kwargs.get("age") is not None:
-        return _zscore(measurement, value, kwargs["age"].days, sex)
+        return _zscore(measurement, value, (kwargs["age"].days), sex)
     if (
         kwargs.get("birth_date") is not None
         and kwargs.get("measurement_date") is not None
     ):
         age_delta = kwargs["measurement_date"] - kwargs["birth_date"]
-        return _zscore(measurement, value, age_delta.days, sex)
+        return _zscore(measurement, value, (age_delta.days), sex)
     if (
         kwargs.get("years") is not None
         and kwargs.get("months") is not None
@@ -166,6 +166,8 @@ def _zscore(
 ) -> float | None:
     if sex not in ["M", "F"]:
         sex = "F"  # default
+
+    age = int(age)  # ensure age is an integer
 
     table = _choose_table(measurement, age, sex)  # type: ignore
     lms = _get_table_data(table, age)
@@ -345,70 +347,62 @@ def _get_table_data(table: str, age_days: int) -> dict[str, float]:
 def _choose_table(
     measurement: MEASUREMENTS, age_days: int, sex: Literal["M", "F"]
 ) -> str:
-    if age_days == 0:
-        if measurement in ["height", "lenght", "height_length"]:
-            table = f"intergrowth_21st_birth_size_length_for_gestational_age_{sex.lower()}.json"
-        elif measurement == "weight":
-            table = f"intergrowth_21st_birth_size_weight_for_gestational_age_{sex.lower()}.json"
-        elif measurement == "head_circumference":
-            table = f"intergrowth_21st_birth_size_head_circumference_for_gestational_age_{sex.lower()}.json"
-        elif measurement == "bmi":
-            raise ValueError("No reference for birth BMI.")
+    sex = sex.lower()  # type: ignore
 
-    elif age_days <= 2 * YEAR:
-        if measurement in ["height", "lenght", "height_length"]:
-            table = f"who_growth_0_to_2_length_for_age_{sex.lower()}.json"
-        elif measurement == "weight":
-            table = f"who_growth_0_to_2_weight_for_age_{sex.lower()}.json"
-        elif measurement == "head_circumference":
-            table = f"who_growth_0_to_2_head_circumference_for_age_{sex.lower()}.json"
-        elif measurement == "bmi":
-            table = f"who_growth_0_to_2_body_mass_index_for_age_{sex.lower()}.json"
+    measurement_aliases = {
+        "length": {"height", "length", "height_length"},
+        "weight": {"weight"},
+        "head_circumference": {"head_circumference"},
+        "body_mass_index": {"bmi", "body_mass_index"},
+    }
 
+    def canonical_measurement(measurement: str) -> str:
+        for key, aliases in measurement_aliases.items():
+            if measurement in aliases:
+                return key
+        raise ValueError(f"Unknown measurement: {measurement}")
+
+    key = canonical_measurement(measurement)
+    age_key = "age"
+
+    # TODO: add birth measurements with gestational age
+    # if age_days == 0:
+    #     if key == "bmi":
+    #         raise ValueError("No reference for birth BMI.")
+    #     source = "intergrowth_21st_birth_size"
+    #     age_key = "gestational_age"
+    if age_days <= 2 * YEAR:
+        source = "who_growth_0_to_2"
+    elif key == "head_circumference" and age_days > 5 * YEAR:
+        raise ValueError("No reference for head circumference after 5 years.")
     elif age_days <= 5 * YEAR:
-        if measurement in ["height", "lenght", "height_length"]:
-            table = f"who_growth_2_to_5_height_for_age_{sex.lower()}.json"
-        elif measurement == "weight":
-            table = f"who_growth_2_to_5_weight_for_age_{sex.lower()}.json"
-        elif measurement == "head_circumference":
-            table = f"who_growth_2_to_5_head_circumference_for_age_{sex.lower()}.json"
-        elif measurement == "bmi":
-            table = f"who_growth_2_to_5_body_mass_index_for_age_{sex.lower()}.json"
-
+        source = "who_growth_2_to_5"
     elif age_days <= 10 * YEAR:
-        if measurement in ["height", "lenght", "height_length"]:
-            table = f"who_growth_5_to_10_height_for_age_{sex.lower()}.json"
-        elif measurement == "weight":
-            table = f"who_growth_5_to_10_weight_for_age_{sex.lower()}.json"
-        elif measurement == "bmi":
-            table = f"who_growth_5_to_10_body_mass_index_for_age_{sex.lower()}.json"
-        elif measurement == "head_circumference":
-            raise ValueError("No reference for head circumference after 5 years.")
-
+        source = "who_growth_5_to_10"
+    elif key == "weight" and age_days > 10 * YEAR:
+        raise ValueError("No reference for weight after 10 years.")
     elif age_days <= 19 * YEAR:
-        if measurement in ["height", "lenght", "height_length"]:
-            table = f"who_growth_10_to_19_height_for_age_{sex.lower()}.json"
-        elif measurement == "weight":
-            table = f"who_growth_10_to_19_weight_for_age_{sex.lower()}.json"
-        elif measurement == "bmi":
-            table = f"who_growth_10_to_19_body_mass_index_for_age_{sex.lower()}.json"
-        elif measurement == "head_circumference":
-            raise ValueError("No reference for head circumference after 5 years.")
-
+        source = "who_growth_10_to_19"
     else:
         raise ValueError("Age exceeds the maximum reference age of 19 years.")
 
-    return table
+    if age_days > 2 * YEAR and key == "length":
+        key = "height"
+
+    return f"{source}_{key}_for_{age_key}_{sex}.json"
 
 
-def main():
-    measurement = "weight"
-    value = 5.5
-    age = datetime.timedelta(days=30)
-    years, months, days = 0, 0, 30
-    birth_date = datetime.date(2025, 1, 5)
-    measurement_date = datetime.date(2025, 2, 4)
-    sex = "M"
+def _run_one(
+    measurement: MEASUREMENTS,
+    value: float,
+    age: datetime.timedelta,
+    birth_date: datetime.date,
+    measurement_date: datetime.date,
+    sex: Literal["M", "F", "U"] = "U",
+):
+    years = int(age.days // YEAR)
+    months = int((age.days % YEAR) // MONTH)
+    days = int(age.days % MONTH)
 
     z_score = zscore(measurement, value, sex, age=age)
     print(f"The z-score for {measurement} is: {z_score:.3f}")
@@ -441,6 +435,44 @@ def main():
         measurement_date=measurement_date,
     )
     print(f"The percentile for {measurement} is: {percentile_value:.3f}")
+
+
+def main():
+    # Example 1: Newborn, weight
+    birth_date = datetime.date(2024, 6, 1)
+    measurement_date = birth_date
+    age = measurement_date - birth_date
+    _run_one("weight", 3.2, age, birth_date, measurement_date, sex="M")
+
+    # Example 2: 6 months old, length
+    birth_date = datetime.date(2023, 12, 1)
+    measurement_date = datetime.date(2024, 6, 1)
+    age = measurement_date - birth_date
+    _run_one("length", 67.0, age, birth_date, measurement_date, sex="F")
+
+    # Example 3: 2 years old, head circumference
+    birth_date = datetime.date(2022, 6, 1)
+    measurement_date = datetime.date(2024, 6, 1)
+    age = measurement_date - birth_date
+    _run_one("head_circumference", 49.0, age, birth_date, measurement_date, sex="M")
+
+    # Example 4: 7 years old, height
+    birth_date = datetime.date(2017, 6, 1)
+    measurement_date = datetime.date(2024, 6, 1)
+    age = measurement_date - birth_date
+    _run_one("height", 120.0, age, birth_date, measurement_date, sex="F")
+
+    # Example 5: 15 years old, bmi
+    birth_date = datetime.date(2009, 6, 1)
+    measurement_date = datetime.date(2024, 6, 1)
+    age = measurement_date - birth_date
+    _run_one("bmi", 21.5, age, birth_date, measurement_date, sex="M")
+
+    # Example 6: 18 years old, height
+    birth_date = datetime.date(2006, 6, 1)
+    measurement_date = datetime.date(2024, 6, 1)
+    age = measurement_date - birth_date
+    _run_one("height", 170.0, age, birth_date, measurement_date, sex="F")
 
 
 if __name__ == "__main__":
