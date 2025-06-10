@@ -110,6 +110,51 @@ def interpolate_lms(
     return {"l": float(l_interp), "m": float(m_interp), "s": float(s_interp)}
 
 
+def functional_interpolate_lms(
+    age_list: list[int],
+    l_list: list[float],
+    m_list: list[float],
+    s_list: list[float],
+    age_days: int,
+    n_points: int = 4,
+) -> dict | None:
+    """
+    Interpolate LMS parameters for the given age_days using numpy and multiple points.
+
+    :param zscores: List of LMS parameter dicts with 'age', 'l', 'm', 's'.
+    :param age_days: Age in days to interpolate for.
+    :param n_points: Number of nearest points to use for interpolation (default 4).
+    :return: Interpolated dict with 'l', 'm', 's' or None if not possible.
+    """
+
+    # Raise ValueError if out of bounds
+    if age_days < age_list[0] or age_days > age_list[-1]:
+        raise ValueError(
+            f"age_days {age_days} is out of bounds ({age_list[0]} - {age_list[-1]})"
+        )
+
+    ages = np.array(age_list)
+    l_vals = np.array(l_list)
+    m_vals = np.array(m_list)
+    s_vals = np.array(s_list)
+
+    # Find n_points closest ages
+    idx_sorted = np.argsort(np.abs(ages - age_days))
+    idxs = np.sort(idx_sorted[:n_points])
+
+    sel_ages = ages[idxs]
+    sel_l = l_vals[idxs]
+    sel_m = m_vals[idxs]
+    sel_s = s_vals[idxs]
+
+    # Use numpy.interp for 1D interpolation
+    l_interp = np.interp(age_days, sel_ages, sel_l)
+    m_interp = np.interp(age_days, sel_ages, sel_m)
+    s_interp = np.interp(age_days, sel_ages, sel_s)
+
+    return {"l": float(l_interp), "m": float(m_interp), "s": float(s_interp)}
+
+
 def _estimate_lms_from_sd(zscores, values):
     """
     OLD

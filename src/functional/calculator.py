@@ -9,7 +9,7 @@ sys.path.append(
 )
 
 from src.utils.constants import MONTH, YEAR
-from src.utils.stats import calculate_z_score, interpolate_lms, normal_cdf
+from src.utils.stats import calculate_z_score, functional_interpolate_lms, normal_cdf
 
 MEASUREMENTS = Literal[
     "bmi",
@@ -164,8 +164,11 @@ def _zscore(
     age: int,
     sex: Literal["M", "F", "U"] = "U",
 ) -> float | None:
-    table = _choose_table(measurement, age)
-    lms = _get_table_data(table, age, sex)
+    if sex not in ["M", "F"]:
+        sex = "F"  # default
+
+    table = _choose_table(measurement, age, sex)  # type: ignore
+    lms = _get_table_data(table, age)
 
     return calculate_z_score(value, **lms)
 
@@ -316,78 +319,79 @@ def _percentile(
     return normal_cdf(z)
 
 
-def _get_table_data(table: str, age_days: int, sex: str) -> dict[str, float]:
-    with open(os.path.join("data", table), "r") as f:
-        data: list[dict] = json.load(f)["data"]
+def _get_table_data(table: str, age_days: int) -> dict[str, float]:
+    with open(os.path.join("data", "functional", table), "r") as f:
+        data: dict = json.load(f)
 
-    age_key = list(data[0].keys())[0]  # The first key is the age in days
+    age_key = "age" if "age" in data.keys() else "gestational_age"
 
-    if sex not in ["M", "F"]:
-        sex = "F"
+    age_index = next(
+        (i for i, entry in enumerate(data[age_key]) if int(entry) == age_days), None
+    )
 
-    data = [entry for entry in data if entry["sex"] == sex]
-
-    entry = next((entry for entry in data if int(entry[age_key]) == age_days), None)
-
-    if entry is None:
-        entry = interpolate_lms(data, age_days)
+    if age_index is None:
+        entry = functional_interpolate_lms(
+            data[age_key], data["l"], data["m"], data["s"], age_days
+        )
 
         if entry is None:
             raise ValueError(f"No data available for age {age_days} days")
 
         return entry
 
-    return {k: entry[k] for k in ("l", "m", "s")}
+    return {k: data[k][age_index] for k in ("l", "m", "s")}
 
 
-def _choose_table(measurement: MEASUREMENTS, age_days: int) -> str:
+def _choose_table(
+    measurement: MEASUREMENTS, age_days: int, sex: Literal["M", "F"]
+) -> str:
     if age_days == 0:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "intergrowth_21st_birth_size_length_for_gestational_age.json"
+            table = f"intergrowth_21st_birth_size_length_for_gestational_age_{sex.lower()}.json"
         elif measurement == "weight":
-            table = "intergrowth_21st_birth_size_weight_for_gestational_age.json"
+            table = f"intergrowth_21st_birth_size_weight_for_gestational_age_{sex.lower()}.json"
         elif measurement == "head_circumference":
-            table = "intergrowth_21st_birth_size_head_circumference_for_gestational_age.json"
+            table = f"intergrowth_21st_birth_size_head_circumference_for_gestational_age_{sex.lower()}.json"
         elif measurement == "bmi":
             raise ValueError("No reference for birth BMI.")
 
     elif age_days <= 2 * YEAR:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "who_growth_0_to_2_length_for_age.json"
+            table = f"who_growth_0_to_2_length_for_age_{sex.lower()}.json"
         elif measurement == "weight":
-            table = "who_growth_0_to_2_weight_for_age.json"
+            table = f"who_growth_0_to_2_weight_for_age_{sex.lower()}.json"
         elif measurement == "head_circumference":
-            table = "who_growth_0_to_2_head_circumference_for_age.json"
+            table = f"who_growth_0_to_2_head_circumference_for_age_{sex.lower()}.json"
         elif measurement == "bmi":
-            table = "who_growth_0_to_2_body_mass_index_for_age.json"
+            table = f"who_growth_0_to_2_body_mass_index_for_age_{sex.lower()}.json"
 
     elif age_days <= 5 * YEAR:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "who_growth_2_to_5_height_for_age.json"
+            table = f"who_growth_2_to_5_height_for_age_{sex.lower()}.json"
         elif measurement == "weight":
-            table = "who_growth_2_to_5_weight_for_age.json"
+            table = f"who_growth_2_to_5_weight_for_age_{sex.lower()}.json"
         elif measurement == "head_circumference":
-            table = "who_growth_2_to_5_head_circumference_for_age.json"
+            table = f"who_growth_2_to_5_head_circumference_for_age_{sex.lower()}.json"
         elif measurement == "bmi":
-            table = "who_growth_2_to_5_body_mass_index_for_age.json"
+            table = f"who_growth_2_to_5_body_mass_index_for_age_{sex.lower()}.json"
 
     elif age_days <= 10 * YEAR:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "who_growth_5_to_10_height_for_age.json"
+            table = f"who_growth_5_to_10_height_for_age_{sex.lower()}.json"
         elif measurement == "weight":
-            table = "who_growth_5_to_10_weight_for_age.json"
+            table = f"who_growth_5_to_10_weight_for_age_{sex.lower()}.json"
         elif measurement == "bmi":
-            table = "who_growth_5_to_10_body_mass_index_for_age.json"
+            table = f"who_growth_5_to_10_body_mass_index_for_age_{sex.lower()}.json"
         elif measurement == "head_circumference":
             raise ValueError("No reference for head circumference after 5 years.")
 
     elif age_days <= 19 * YEAR:
         if measurement in ["height", "lenght", "height_length"]:
-            table = "who_growth_10_to_19_height_for_age.json"
+            table = f"who_growth_10_to_19_height_for_age_{sex.lower()}.json"
         elif measurement == "weight":
-            table = "who_growth_10_to_19_weight_for_age.json"
+            table = f"who_growth_10_to_19_weight_for_age_{sex.lower()}.json"
         elif measurement == "bmi":
-            table = "who_growth_10_to_19_body_mass_index_for_age.json"
+            table = f"who_growth_10_to_19_body_mass_index_for_age_{sex.lower()}.json"
         elif measurement == "head_circumference":
             raise ValueError("No reference for head circumference after 5 years.")
 
