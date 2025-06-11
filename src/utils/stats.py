@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import curve_fit, minimize
+from scipy.optimize import curve_fit
 from scipy.stats import norm
 
 
@@ -13,7 +13,9 @@ def normal_cdf(z: float) -> float:
     return float(norm.cdf(z))
 
 
-def calculate_z_score(value: float, l: float, m: float, s: float) -> float:
+def calculate_z_score(
+    value: float, l: float, m: float, s: float  # noqa: E741
+) -> float:
     """
     Calculate the z-score for a given value based on the LMS method.
 
@@ -34,34 +36,34 @@ def estimate_lms_from_sd(
 ) -> tuple[float | None, float | None, float | None]:
     """Estimate L, M, S parameters from SD values and z-scores."""
 
-    m = values[np.where(z_scores == 0)[0][0]].item() if 0 in z_scores else None
+    mu = values[np.where(z_scores == 0)[0][0]].item() if 0 in z_scores else None
 
-    if m is None:
+    if mu is None:
         return None, None, None
 
-    def lms_func(z, L, S):
+    def lms_func(z, _lambda, _sigma):
         # Avoid division by zero for L close to 0
-        L = np.clip(L, -10, 10)
-        M = float(m)
-        S = np.clip(S, 1e-8, None)
+        _lambda = np.clip(_lambda, -10, 10)
+        _mu = float(mu)
+        _sigma = np.clip(_sigma, 1e-8, None)
         with np.errstate(all="ignore"):
             return (
-                M * np.power(1 + L * S * z, 1 / L)
-                if abs(L) > 1e-6
-                else M * np.exp(S * z)
+                _mu * np.power(1 + _lambda * _sigma * z, 1 / _lambda)
+                if abs(_lambda) > 1e-6
+                else _mu * np.exp(_sigma * z)
             )
 
-    S0 = np.std(values) / float(m) if float(m) != 0 else 0.1
+    S0 = np.std(values) / float(mu) if float(mu) != 0 else 0.1
     try:
         popt, _ = curve_fit(lms_func, z_scores, values, p0=[0.1, S0], maxfev=10000)
-        L_fit, S_fit = popt
-        l = L_fit
-        s = S_fit
+        lambda_fit, sigma_fit = popt
+        lamb = lambda_fit
+        sigm = sigma_fit
 
     except Exception:
         return None, None, None
 
-    return l, m, s
+    return lamb, mu, sigm
 
 
 # TODO: Remove TableData logic and make it a pure utility function
@@ -153,49 +155,3 @@ def functional_interpolate_lms(
     s_interp = np.interp(age_days, sel_ages, sel_s)
 
     return {"l": float(l_interp), "m": float(m_interp), "s": float(s_interp)}
-
-
-def _estimate_lms_from_sd(zscores, values):
-    """
-    OLD
-    Estimate LMS parameters from mean and values at given Z-scores.
-
-    Args:
-        zscores (array-like): Z-scores corresponding to the values. [-3, -2, -1, 0, 1, 2, 3]
-        values (array-like): Observed values at the given Z-scores.
-
-    Returns:
-        tuple: (L, M, S)
-            L: Box-Cox power
-            M: Median
-            S: Coefficient of variation
-    """
-    z_scores = np.asarray(zscores)
-    values = np.asarray(values)
-    # Find the value at z=0 for M (median)
-    if 0 in z_scores:
-        M = values[np.where(z_scores == 0)[0][0]]
-    else:
-        # Interpolate for z=0 if not present
-        M = np.interp(0, z_scores, values)
-
-    def residuals(params):
-        L, S = params
-        if S <= 0:
-            return 1e6  # Penalize negative S
-        # Avoid division by zero for L close to 0
-        if np.isclose(L, 0):
-            pred = M * np.exp(S * z_scores)
-        else:
-            pred = M * (1 + L * S * z_scores) ** (1 / L)
-        return np.sum((values - pred) ** 2)
-
-    # Initial guess: L=1 (normal), S from SD1 if possible
-    if len(z_scores) >= 2 and z_scores[0] != z_scores[1]:
-        S0 = (values[1] - values[0]) / ((z_scores[1] - z_scores[0]) * M)
-    else:
-        S0 = 0.1
-    res = minimize(residuals, [1.0, S0], bounds=[(-2, 2), (1e-6, None)])
-    L, S = res.x
-
-    return L, M, S
