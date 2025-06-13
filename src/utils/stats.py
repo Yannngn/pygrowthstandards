@@ -66,6 +66,38 @@ def estimate_lms_from_sd(
     return lamb, mu, sigm
 
 
+def interpolate_values(
+    x_values: list[float], y_values: list[float], x: float, n_points: int = 4
+) -> float:
+    """
+    Interpolates a y-value for a given x using the closest points from provided data.
+
+    This function performs 1D linear interpolation to estimate the y-value at a specific x.
+    By default, it uses the `n_points` closest points to `x` from `x_values` and their corresponding `y_values`.
+    If `n_points` is set to -1, interpolation is performed using all available points.
+
+        x_values (list[float]): List of x-coordinates (must be numeric and sortable).
+        y_values (list[float]): List of y-coordinates corresponding to `x_values`.
+        x (float): The x-value at which to interpolate.
+        n_points (int, optional): Number of closest points to use for interpolation.
+            If -1, uses all points. Defaults to 4.
+
+        float: The interpolated y-value at the specified x.
+
+    Raises:
+        ValueError: If `x_values` and `y_values` have different lengths or if `n_points` is invalid.
+    """
+    if n_points == -1:
+        return np.interp(x, x_values, y_values)
+
+    # Find n_points closest ages
+    idx_sorted = np.argsort(np.abs(x_values - x))
+    idxs = np.sort(idx_sorted[:n_points])
+
+    # Use numpy.interp for 1D interpolation
+    return np.interp(x, x_values[idxs], y_values[idxs])
+
+
 # TODO: Remove TableData logic and make it a pure utility function
 def interpolate_lms(
     zscores: list[dict], age_days: int, n_points: int = 4
@@ -99,15 +131,9 @@ def interpolate_lms(
     idx_sorted = np.argsort(np.abs(ages - age_days))
     idxs = np.sort(idx_sorted[:n_points])
 
-    sel_ages = ages[idxs]
-    sel_l = l_vals[idxs]
-    sel_m = m_vals[idxs]
-    sel_s = s_vals[idxs]
-
-    # Use numpy.interp for 1D interpolation
-    l_interp = np.interp(age_days, sel_ages, sel_l)
-    m_interp = np.interp(age_days, sel_ages, sel_m)
-    s_interp = np.interp(age_days, sel_ages, sel_s)
+    l_interp = interpolate_values(age_days, ages[idxs], l_vals[idxs], -1)
+    s_interp = interpolate_values(age_days, ages[idxs], s_vals[idxs], -1)
+    m_interp = interpolate_values(age_days, ages[idxs], m_vals[idxs], -1)
 
     return {"l": float(l_interp), "m": float(m_interp), "s": float(s_interp)}
 
@@ -144,14 +170,8 @@ def functional_interpolate_lms(
     idx_sorted = np.argsort(np.abs(ages - age_days))
     idxs = np.sort(idx_sorted[:n_points])
 
-    sel_ages = ages[idxs]
-    sel_l = l_vals[idxs]
-    sel_m = m_vals[idxs]
-    sel_s = s_vals[idxs]
-
-    # Use numpy.interp for 1D interpolation
-    l_interp = np.interp(age_days, sel_ages, sel_l)
-    m_interp = np.interp(age_days, sel_ages, sel_m)
-    s_interp = np.interp(age_days, sel_ages, sel_s)
+    l_interp = interpolate_values(age_days, ages[idxs], l_vals[idxs], -1)
+    s_interp = interpolate_values(age_days, ages[idxs], s_vals[idxs], -1)
+    m_interp = interpolate_values(age_days, ages[idxs], m_vals[idxs], -1)
 
     return {"l": float(l_interp), "m": float(m_interp), "s": float(s_interp)}
