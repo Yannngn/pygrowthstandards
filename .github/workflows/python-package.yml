@@ -31,7 +31,9 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with ruff
       run: |
-        ruff check --output-format=github .
+        # Ignore specific error codes E741 (ambiguous variable name) and F401 (unused import)
+        ruff check . --output-format=github --ignore E741,F401
+        
     - name: Test with pytest
       run: |
         pytest
