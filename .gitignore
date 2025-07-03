@@ -1,4 +1,6 @@
-data/raw/*
+data/raw/**/*.csv
+data/raw/**/*.pdf
+data/raw/**/*.xlsx
 
 # Python-generated files
 __pycache__/
