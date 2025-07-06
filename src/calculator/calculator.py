@@ -17,17 +17,25 @@ from src.calculator.table_data import TableData
 
 class Calculator(Plotter, Handler):
     def __init__(self, child: Child):
-        """
-        Initializes a Calculator instance with a child object.
+        """Initializes a Calculator instance with a child object.
 
-        :param child: An instance of the child class.
+        Args:
+            child: An instance of the Child class.
         """
         self.child = child
 
         self._data = TableData(child.sex)
         self._measurements: list[Measurement] = []
 
-    def calculate_measurement_zscore(self, measurement: Measurement):
+    def calculate_measurement_z_score(self, measurement: Measurement) -> None:
+        """Calculates and sets z-scores for all measurement types in a Measurement instance.
+
+        Args:
+            measurement: The measurement instance to calculate z-scores for.
+
+        Raises:
+            ValueError: If gestational age is required but not set for newborn measurements.
+        """
         child_age_days = self.child.age(measurement.date).days
 
         newborn = child_age_days == 0
@@ -51,27 +59,40 @@ class Calculator(Plotter, Handler):
                 continue
 
     def get_measurements_by_age_group(self, age_group: str = "none") -> list[Measurement]:
-        """
-        Retrieve measurements within a specific age range.
+        """Retrieves measurements within a specific age group.
 
         Args:
-            age_limits (tuple[int, int] | None): A tuple containing the minimum and maximum age in months.
-                If None, returns all measurements.
+            age_group: The age group to filter by (e.g., "0-2", "newborn", "very_preterm").
+                Defaults to "none" which returns all measurements.
 
         Returns:
-            list[Measurement]: A list of Measurement instances within the specified age range.
+            A list of Measurement instances within the specified age group.
+
+        Raises:
+            ValueError: If gestational age is required but not set for newborn or very_preterm groups.
         """
         min_age, max_age = self._get_age_limits(age_group)
         if age_group in ["newborn", "very_preterm"]:
-            assert self.child.gestational_age is not None, "Gestational age must be set for newborn or very preterm measurements."
+            if self.child.gestational_age is None:
+                raise ValueError("Gestational age is required for newborn measurements. Use child.set_gestational_age() to set it.")
             return [m for m in self._measurements if min_age <= self.child.gestational_age.days <= max_age]
 
         return [m for m in self._measurements if min_age <= self.child.age(m.date).days <= max_age]
 
     def results(self, age_group: str = "none") -> list[dict]:
+        """Calculates and returns measurement results with z-scores for a specific age group.
+
+        Args:
+            age_group: The age group to filter by. Defaults to "none" for all measurements.
+
+        Returns:
+            A list of dictionaries containing measurement values and z-scores.
+            Each dict has measurement types as keys with "value" and "z" subkeys.
+        """
         results = []
         measurements = self.get_measurements_by_age_group(age_group)
-        self._calculate_all(measurements)
+        for measurement in measurements:
+            self.calculate_measurement_z_score(measurement)
 
         for m in measurements:
             entry = {}
@@ -83,16 +104,14 @@ class Calculator(Plotter, Handler):
         return results
 
     def display_results(self, age_group: str = "none") -> str:
-        """
-        Display the results of the measurements as a pandas DataFrame with MultiIndex columns and formatted floats.
-        Adds measurement date and child age (in days) to the columns.
+        """Displays measurement results as a formatted pandas DataFrame string.
 
         Args:
-            start_date (datetime.date | None, optional): The start date for filtering measurements.
-            end_date (datetime.date | None, optional): The end date for filtering measurements.
+            age_group: The age group to filter by. Defaults to "none" for all measurements.
 
         Returns:
-            str: String representation of the DataFrame.
+            A string representation of the DataFrame with measurement results,
+            or "No measurements found." if no measurements exist.
         """
 
         results = self.results(age_group)
@@ -139,6 +158,38 @@ class Calculator(Plotter, Handler):
         # Use to_string with custom formatting for better visual separation
         return df.to_string(index=False, justify="center", col_space=6)
 
+    def calculate_z_score(self, measurement_type: str, age_group: str, x: int | float, y: float) -> float:
+        """Calculates the z-score for a given measurement value.
+
+        Args:
+            measurement_type: The type of measurement (e.g., "stature", "weight").
+            age_group: The age group for selecting the appropriate growth table.
+            x: The x value (typically age in days).
+            y: The measurement value to calculate z-score for.
+
+        Returns:
+            The calculated z-score.
+        """
+        name = self._data.get_table_name(measurement_type, age_group)
+
+        return self._data._calculate_z_score(y, *self._data.get_lms(name, x))
+
+    def calculate_value_for_z_score(self, measurement_type: str, age_group: str, x: int | float, z_score: float) -> float:
+        """Calculates the measurement value for a given z-score.
+
+        Args:
+            measurement_type: The type of measurement (e.g., "stature", "weight").
+            age_group: The age group for selecting the appropriate growth table.
+            x: The x value (typically age in days).
+            z_score: The z-score to calculate the value for.
+
+        Returns:
+            The calculated measurement value.
+        """
+        name = self._data.get_table_name(measurement_type, age_group)
+
+        return self._data._calculate_value_for_z_score(z_score, *self._data.get_lms(name, x))
+
     @classmethod
     def from_child(
         cls,
@@ -147,17 +198,16 @@ class Calculator(Plotter, Handler):
         gestational_age_weeks: int | None = None,
         gestational_age_days: int | None = None,
     ) -> "Calculator":
-        """
-        Create a Calculator instance from basic child information.
+        """Creates a Calculator instance from basic child information.
 
         Args:
-            birthday_date (datetime.date): The child's date of birth.
-            sex (Literal["M", "F", "U"], optional): The child's sex ("M", "F", or "U" for unknown). Defaults to "U".
-            gestational_age_weeks (int | None, optional): Gestational age in weeks, if known.
-            gestational_age_days (int | None, optional): Additional gestational age in days, if known.
+            birthday_date: The child's date of birth.
+            sex: The child's sex ("M", "F", or "U" for unknown). Defaults to "U".
+            gestational_age_weeks: Gestational age in weeks, if known.
+            gestational_age_days: Additional gestational age in days, if known.
 
         Returns:
-            Calculator: A Calculator instance initialized with a child object.
+            A Calculator instance initialized with a Child object.
         """
         return cls(
             Child(
@@ -168,27 +218,10 @@ class Calculator(Plotter, Handler):
             )
         )
 
-    def calculate_z_score(self, measurement_type: str, age_group: str, x: int | float, y: float) -> float:
-        name = self._data.get_table_name(measurement_type, age_group)
+    def __str__(self) -> str:
+        """Returns a string representation of the Calculator instance.
 
-        return self._data._calculate_z_score(y, *self._data.get_lms(name, x))
-
-    def calculate_value_for_z_score(self, measurement_type: str, age_group: str, x: int | float, zscore: float) -> float:
+        Returns:
+            A string containing child information and measurement count.
         """
-        Calculate the value for a given z-score based on the LMS parameters of the specified table.
-
-        :param name: The name of the table (e.g., "who_growth_stature").
-        :param x: The x value (e.g., age in months).
-        :param zscore: The z-score to calculate the value for.
-        :return: The calculated value.
-        """
-        name = self._data.get_table_name(measurement_type, age_group)
-
-        return self._data._calculate_value_for_z_score(zscore, *self._data.get_lms(name, x))
-
-    def _calculate_all(self, measurements: list[Measurement]):
-        for measurement in measurements:
-            self.calculate_measurement_zscore(measurement)
-
-    def __str__(self):
         return f"Calculator(child={self.child}, measurements={len(self._measurements)})"
