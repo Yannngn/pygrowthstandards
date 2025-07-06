@@ -3,9 +3,7 @@ import os
 import sys
 from typing import Literal, overload
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 from src.functional.calculator import percentile as calculator_percentile
 from src.functional.calculator import zscore as calculator_zscore
 from src.functional.data import MEASUREMENTS
@@ -23,12 +21,12 @@ def percentile(
     **kwargs,
 ) -> float | None:
     """
-    Calculate the percentile for a given measurement value based on the age of the individual.
+    Calculate the percentile for a given measurement value based on the gestational age of the individual.
 
     Args:
         measurement (MEASUREMENTS): The type of measurement.
         value (float): The measurement value.
-        age (datetime.timedelta): The age of the individual.
+        age (datetime.timedelta): The gestational age of the individual.
 
     Returns:
         float | None: The calculated percentile or None if not applicable.
@@ -60,9 +58,7 @@ def percentile(
         float | None: The calculated percentile or None if not applicable.
     """
     total_gestational_days = gestational_age_weeks * 7 + gestational_age_days
-    return calculator_percentile(
-        measurement, value, total_gestational_days, sex=sex, birth=True
-    )
+    return calculator_percentile(measurement, value, total_gestational_days, sex=sex, birth=True)
 
 
 @overload
@@ -86,9 +82,7 @@ def percentile(
     Returns:
         float | None: The calculated percentile or None if not applicable.
     """
-    return calculator_percentile(
-        measurement, value, gestational_age_in_days, sex=sex, birth=True
-    )
+    return calculator_percentile(measurement, value, gestational_age_in_days, sex=sex, birth=True)
 
 
 def percentile(
@@ -103,7 +97,7 @@ def percentile(
     **kwargs,
 ) -> float | None:
     """
-    Calculate the percentile for a given measurement value based on the age or gestational age.
+    Calculate the percentile for a given measurement value based on the gestational age.
 
     This function supports multiple ways to specify age (timedelta, gestational age in weeks/days, or gestational age in days)
     and dispatches to the correct calculation.
@@ -112,7 +106,7 @@ def percentile(
         measurement (MEASUREMENTS): The type of measurement.
         value (float): The measurement value.
         sex (Literal["M", "F", "U"]): Sex of the individual.
-        age (datetime.timedelta | None): Age as timedelta.
+        age (datetime.timedelta | None): Gestational age as timedelta.
         gestational_age_weeks (int | None): Gestational age in weeks.
         gestational_age_days (int | None): Additional gestational days.
         gestational_age_in_days (int | None): Gestational age in days.
@@ -125,17 +119,13 @@ def percentile(
         return calculator_percentile(measurement, value, age.days, sex=sex, birth=True)
 
     if gestational_age_in_days is not None:
-        return calculator_percentile(
-            measurement, value, gestational_age_in_days, sex=sex, birth=True
-        )
+        return calculator_percentile(measurement, value, gestational_age_in_days, sex=sex, birth=True)
 
     if gestational_age_weeks is not None:
         total_gestational_days = gestational_age_weeks * 7
         if gestational_age_days is not None:
             total_gestational_days += gestational_age_days
-        return calculator_percentile(
-            measurement, value, total_gestational_days, sex=sex, birth=True
-        )
+        return calculator_percentile(measurement, value, total_gestational_days, sex=sex, birth=True)
 
 
 @overload
@@ -148,12 +138,12 @@ def zscore(
     **kwargs,
 ) -> float | None:
     """
-    Calculate the z-score for a given measurement value based on the age of the individual.
+    Calculate the z-score for a given measurement value based on the gestational age of the individual.
 
     Args:
         measurement (MEASUREMENTS): The type of measurement (bmi, head_circumference, height_length, weight).
         value (float): The measurement value to calculate the z-score for.
-        age (datetime.timedelta): The age of the individual.
+        age (datetime.timedelta): The gestational age of the individual.
 
     Returns:
         float | None: The calculated z-score or None if the calculation is not applicable.
@@ -185,9 +175,7 @@ def zscore(
         float | None: The calculated z-score or None if the calculation is not applicable.
     """
     total_gestational_days = gestational_age_weeks * 7 + gestational_age_days
-    return calculator_zscore(
-        measurement, value, total_gestational_days, sex=sex, birth=True
-    )
+    return calculator_zscore(measurement, value, total_gestational_days, sex=sex, birth=True)
 
 
 @overload
@@ -211,9 +199,7 @@ def zscore(
     Returns:
         float | None: The calculated z-score or None if the calculation is not applicable.
     """
-    return calculator_zscore(
-        measurement, value, gestational_age_in_days, sex=sex, birth=True
-    )
+    return calculator_zscore(measurement, value, gestational_age_in_days, sex=sex, birth=True)
 
 
 def zscore(
@@ -228,7 +214,7 @@ def zscore(
     **kwargs,
 ) -> float | None:
     """
-    Calculate the z-score for a given measurement value based on the age or other user-friendly inputs.
+    Calculate the z-score for a given measurement value based on the gestational age.
 
     This function supports multiple ways to specify age (timedelta, years/months/days, or birth/measurement dates)
     and dispatches to the correct calculation.
@@ -249,17 +235,13 @@ def zscore(
         return calculator_zscore(measurement, value, age.days, sex=sex, birth=True)
 
     if gestational_age_in_days is not None:
-        return calculator_zscore(
-            measurement, value, gestational_age_in_days, sex=sex, birth=True
-        )
+        return calculator_zscore(measurement, value, gestational_age_in_days, sex=sex, birth=True)
 
     if gestational_age_weeks is not None:
         total_gestational_days = gestational_age_weeks * 7
         if gestational_age_days is not None:
             total_gestational_days += gestational_age_days
-        return calculator_zscore(
-            measurement, value, total_gestational_days, sex=sex, birth=True
-        )
+        return calculator_zscore(measurement, value, total_gestational_days, sex=sex, birth=True)
 
     return None
 
@@ -278,9 +260,7 @@ def _run_one(
     z_score = zscore(measurement, value, sex, age=age)
     print(f"The z-score for {measurement} is: {z_score:.3f}")
 
-    z_score = zscore(
-        measurement, value, sex, gestational_age_weeks=weeks, gestational_age_days=days
-    )
+    z_score = zscore(measurement, value, sex, gestational_age_weeks=weeks, gestational_age_days=days)
     print(f"The z-score for {measurement} is: {z_score:.3f}")
 
     z_score = zscore(
@@ -294,14 +274,10 @@ def _run_one(
     percentile_value = percentile(measurement, value, sex, age=age)
     print(f"The percentile for {measurement} is: {percentile_value:.3f}")
 
-    percentile_value = percentile(
-        measurement, value, sex, gestational_age_weeks=weeks, gestational_age_days=days
-    )
+    percentile_value = percentile(measurement, value, sex, gestational_age_weeks=weeks, gestational_age_days=days)
     print(f"The percentile for {measurement} is: {percentile_value:.3f}")
 
-    percentile_value = percentile(
-        measurement, value, sex, gestational_age_in_days=age.days
-    )
+    percentile_value = percentile(measurement, value, sex, gestational_age_in_days=age.days)
     print(f"The percentile for {measurement} is: {percentile_value:.3f}")
 
 
@@ -324,7 +300,7 @@ def main():
     try:
         # Example 5: Newborn, bmi (gestational age: 41 weeks)
         age = datetime.timedelta(weeks=41)
-        _run_one("bmi", 13.8, age, sex="M")
+        _run_one("body_mass_index", 13.8, age, sex="M")
     except ValueError as e:
         print(e)
     # Example 6: Newborn, height (male, gestational age: 40 weeks, 3 days)

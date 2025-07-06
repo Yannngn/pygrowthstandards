@@ -94,6 +94,18 @@ def set_style(fig: Figure, ax: Axes, style: dict = FIG_AXES_STYLE):
     fig.set_tight_layout(True)  # type: ignore
 
 
+def get_label_name(key: int | float):
+    if isinstance(key, int):
+        return f"sd{key}" if key >= 0 else f"sd{-key}neg"
+
+    if isinstance(key, float):
+        if key == 0.001:
+            return "p01"
+        elif key == 0.999:
+            return "p999"
+        return f"p{int(key * 100)}"
+
+
 def get_label_style(key):
     """Return style dict for a given SD or percentile key."""
     if key in SD_STYLES:

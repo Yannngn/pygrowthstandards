@@ -2,6 +2,16 @@ WEEK = 7  # Days in a week
 MONTH = 30.44  # Average days in a month
 YEAR = 365.25  # Average days in a year
 
+AGE_CHOICES = {
+    "0-2": (0, int(2 * YEAR)),
+    "2-5": (int(2 * YEAR), int(5 * YEAR)),
+    "5-10": (int(5 * YEAR), int(10 * YEAR)),
+    "10-19": (int(10 * YEAR), int(19 * YEAR)),
+    "newborn": (168, 300),  # Gestational age
+    "very_preterm": (189, 448),  # Gestational age for very preterm infants
+}
+
+
 FILENAME_TO_MEASUREMENT_TYPE = {
     "intergrowth_21st_birth_size_head_circumference_for_gestational_age": {
         "source": "intergrowth_21st",

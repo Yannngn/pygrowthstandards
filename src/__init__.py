@@ -1,7 +1,6 @@
+from . import functional
 from .calculator.calculator import Calculator
-from .calculator.kid import Kid
+from .calculator.child import Child
 from .calculator.measurement import Measurement
 
-from . import functional
-
-__all__ = ["Calculator", "Kid", "Measurement", "functional"]
+__all__ = ["Calculator", "Child", "Measurement", "functional"]

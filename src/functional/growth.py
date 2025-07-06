@@ -3,9 +3,7 @@ import os
 import sys
 from typing import Literal, overload
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 from src.functional.calculator import percentile as calculator_percentile
 from src.functional.calculator import zscore as calculator_zscore
@@ -73,7 +71,7 @@ def percentile(
     sex: Literal["M", "F", "U"] = "U",
     *,
     birth_date: datetime.date,
-    measurement_date: datetime.date = datetime.date.today(),
+    measurement_date: datetime.date | None = None,
     **kwargs,
 ) -> float | None:
     """
@@ -89,6 +87,8 @@ def percentile(
     Returns:
         float | None: The calculated percentile or None if not applicable.
     """
+    if measurement_date is None:
+        measurement_date = datetime.date.today()
     age = measurement_date - birth_date
     return calculator_percentile(measurement, value, age.days, sex)
 
@@ -130,17 +130,10 @@ def percentile(
 
     if kwargs.get("age") is not None:
         return calculator_percentile(measurement, value, kwargs["age"].days, sex)
-    if (
-        kwargs.get("birth_date") is not None
-        and kwargs.get("measurement_date") is not None
-    ):
+    if kwargs.get("birth_date") is not None and kwargs.get("measurement_date") is not None:
         age_delta = kwargs["measurement_date"] - kwargs["birth_date"]
         return calculator_percentile(measurement, value, age_delta.days, sex)
-    if (
-        kwargs.get("years") is not None
-        and kwargs.get("months") is not None
-        and kwargs.get("days") is not None
-    ):
+    if kwargs.get("years") is not None and kwargs.get("months") is not None and kwargs.get("days") is not None:
         total_days = kwargs["years"] * YEAR + kwargs["months"] * MONTH + kwargs["days"]
         return calculator_percentile(measurement, value, total_days, sex)
 
@@ -206,7 +199,7 @@ def zscore(
     sex: Literal["M", "F", "U"] = "U",
     *,
     birth_date: datetime.date,
-    measurement_date: datetime.date = datetime.date.today(),
+    measurement_date: datetime.date | None = None,
     **kwargs,
 ) -> float | None:
     """
@@ -222,6 +215,9 @@ def zscore(
     Returns:
         float | None: The calculated z-score or None if the calculation is not applicable.
     """
+    if measurement_date is None:
+        measurement_date = datetime.date.today()
+
     age = measurement_date - birth_date
 
     return calculator_zscore(measurement, value, age.days, sex=sex)
@@ -264,17 +260,10 @@ def zscore(
 
     if kwargs.get("age") is not None:
         return calculator_zscore(measurement, value, (kwargs["age"].days), sex)
-    if (
-        kwargs.get("birth_date") is not None
-        and kwargs.get("measurement_date") is not None
-    ):
+    if kwargs.get("birth_date") is not None and kwargs.get("measurement_date") is not None:
         age_delta = kwargs["measurement_date"] - kwargs["birth_date"]
         return calculator_zscore(measurement, value, (age_delta.days), sex)
-    if (
-        kwargs.get("years") is not None
-        and kwargs.get("months") is not None
-        and kwargs.get("days") is not None
-    ):
+    if kwargs.get("years") is not None and kwargs.get("months") is not None and kwargs.get("days") is not None:
         total_days = kwargs["years"] * YEAR + kwargs["months"] * MONTH + kwargs["days"]
         return calculator_zscore(measurement, value, total_days, sex)
 
@@ -292,10 +281,10 @@ def _run_one(
     days = int(age.days % MONTH)
 
     z_score = zscore(measurement, value, sex, age=age)
-    print(f"The z-score for {measurement} is: {z_score:.3f}")
+    print(f"The z-score for {measurement} using age is: {z_score:.3f}")
 
     z_score = zscore(measurement, value, sex, years=years, months=months, days=days)
-    print(f"The z-score for {measurement} is: {z_score:.3f}")
+    print(f"The z-score for {measurement} using years months and days is: {z_score:.3f}")
 
     z_score = zscore(
         measurement,
@@ -304,15 +293,13 @@ def _run_one(
         birth_date=birth_date,
         measurement_date=measurement_date,
     )
-    print(f"The z-score for {measurement} is: {z_score:.3f}")
+    print(f"The z-score for {measurement} using birthdate is: {z_score:.3f}")
 
     percentile_value = percentile(measurement, value, sex, age=age)
-    print(f"The percentile for {measurement} is: {percentile_value:.3f}")
+    print(f"The percentile for {measurement} using age is: {percentile_value:.3f}")
 
-    percentile_value = percentile(
-        measurement, value, sex, years=years, months=months, days=days
-    )
-    print(f"The percentile for {measurement} is: {percentile_value:.3f}")
+    percentile_value = percentile(measurement, value, sex, years=years, months=months, days=days)
+    print(f"The percentile for {measurement} using years months and days is: {percentile_value:.3f}")
 
     percentile_value = percentile(
         measurement,
@@ -321,7 +308,7 @@ def _run_one(
         birth_date=birth_date,
         measurement_date=measurement_date,
     )
-    print(f"The percentile for {measurement} is: {percentile_value:.3f}")
+    print(f"The percentile for {measurement} using birthdate is: {percentile_value:.3f}")
 
 
 def main():
@@ -353,7 +340,7 @@ def main():
     birth_date = datetime.date(2009, 6, 1)
     measurement_date = datetime.date(2024, 6, 1)
     age = measurement_date - birth_date
-    _run_one("bmi", 21.5, age, birth_date, measurement_date, sex="M")
+    _run_one("body_mass_index", 21.5, age, birth_date, measurement_date, sex="M")
 
     # Example 6: 18 years old, height
     birth_date = datetime.date(2006, 6, 1)

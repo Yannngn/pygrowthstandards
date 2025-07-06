@@ -1,13 +1,12 @@
 import datetime
 import os
 import sys
-
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
 from collections.abc import Collection
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+
 from src.calculator.measurement import Measurement
+from src.utils.constants import AGE_CHOICES, YEAR
 
 
 class Handler:
@@ -18,7 +17,7 @@ class Handler:
 
     def add_measurement(
         self,
-        length_height: float | None = None,
+        stature: float | None = None,
         weight: float | None = None,
         head_circumference: float | None = None,
         date: datetime.date = datetime.date.today(),
@@ -35,9 +34,7 @@ class Handler:
             head_circumference (float | None): The head circumference value.
             date (datetime.date): The date of the measurement. Defaults to today.
         """
-        self._measurements.append(
-            Measurement(length_height, weight, head_circumference, date)
-        )
+        self._measurements.append(Measurement(stature, weight, head_circumference, date))
         self._measurements.sort(key=lambda m: m.date)
 
     def add_measurement_object(self, measurement: Measurement) -> None:
@@ -68,7 +65,7 @@ class Handler:
 
         self._measurements.sort(key=lambda m: m.date)
 
-    def add_measurement_objects(self, *measurements: Measurement) -> None:
+    def add_measurement_objects(self, list_of_measurements: Collection[Measurement]) -> None:
         """
         Add multiple Measurement instances to the list.
 
@@ -77,7 +74,7 @@ class Handler:
         Args:
             *measurements (Measurement): Variable number of Measurement instances.
         """
-        self._measurements.extend(measurements)
+        self._measurements.extend(list_of_measurements)
         self._measurements.sort(key=lambda m: m.date)
 
     # getters
@@ -112,9 +109,7 @@ class Handler:
         """
         return [m for m in self._measurements if m.date == date]
 
-    def get_measurements_by_date_range(
-        self, start_date: datetime.date | None, end_date: datetime.date | None
-    ) -> list[Measurement]:
+    def get_measurements_by_date_range(self, start_date: datetime.date | None, end_date: datetime.date | None) -> list[Measurement]:
         """
         Retrieve measurements within a specific date range.
 
@@ -149,7 +144,7 @@ class Handler:
         """
         measurements = self.get_measurements()
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_z_scores() for m in measurements]
 
@@ -165,13 +160,11 @@ class Handler:
         """
         measurements = self.get_measurements_by_date(date)
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_z_scores() for m in measurements]
 
-    def get_zscores_by_date_range(
-        self, start_date: datetime.date, end_date: datetime.date
-    ) -> list[dict[str, float]]:
+    def get_zscores_by_date_range(self, start_date: datetime.date, end_date: datetime.date) -> list[dict[str, float]]:
         """
         Calculate z-scores for measurements within a specific date range.
 
@@ -185,7 +178,7 @@ class Handler:
 
         measurements = self.get_measurements_by_date_range(start_date, end_date)
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_z_scores() for m in measurements]
 
@@ -202,7 +195,7 @@ class Handler:
         """
         measurements = self.get_measurements()
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_percentiles() for m in measurements]
 
@@ -218,13 +211,11 @@ class Handler:
         """
         measurements = self.get_measurements_by_date(date)
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_percentiles() for m in measurements]
 
-    def get_percentiles_by_date_range(
-        self, start_date: datetime.date, end_date: datetime.date
-    ) -> list[dict[str, float]]:
+    def get_percentiles_by_date_range(self, start_date: datetime.date, end_date: datetime.date) -> list[dict[str, float]]:
         """
         Calculate percentiles for measurements within a specific date range.
 
@@ -237,9 +228,12 @@ class Handler:
         """
         measurements = self.get_measurements_by_date_range(start_date, end_date)
 
-        self._calculate(measurements)
+        self._calculate_all(measurements)
 
         return [m.get_percentiles() for m in measurements]
 
-    def _calculate(self, measurements: list[Measurement]):
+    def _calculate_all(self, measurements: list[Measurement]):
         raise (NotImplementedError("Subclasses should implement this method"))
+
+    def _get_age_limits(self, age_group: str) -> tuple[int, int]:
+        return AGE_CHOICES.get(age_group, (0, int(19 * YEAR)))

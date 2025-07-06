@@ -1,37 +1,28 @@
+from decimal import Decimal as D
+from typing import TypeAlias
+
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 
+Number: TypeAlias = D | float
 
-def normal_cdf(z: float) -> float:
+# TODO: use utils.stats and adapt to Decimal
+
+
+def normal_cdf(z: Number) -> D:
     """
     Convert a z-score to its percentile (0-100).
 
     :param z: The z-score.
     :return: The percentile (0-100).
     """
+    z = float(z) if isinstance(z, D) else z
 
-    return norm.cdf(z).item()
-
-
-def calculate_value_for_z_score(z_score: float, lamb: float, mu: float, sigm: float) -> float:
-    """
-    Calculate the value for a given z-score based on the LMS method.
-
-    :param z_score: The z-score to calculate the value for.
-    :param lamb: The L parameter from the LMS method.
-    :param mu: The M parameter from the LMS method.
-    :param sigm: The S parameter from the LMS method.
-    :return: The calculated value.
-    """
-
-    if lamb == 0:
-        return mu * (1 + sigm * z_score)
-
-    return mu * pow(1 + lamb * sigm * z_score, 1 / lamb)
+    return D(norm.cdf(z).round(6).item())
 
 
-def calculate_z_score(value: float, lamb: float, mu: float, sigm: float) -> float:
+def calculate_z_score(value: Number, lamb: Number, mu: Number, sigm: Number) -> D:
     """
     Calculate the z-score for a given value based on the LMS method.
 
@@ -41,13 +32,19 @@ def calculate_z_score(value: float, lamb: float, mu: float, sigm: float) -> floa
     :param s: The S parameter from the LMS method.
     :return: The calculated z-score.
     """
+
+    value = D(value)
+    lamb = D(lamb)
+    mu = D(mu)
+    sigm = D(sigm)
+
     if lamb == 0:
         return (value / mu - 1) / sigm
 
-    return (pow(value / mu, lamb) - 1) / (lamb * sigm)
+    return ((value / mu) ** lamb - 1) / (lamb * sigm)
 
 
-def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) -> tuple[float, float, float]:
+def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) -> tuple[D, D, D]:
     """Estimate L, M, S parameters from SD values and z-scores."""
 
     if 0 not in z_score_idx:
@@ -70,35 +67,38 @@ def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) ->
 
     S0 = np.std(z_score_values) / float(mu)
 
-    (lambda_fit, sigma_fit), _ = curve_fit(lms_func, z_score_idx, z_score_values, p0=[0.1, S0])
+    popt, _ = curve_fit(lms_func, z_score_idx, z_score_values, p0=[0.1, S0])
+    lambda_fit, sigma_fit = popt
+    lamb = round(lambda_fit, 4)
+    sigm = round(sigma_fit, 5)
 
-    return lambda_fit, mu, sigma_fit
+    return D(lamb), D(mu), D(sigm)
 
 
-def interpolate_array(x_values: np.ndarray, y_values: np.ndarray, x: int | float, n_points: int = 4) -> float:
+def interpolate_array(x_values: np.ndarray, y_values: np.ndarray, x: int | Number, n_points: int = 4) -> D:
     """
     Interpolate LMS parameters for a given x using the closest points from provided data.
 
     :param x_values: Array of x-coordinates (must be numeric and sortable).
     :param y_values: Array of y-coordinates corresponding to x_values.
     :param x: The x-value at which to interpolate.
-    :param n_points: float of closest points to use for interpolation (default 4).
+    :param n_points: Number of closest points to use for interpolation (default 4).
     :return: Interpolated value as Decimal.
     """
     if n_points == -1:
-        return np.interp(float(x), x_values, y_values).item()
+        return D(np.interp(float(x), x_values, y_values))
 
     # Find n_points closest ages
     idx_sorted = np.argsort(np.abs(x_values - float(x)))
     idxs = np.sort(idx_sorted[:n_points])
 
     # Use numpy.interp for 1D interpolation
-    return np.interp(float(x), x_values[idxs], y_values[idxs]).item()
+    return D(np.interp(float(x), x_values[idxs], y_values[idxs]))
 
 
 def interpolate_lms(
-    x_values: np.ndarray, l_values: np.ndarray, m_values: np.ndarray, s_values: np.ndarray, x: int | float, n_points: int = 4
-) -> tuple[float, float, float]:
+    x_values: np.ndarray, l_values: np.ndarray, m_values: np.ndarray, s_values: np.ndarray, x: int | Number, n_points: int = 4
+) -> tuple[D, D, D]:
     """
     Interpolate LMS parameters for a given x using the closest points from provided data.
 
@@ -107,7 +107,7 @@ def interpolate_lms(
     :param m_values: Array of M values corresponding to x_values.
     :param s_values: Array of S values corresponding to x_values.
     :param x: The x-value at which to interpolate.
-    :param n_points: float of closest points to use for interpolation (default 4).
+    :param n_points: Number of closest points to use for interpolation (default 4).
     :return: Interpolated tuple (L, M, S) as Decimals.
     """
 
@@ -117,8 +117,8 @@ def interpolate_lms(
     idx_sorted = np.argsort(np.abs(x_values - float(x)))
     idxs = np.sort(idx_sorted[:n_points])
 
-    l_interp = interpolate_array(x_values[idxs], l_values[idxs], x, -1)
     m_interp = interpolate_array(x_values[idxs], m_values[idxs], x, -1)
+    l_interp = interpolate_array(x_values[idxs], l_values[idxs], x, -1)
     s_interp = interpolate_array(x_values[idxs], s_values[idxs], x, -1)
 
     return l_interp, m_interp, s_interp
