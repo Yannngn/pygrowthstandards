@@ -1,3 +1,3 @@
-from .src import Calculator, Kid, Measurement
+from .src import Calculator, Child, Measurement
 
-__all__ = ["Calculator", "Kid", "Measurement"]
+__all__ = ["Calculator", "Child", "Measurement"]
