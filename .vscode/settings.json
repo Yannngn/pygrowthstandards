@@ -1,5 +1,13 @@
 {
   "python.testing.pytestArgs": ["tests"],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.venv",
+    "**/.git",
+    "**/venv",
+    "**/tests"
+  ]
 }

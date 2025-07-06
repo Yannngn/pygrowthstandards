@@ -25,6 +25,7 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
     conv_res = converter.convert(source)
 
     tables = []
+    header = ["days", "sd3neg", "sd2neg", "sd1neg", "sd0", "sd1", "sd2", "sd3"]
     for table in conv_res.document.tables:
         table_df: pd.DataFrame = table.export_to_dataframe()
 
@@ -43,9 +44,7 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
         combined_df = pd.concat(tables, ignore_index=True)
 
         if "days" in combined_df.columns:
-            combined_df["days"] = combined_df["days"].apply(
-                intergrowth_convert_weeks_days
-            )
+            combined_df["days"] = combined_df["days"].apply(intergrowth_convert_weeks_days)
 
         combined_df.to_csv(element_csv_filename, index=False, header=header)
 
