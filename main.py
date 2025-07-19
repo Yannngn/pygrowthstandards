@@ -5,6 +5,7 @@ from src import Calculator
 
 def main():
     calculator = Calculator.from_child(birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=40)
+    # calculator.plot_all_standards()
 
     print(calculator.child)
 
@@ -95,19 +96,7 @@ def main():
 
     print(calculator.display_results())
 
-    for m in ["stature", "weight", "head_circumference", "body_mass_index"]:
-        calculator.plot_table(m, "0-2", output_path=f"results/{m}_plot.png")  # type: ignore
-        calculator.plot_measurements(m, "0-2", output_path=f"results/{m}_measurements_plot.png")  # type: ignore
-
-    # print(
-    #     F.zscore(
-    #         "height",
-    #         115,
-    #         "M",
-    #         birth_date=datetime.date(2020, 1, 1),
-    #         measurement_date=datetime.date(2025, 6, 1),
-    #     )
-    # )
+    # calculator.plot_all_measurements()
 
 
 if __name__ == "__main__":

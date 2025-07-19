@@ -1,20 +1,24 @@
 import json
-import logging
 import os
 import sys
 import tempfile
 from dataclasses import dataclass, field
 from decimal import Decimal as D
+from typing import Literal
 
 import numpy as np
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-from src.utils.constants import MONTH, WEEK
+from src.utils.choices import (
+    AGE_GROUP_CHOICES,
+    AGE_GROUP_TYPE,
+    MEASUREMENT_TYPE_TYPE,
+    TABLE_NAME_TYPE,
+)
+from src.utils.constants import MONTH, WEEK, YEAR
 from src.utils.decimal_stats import estimate_lms_from_sd
-
-DATASETS = ["newborn_size", "very_preterm_growth", "growth"]
 
 X_TEMPLATE = D("0.00")
 MU_TEMPLATE = D("0.0000")
@@ -28,15 +32,18 @@ UNITS = {
     "body_mass_index": "kg/m²",
     "weight_length": "kg/cm",
     "weight_height": "kg/cm",
-    "head_circumference_velocity": "cm/month",
-    "length_velocity": "cm/month",
+    "stature_velocity": "cm/month",
     "weight_velocity": "kg/month",
+    "head_circumference_velocity": "cm/month",
 }
 
-# TODO: Fix json
+DataSourceType = Literal["who", "intergrowth"]
+DataSexType = Literal["M", "F", "U"]
+DataUnitType = Literal["days", "cm"]
+DataUnitNameType = Literal["age", "gestational_age", "stature"]
 
 
-@dataclass
+@dataclass(order=True, eq=True)
 class DataPoint:
     x: D
     L: D
@@ -94,21 +101,59 @@ class DataPoint:
 
         return estimate_lms_from_sd(zscores, values)
 
+    def __eq__(self, other):
+        if not isinstance(other, DataPoint):
+            return NotImplemented
+        return self.x == other.x
+
 
 @dataclass
 class Dataset:
-    source: str
-    name: str
-    measurement_type: str
-    sex: str
+    source: DataSourceType  # who
+    table: TABLE_NAME_TYPE  # child_growth
+    measurement_type: MEASUREMENT_TYPE_TYPE  # stature
+    sex: DataSexType  # M
+    unit_name: DataUnitNameType  # age
+    unit_type: DataUnitType  # days
+
     points: list[DataPoint] = field(default_factory=list)
-    x_axis: str = "days"
-    min_age: int | None = None
-    max_age: int | None = None
+
+    min_x: D = field(init=False)
+    max_x: D = field(init=False)
+
+    age_group: AGE_GROUP_TYPE = field(init=False)
 
     def __post_init__(self):
-        if self.points:
-            self.points.sort(key=lambda p: p.x)
+        if not self.points:
+            raise ValueError("Points list cannot be empty.")
+
+        xs = [point.x for point in self.points if point.x is not None]
+        self.min_x = min(xs)
+        self.max_x = max(xs)
+        self.points.sort(key=lambda p: p.x)
+
+        if self.measurement_type.endswith("_height"):
+            self.age_group = self.table if self.table in AGE_GROUP_CHOICES else "2-5"  # type: ignore
+            self.measurement_type = "weight"
+            return
+
+        if self.measurement_type.endswith("_length"):
+            self.age_group = self.table if self.table in AGE_GROUP_CHOICES else "0-2"  # type: ignore
+            self.measurement_type = "weight"
+            return
+
+        if self.table in AGE_GROUP_CHOICES:
+            self.age_group = self.table  # type: ignore
+
+            return
+
+        group = f"{int(round(float(self.min_x) / YEAR))}-{int(round(float(self.max_x) / YEAR))}"
+        if group in list(AGE_GROUP_CHOICES) + ["0-5", "5-19"]:
+            self.age_group = group  # type: ignore
+
+            return
+
+        raise ValueError(f"Invalid age group '{group}' for dataset {self.source} - {self.table} - {self.measurement_type} - {self.sex}")
 
     @classmethod
     def from_csv(cls, csv_path: str) -> "Dataset":
@@ -134,74 +179,65 @@ class Dataset:
 
         filename = os.path.splitext(os.path.basename(csv_path))[0]
         parts = filename.split("-")
-        source = parts[0]
-        name = parts[1]
-        measurement_type = parts[2]
-        sex = parts[3]
+        print(filename)
+        if len(parts) > 4:
+            _ = parts.pop()
+
+        sex = parts.pop().upper()
+
+        if sex not in ["M", "F", "U"]:  # 1mon and 2mon from velocity datasets
+            sex = parts.pop().upper()
+
+        measurement_type = parts.pop()
+        table = parts.pop().replace("birth", "newborn")
+        source = parts.pop()
+        unit = "gestational_age" if "birth" in filename else "age"
 
         df.columns = [col.lower() for col in df.columns]
         x_column = df.columns[0]
 
-        # Weight for Lenght/Height datasets
-        if x_column == "length" or x_column == "height":
+        # Weight for Length/Height datasets
+        if x_column in ["length", "height"]:
             df["x"] = df[x_column]
-            return cls(source=source, name=name, measurement_type=measurement_type, x_axis=x_column.lower(), sex=sex, points=get_points(df))
+
+            return cls(source=source, table=table, measurement_type=measurement_type, sex=sex, unit_name="stature", unit_type="cm", points=get_points(df))  # type: ignore
 
         # Velocity datasets
-        elif x_column == "interval":
+        elif x_column in ["interval"]:
             # Normalize dash types and strip whitespace
-            df[x_column] = df[x_column].str.replace("–", "-").str.strip()
+            df[x_column] = df[x_column].str.replace("\u2013", "-").str.strip()
 
             interval_min_list, interval_max_list = [], []
             for value in df[x_column]:
-                parts: list[str] = str(value).split("-")
-                min_part, max_part = parts[0].strip(), parts[1].strip()
+                age_parts: list[str] = str(value).split("-")
+                min_part, max_part = age_parts[0].strip(), age_parts[1].strip()
 
                 def parse_interval(part: str) -> int:
                     if part.endswith("wks"):
-                        return int(float(part.replace(" wks", "").strip()) * WEEK)
-                    elif part.endswith("mo"):
-                        return int(float(part.replace(" mo", "").strip()) * MONTH)
-                    else:
-                        return int(float(part) * MONTH)
+                        return int(float(part.replace("wks", "").strip()) * WEEK)
+
+                    if part.endswith("mo"):
+                        return int(float(part.replace("mo", "").strip()) * MONTH)
+
+                    return int(float(part) * MONTH)
 
                 interval_min_list.append(parse_interval(min_part))
                 interval_max_list.append(parse_interval(max_part))
 
-            max_value = max(interval_max_list)
             df["x"] = interval_min_list
-            return cls(
-                source=source,
-                name=name,
-                measurement_type=measurement_type,
-                sex=sex,
-                min_age=min(interval_min_list),
-                max_age=max_value,
-                points=get_points(df),
-            )
+            return cls(source=source, table=table, measurement_type=measurement_type, sex=sex, unit_name=unit, unit_type="days", points=get_points(df))  # type: ignore
 
         # Age in days, weeks, or months
-        elif x_column == "weeks":
+        elif x_column in ["weeks"]:
             df["x"] = df[x_column].astype(float).mul(WEEK).astype(int)
 
-        elif x_column == "month":
+        elif x_column in ["month"]:
             df["x"] = df[x_column].astype(float).mul(MONTH).astype(int)
 
         else:
             df["x"] = df[x_column].astype(float).astype(int)
 
-        min_age = df["x"].min()
-        max_age = df["x"].max()
-
-        return cls(
-            source=source,
-            name=name,
-            measurement_type=measurement_type,
-            sex=sex,
-            min_age=min_age,
-            max_age=max_age,
-            points=get_points(df),
-        )
+        return cls(source=source, table=table, measurement_type=measurement_type, sex=sex, unit_name=unit, unit_type="days", points=get_points(df))  # type: ignore
 
     @classmethod
     def from_xlsx(cls, xlsx_path: str) -> "Dataset":
@@ -235,17 +271,31 @@ class Dataset:
 
         return dataset
 
+    def to_dict(self) -> dict:
+        """
+        Convert the Dataset instance to a dictionary.
+
+        Returns:
+            dict: Dictionary representation of the Dataset.
+        """
+        return {
+            # "source": self.source,
+            "table": self.table,
+            "age_group": self.age_group,
+            "sex": self.sex,
+            "measurement_type": self.measurement_type,
+            "unit_name": self.unit_name,
+            # "unit_type": self.unit_type,
+            "points": [point.to_dict() for point in self.points],
+        }
+
 
 @dataclass
 class GrowthData:
-    source: str
-    name: str
-    measurement_type: str
-    sex: str
+    version: str = "0.1.0"
     datasets: list[Dataset] = field(default_factory=list)
-    x_axis: str | None = None
-    min_x: int | None = None
-    max_x: int | None = None
+
+    consolidated_data: dict[str, str | list[dict]] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
         if self.datasets is None:
@@ -282,49 +332,22 @@ class GrowthData:
         dataset = Dataset.from_xlsx(xlsx_path)
         self.add_dataset(dataset)
 
-    def consolidate_data(self) -> list[DataPoint]:
-        consolidated_points = []
-        min_x = max_x = x_axis = None
-
+    def process_data(self):
+        complete_data = []
         for dataset in self.datasets:
-            assert dataset.sex == self.sex, "All datasets must have the same sex."
-            assert dataset.source == self.source, "All datasets must have the same source."
-            assert dataset.measurement_type == self.measurement_type, "All datasets must have the same measurement type."
+            data = dataset.to_dict()
+            points: list[dict] = data.pop("points", [])
+            complete_data.extend([{**data, **point} for point in points])
 
-            if x_axis is None:
-                x_axis = dataset.x_axis
+        for item in complete_data:
+            if item.get("age_group") == "0-5":
+                x_years = float(item["x"]) / YEAR
+                item["age_group"] = "0-2" if x_years < 2 else "2-5"
+            elif item.get("age_group") == "5-19":
+                x_years = float(item["x"]) / YEAR
+                item["age_group"] = "5-10" if x_years < 10 else "10-19"
 
-            assert dataset.x_axis == x_axis, "All datasets must have the same x-axis."
-
-            if dataset.min_age is not None and (min_x is None or dataset.min_age < min_x):
-                min_x = int(dataset.min_age)  # type: ignore
-
-            if dataset.max_age is not None and (max_x is None or dataset.max_age > max_x):
-                max_x = int(dataset.max_age)  # type: ignore
-
-            consolidated_points.extend(dataset.points)
-
-        if self.measurement_type in ["weight_length", "weight_height"]:
-            min_x = min(point.x for point in consolidated_points if point.x is not None)
-            max_x = max(point.x for point in consolidated_points if point.x is not None)
-
-        self.min_x = min_x
-        self.max_x = max_x
-        self.x_axis = x_axis
-
-        # Remove duplicates based on x value, keeping the first occurrence
-        seen_x = set()
-        unique_points = []
-        for point in consolidated_points:
-            if point.x not in seen_x:
-                unique_points.append(point)
-                seen_x.add(point.x)
-        consolidated_points = unique_points
-
-        # Sort consolidated points by x value
-        consolidated_points.sort(key=lambda p: p.x)
-
-        return consolidated_points
+        self.consolidated_data = {"version": self.version, "data": complete_data}
 
     def to_csv(self, output_dir: str):
         """
@@ -333,24 +356,10 @@ class GrowthData:
             output_dir (str): Directory where the CSV file will be saved.
         """
 
-        consolidated_points = self.consolidate_data()
+        self.process_data()
 
-        if not consolidated_points:
-            logging.warning("No data points to save.")
-            return
-
-        points = [point.to_dict() for point in consolidated_points]
-
-        data = {
-            "x": [point["x"] for point in points],
-            "L": [point["L"] for point in points],
-            "M": [point["M"] for point in points],
-            "S": [point["S"] for point in points],
-        }
-
-        df = pd.DataFrame(data)
-        output_file = os.path.join(output_dir, f"{self.source}-{self.name}-{self.measurement_type}-{self.sex}-lms.csv")
-        df.to_csv(output_file, index=False)
+        df = pd.DataFrame(self.consolidated_data["data"])
+        df.to_csv(os.path.join(output_dir, "pygrowthstandards.csv"), index=False)
 
     def to_json(self, output_dir: str):
         """
@@ -358,40 +367,13 @@ class GrowthData:
         Args:
             output_dir (str): Directory where the JSON file will be saved.
         """
-        consolidated_points = self.consolidate_data()
-        if not consolidated_points:
-            logging.warning("No data points to save.")
-            return
+        self.process_data()
 
-        def is_int(value: D | int) -> bool:
-            """
-            Check if a Decimal value is an integer.
-            """
-            if isinstance(value, int):
-                return True
-
-            return value == value.to_integral_value()
-
-        data = {
-            "source": self.source,
-            "name": self.name,
-            "measurement_type": self.measurement_type,
-            "sex": self.sex,
-            "x_axis": self.x_axis,
-            "unit": UNITS.get(self.measurement_type, ""),
-            "min_x": int(self.min_x) if is_int(self.min_x) else str(D(self.min_x).quantize(X_TEMPLATE)),  # type: ignore
-            "max_x": int(self.max_x) if is_int(self.max_x) else str(D(self.max_x).quantize(X_TEMPLATE)),  # type: ignore
-            "points": [
-                {
-                    "x": int(p.x) if is_int(p.x) else str(p.x.quantize(X_TEMPLATE)),
-                    "L": str(p.L.quantize(LAMBDA_TEMPLATE)),
-                    "M": str(p.M.quantize(MU_TEMPLATE)),
-                    "S": str(p.S.quantize(SIGMA_TEMPLATE)),
-                }
-                for p in consolidated_points
-            ],
-        }
-
-        output_file = os.path.join(output_dir, f"{self.source}-{self.name}-{self.measurement_type}-{self.sex}-lms.json")
+        output_file = os.path.join(output_dir, "pygrowthstandards.json")
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+            json.dump(self.consolidated_data, f, ensure_ascii=False)
+        self.process_data()
+
+        output_file = os.path.join(output_dir, "pygrowthstandards.json")
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(self.consolidated_data, f, ensure_ascii=False)

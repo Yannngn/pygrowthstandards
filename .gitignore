@@ -1,7 +1,8 @@
 data/raw/**/*.csv
 data/raw/**/*.pdf
 data/raw/**/*.xlsx
-
+data/tabular/*.csv
+data/functional/*.json
 # Python-generated files
 __pycache__/
 *.py[oc]

@@ -11,5 +11,5 @@ wget -O intergrowth-birth-head_circumference-f.pdf https://intergrowth21.ndog.ox
 wget -O intergrowth-birth-head_circumference-m.pdf https://intergrowth21.ndog.ox.ac.uk/Content/PDF/NewBorn/INTERGROWTH-21st_Head_Circumference_Z_Scores_Boys.pdf
 
 # Length standards
-wget -O intergrowth-birth-length-f.pdf https://intergrowth21.ndog.ox.ac.uk/Content/PDF/NewBorn/INTERGROWTH-21st_Length_Z_Scores_Girls.pdf
-wget -O intergrowth-birth-length-m.pdf https://intergrowth21.ndog.ox.ac.uk/Content/PDF/NewBorn/INTERGROWTH-21st_Length_Z_Scores_Boys.pdf
+wget -O intergrowth-birth-stature-f.pdf https://intergrowth21.ndog.ox.ac.uk/Content/PDF/NewBorn/INTERGROWTH-21st_Length_Z_Scores_Girls.pdf
+wget -O intergrowth-birth-stature-m.pdf https://intergrowth21.ndog.ox.ac.uk/Content/PDF/NewBorn/INTERGROWTH-21st_Length_Z_Scores_Boys.pdf

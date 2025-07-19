@@ -49,9 +49,9 @@ class TestCalculator:
         calculator = Calculator(child)
 
         # Mock the _data._get_lms method
-        calculator._data._get_lms = Mock(return_value=(0.2, 100.0, 0.1))
+        calculator._data.get_lms = Mock(return_value=(0.2, 100.0, 0.1))
 
-        result = calculator._calculate_z_score("test_table", 110.0, 365)
+        result = calculator.calculate_z_score("test_table", 110.0, 365)
 
         assert result == 1.5
         mock_calculate_z_score.assert_called_once_with(110.0, 0.2, 100.0, 0.1)

@@ -1,396 +1,234 @@
 import csv
 import os
 import sys
-from typing import Any, Collection
+from dataclasses import dataclass
+from decimal import Decimal as D
+from typing import Any, Literal, NamedTuple
 
 import numpy as np
-from scipy.stats import norm
-
-from src.utils.constants import WEEK, YEAR
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 
-from src.utils.stats import (
-    calculate_value_for_z_score,
-    calculate_z_score,
-    interpolate_lms,
+import src.utils.stats as stats
+from src.data.objects import DataPoint
+from src.utils.choices import (
+    AGE_GROUP_CHOICES,
+    AGE_GROUP_TYPE,
+    MEASUREMENT_TYPE_CHOICES,
+    MEASUREMENT_TYPE_TYPE,
+    TABLE_NAME_CHOICES,
+    TABLE_NAME_TYPE,
+)
+from src.utils.errors import (
+    InvalidAgeGroupError,
+    InvalidKeyPairError,
+    InvalidMeasurementTypeError,
+    InvalidTableNameError,
 )
 
 
-class Tables:
-    # Growth
-    GROWTH_STATURE = "growth_stature"
-    GROWTH_WEIGHT = "growth_weight"
-    GROWTH_HEAD_CIRCUMFERENCE = "growth_head_circumference"
-    GROWTH_BODY_MASS_INDEX = "growth_body_mass_index"
+@dataclass
+class ArrayTable:
+    name: Any
+    measurement_type: str  # 'stature'
+    sex: str  # 'F'
+    unit_name: str  # 'age'
 
-    # Weight/Stature
-    GROWTH_WEIGHT_LENGTH = "growth_weight_length"
-    GROWTH_WEIGHT_HEIGHT = "growth_weight_height"
+    x: np.ndarray
+    L: np.ndarray
+    M: np.ndarray
+    S: np.ndarray
 
-    # Velocity
-    GROWTH_WEIGHT_VELOCITY = "growth_weight_velocity"
-    GROWTH_LENGTH_VELOCITY = "growth_length_velocity"
-    GROWTH_CIRCUMFERENCE_VELOCITY = "growth_head_circumference_velocity"
+    @classmethod
+    def from_points(cls, name: str, sex: str, measurement_type: str, unit_name: str, points: list[DataPoint]):
+        """
+        Creates an ArrayTable from a Table object.
 
-    # Preterm Growth
-    VERY_PRETERM_LENGTH = "very_preterm_growth_length"
-    VERY_PRETERM_WEIGHT = "very_preterm_growth_weight"
-    VERY_PRETERM_HEAD_CIRCUMFERENCE = "very_preterm_growth_head_circumference"
+        :param table: The Table object to convert.
+        :return: An ArrayTable object.
+        """
+        return cls(
+            name=name,
+            sex=sex,
+            measurement_type=measurement_type,
+            unit_name=unit_name,
+            x=np.array([getattr(point, "x") for point in points]).astype(float),
+            L=np.array([getattr(point, "L") for point in points]).astype(float),
+            M=np.array([getattr(point, "M") for point in points]).astype(float),
+            S=np.array([getattr(point, "S") for point in points]).astype(float),
+        )
 
-    # Birth
-    BIRTH_LENGTH = "newborn_size_length"
-    BIRTH_WEIGHT = "newborn_size_weight"
-    BIRTH_HEAD_CIRCUMFERENCE = "newborn_size_head_circumference"
+    def add_point(self, x: int | float) -> None:
+        """
+        Interpolates a new point
+        """
+        L, M, S = stats.interpolate_lms(x_values=self.x, l_values=self.L, m_values=self.M, s_values=self.S, x=x)
+
+        # Find the index where x should be inserted to keep the array sorted
+        insert_idx = np.searchsorted(self.x, x)
+
+        # Insert x, L, M, S at the correct position in each array
+        self.x = np.insert(self.x, insert_idx, x)
+        self.L = np.insert(self.L, insert_idx, L)
+        self.M = np.insert(self.M, insert_idx, M)
+        self.S = np.insert(self.S, insert_idx, S)
+
+    def get_point(self, x: int | float) -> tuple[float, float, float]:
+        """
+        Returns the LMS values for a given x value.
+
+        :param x: The x value for which to get the LMS values.
+        :return: The LMS values.
+        """
+        if x not in self.x:
+            self.add_point(x)
+
+        idx = np.searchsorted(self.x, x)
+
+        return (self.L[idx], self.M[idx], self.S[idx])
 
 
-class TableFiles:
-    # Growth
-    GROWTH_STATURE = "who-growth-stature"
-    GROWTH_WEIGHT = "who-growth-weight"
-    GROWTH_HEAD_CIRCUMFERENCE = "who-growth-head_circumference"
-    GROWTH_BODY_MASS_INDEX = "who-growth-body_mass_index"
+@dataclass
+class PlotTable(ArrayTable):
+    name: AGE_GROUP_TYPE
 
-    # Weight/Stature
-    GROWTH_WEIGHT_LENGTH = "who-growth-weight_length"
-    GROWTH_WEIGHT_HEIGHT = "who-growth-weight_height"
 
-    # Velocity
-    GROWTH_WEIGHT_VELOCITY = "who-growth-weight_velocity"
-    GROWTH_LENGTH_VELOCITY = "who-growth-length_velocity"
-    GROWTH_CIRCUMFERENCE_VELOCITY = "who-growth-head_circumference_velocity"
+@dataclass
+class Table(ArrayTable):
+    name: TABLE_NAME_TYPE
 
-    # Preterm Growth
-    VERY_PRETERM_LENGTH = "intergrowth-very_preterm_growth-length"
-    VERY_PRETERM_WEIGHT = "intergrowth-very_preterm_growth-weight"
-    VERY_PRETERM_HEAD_CIRCUMFERENCE = "intergrowth-very_preterm_growth-head_circumference"
 
-    # Birth
-    BIRTH_LENGTH = "intergrowth-newborn_size-length"
-    BIRTH_WEIGHT = "intergrowth-newborn_size-weight"
-    BIRTH_HEAD_CIRCUMFERENCE = "intergrowth-newborn_size-head_circumference"
+DataType = NamedTuple(
+    "DataType",
+    [
+        ("name", TABLE_NAME_TYPE),
+        ("measurement_type", MEASUREMENT_TYPE_TYPE),
+        ("sex", str),
+        ("unit_name", str),
+    ],
+)
+PlotDataType = NamedTuple(
+    "PlotDataType",
+    [
+        ("age_group", AGE_GROUP_TYPE),
+        ("measurement_type", MEASUREMENT_TYPE_TYPE),
+        ("sex", str),
+        ("unit_name", str),
+    ],
+)
 
 
 class TableData:
-    def __init__(self, sex: str):
-        """
-        Initializes a TableData instance with age in days and preterm status.
-
-        :param age_days: Age of the child in days.
-        :param is_very_preterm: Boolean indicating if the child is very preterm.
-        """
+    def __init__(self, sex: Literal["M", "F", "U"] | None, age: int | None = None, very_preterm: bool | None = None):
         self.sex = sex
+        self.age = age
+        self.very_preterm = very_preterm
 
-        self._setup()
+        self.measurement_choices: list[MEASUREMENT_TYPE_TYPE] = []
 
-    def get_table_name(self, measurement_type: str, age_group: str) -> str:
-        def normalize_measurement_type():
-            if measurement_type in ["stature", "lfa", "hfa", "lhfa", "length", "height", "length_height"]:
-                if age_group in ["newborn", "birth_size", "birth", "very_preterm", "very_preterm_growth"]:
-                    return "length"
-                return "stature"
+        self.data, self.plot_data = self._get_data()
 
-            if measurement_type in ["w", "wfa", "weight"]:
-                return "weight"
+    def _get_data(self) -> tuple[dict[DataType, Table], dict[PlotDataType, PlotTable]]:
+        """Gets up the data for various anthropometric measurements based on the child's age and preterm status."""
 
-            if measurement_type in ["hc", "hcfa", "head_circumference"]:
-                return "head_circumference"
+        data_path = os.path.join("data", "pygrowthstandards.csv")
 
-            if measurement_type in ["bmi", "body_mass_index", "bfa"]:
-                return "body_mass_index"
+        with open(data_path, "r", newline="") as f:
+            reader = csv.DictReader(f)
 
-            if measurement_type in ["wlr", "weight_length", "weight_length_ratio"]:
-                return "weight_length"
+            if self.sex is not None:
+                assert self.sex in ["M", "F", "U"]
+                sex = "F" if self.sex == "U" else self.sex
 
-            if measurement_type in ["whr", "weight_height", "weight_height_ratio"]:
-                return "weight_height"
+                reader = filter(lambda row: row["sex"] == sex, reader)
 
-            if measurement_type in ["weight_velocity"]:
-                return "weight_velocity"
+            if self.very_preterm is not None:
+                assert isinstance(self.very_preterm, bool)
 
-            if measurement_type in ["length_velocity"]:
-                return "length_velocity"
+                if self.very_preterm:
+                    reader = filter(lambda row: row["table"] not in ["newborn"], reader)
+                    # TODO: after 64 weeks use 0-2 data for very preterm children
+                else:
+                    reader = filter(lambda row: row["table"] not in ["very_preterm_growth", "very_preterm_newborn"], reader)
 
-            if measurement_type in ["head_circumference_velocity"]:
-                return "head_circumference_velocity"
+            if self.age is not None:
+                if self.age < 5:
+                    reader = filter(lambda row: row["table"] not in ["growth"], reader)
 
-            raise ValueError(f"Unknown measurement type: {measurement_type}")
+            # GROUP BY
+            tables: dict[DataType, list] = {}
+            plot_tables: dict[PlotDataType, list] = {}
+            for row in reader:
+                name: TABLE_NAME_TYPE = row["table"]  # type: ignore
+                age_group: AGE_GROUP_TYPE = row["age_group"]  # type: ignore
+                measurement_type: MEASUREMENT_TYPE_TYPE = row["measurement_type"]  # type: ignore
+                sex: str = row["sex"]
+                unit_name: str = row["unit_name"]
 
-        def normalize_age_group():
-            if age_group in ["newborn", "newborn_size", "birth_size", "birth"]:
-                return "newborn_size"
-            if age_group in ["very_preterm", "very_preterm_growth"]:
-                return "very_preterm_growth"
-            return "growth"
+                assert name in TABLE_NAME_CHOICES, InvalidTableNameError(name)
+                assert age_group in AGE_GROUP_CHOICES, InvalidAgeGroupError(age_group)
+                assert measurement_type in MEASUREMENT_TYPE_CHOICES, InvalidMeasurementTypeError(measurement_type)
 
-        return f"{normalize_age_group()}_{normalize_measurement_type()}"
+                point = DataPoint(x=D(row["x"]), L=D(row["L"]), M=D(row["M"]), S=D(row["S"]))
 
-    def get_table(self, name: str) -> dict[str, list[int | float]]:
-        """
-        Returns the LMS data for the specified table name.
-        :param name: The name of the table (e.g., "growth_stature").
-        :return: A dictionary with keys 'x', 'l', 'm', 's'.
-        """
-        data = getattr(self, name, {}).copy()
-        if not data:
-            raise ValueError(f"Unknown measurement name: {name}")
+                data_key = DataType(name, measurement_type, sex, unit_name)
+                if data_key not in tables:
+                    tables[data_key] = []
 
-        return data
+                plot_key = PlotDataType(age_group, measurement_type, sex, unit_name)
+                if plot_key not in plot_tables:
+                    plot_tables[plot_key] = []
 
-    def get_table_cutoffs(self, measurement_type: str, age_group: str = "none") -> tuple[int | float, int | float]:
+                tables[data_key].append(point)
+                plot_tables[plot_key].append(point)
+
+        array_tables = {key: Table.from_points(*key, points=table) for key, table in tables.items()}
+        array_plot_tables = {key: PlotTable.from_points(*key, points=table) for key, table in plot_tables.items()}
+
+        return array_tables, array_plot_tables
+
+    def get_table(
+        self, name: TABLE_NAME_TYPE, measurement_type: MEASUREMENT_TYPE_TYPE, sex: str | None = None, unit_name: str = "age"
+    ) -> Table:
+        sex_ = (self.sex or sex) or "F"
+
+        if measurement_type in ["weight_stature_ratio"] and unit_name == "age":
+            measurement_type = "weight"
+            unit_name = "stature"
+
+        assert measurement_type in MEASUREMENT_TYPE_CHOICES, InvalidMeasurementTypeError(measurement_type)
+        assert name in TABLE_NAME_CHOICES, InvalidTableNameError(name)
+
+        data_key = DataType(name, measurement_type, sex_, unit_name)
+        if data_key not in self.data:
+            raise InvalidKeyPairError(name, measurement_type)
+
+        return self.data[data_key]
+
+    def get_plot_table(self, age_group: AGE_GROUP_TYPE, measurement_type: str, sex: str | None = None, unit_name: str = "age") -> PlotTable:
+        sex_ = (self.sex or sex) or "F"
+
+        if measurement_type in ["weight_stature_ratio"] and unit_name == "age":
+            measurement_type = "weight"
+            unit_name = "stature"
+
+        assert age_group in AGE_GROUP_CHOICES, InvalidAgeGroupError(age_group)
+        assert measurement_type in MEASUREMENT_TYPE_CHOICES, InvalidMeasurementTypeError(measurement_type)
+
+        data_key = PlotDataType(age_group, measurement_type, sex_, unit_name)  # type: ignore
+
+        if data_key not in self.plot_data:
+            raise InvalidKeyPairError(age_group, measurement_type)
+
+        return self.plot_data[data_key]
+
+    def get_cutoffs(self, data: ArrayTable) -> tuple[int | float, int | float]:
         """
         Returns the start and end ages for the specified table.
 
         """
-        name = self.get_table_name(measurement_type, age_group)
-        data = getattr(self, name, {}).copy()
-        if not data:
-            raise ValueError(f"Unknown name: {name}")
-        x = data.get("x", [])
+        return data.x.min(), data.x.max()
 
-        return min(x), max(x)
-
-    def get_measurement_type(self, table_name: str) -> str:
-        if table_name in [Tables.GROWTH_STATURE, Tables.BIRTH_LENGTH, Tables.VERY_PRETERM_LENGTH]:
-            return "stature"
-
-        if table_name in [Tables.GROWTH_WEIGHT, Tables.BIRTH_WEIGHT, Tables.VERY_PRETERM_WEIGHT]:
-            return "weight"
-
-        if table_name in [
-            Tables.GROWTH_HEAD_CIRCUMFERENCE,
-            Tables.BIRTH_HEAD_CIRCUMFERENCE,
-            Tables.VERY_PRETERM_HEAD_CIRCUMFERENCE,
-        ]:
-            return "head_circumference"
-
-        if table_name in [Tables.GROWTH_BODY_MASS_INDEX]:
-            return "body_mass_index"
-
-        if table_name in [Tables.GROWTH_WEIGHT_LENGTH]:
-            return "weight_length_ratio"
-
-        if table_name in [Tables.GROWTH_WEIGHT_HEIGHT]:
-            return "weight_height_ratio"
-
-        if table_name in [Tables.GROWTH_WEIGHT_VELOCITY]:
-            return "weight_velocity"
-
-        if table_name in [Tables.GROWTH_LENGTH_VELOCITY]:
-            return "length_velocity"
-
-        if table_name in [Tables.GROWTH_CIRCUMFERENCE_VELOCITY]:
-            return "head_circumference_velocity"
-
-        raise ValueError(f"Unknown measurement type: {table_name}")
-
-    def get_age_group(self, age_days: int | float, newborn: bool = False, very_preterm: bool = False) -> str:
-        if newborn:
-            return "newborn"
-
-        if very_preterm and age_days < 64 * WEEK:
-            return "very_preterm"
-
-        if age_days < 2 * YEAR:
-            return "0-2"
-
-        if age_days < 5 * YEAR:
-            return "2-5"
-
-        if age_days < 10 * YEAR:
-            return "5-10"
-
-        return "10-19"
-
-    def get_plot_data(
-        self, measurement_type: str, age_group: str = "none", values: Collection[int | float] = [-3, -2, 0, 2, 3]
-    ) -> dict[Any, list[int | float]]:
-        """
-        Returns a dictionary with x values and corresponding y values for the specified table and zscores or centiles.
-        :param measurement_type: The measurement_type of the table (e.g., "stature").
-        :param values: A list of zscores or centiles to plot.
-        :return: A dictionary with x values and corresponding y values.
-        """
-        name = self.get_table_name(measurement_type, age_group)
-        data = self.get_table(name)
-
-        plot_data: dict = {"x": np.array(data["x"])}
-
-        for value in values:
-            if isinstance(value, float):
-                assert 0 < value < 1, "Centile values must be between 0 and 1."
-                plot_data[value] = self._calculate_values_for_centile_array(name, value)
-                continue
-
-            plot_data[value] = self._calculate_values_for_z_score_array(name, value)
-
-        return plot_data
-
-    def get_lms(self, name: str, x: int | float) -> tuple[float, float, float]:
-        data = self.get_table(name)
-
-        x_ = np.array(data.pop("x", []))
-
-        if x in x_:
-            idx = np.where(x_ == x)[0][0]
-            return data["l"][idx], data["m"][idx], data["s"][idx]
-
-        l_values = np.array(data["l"])
-        m_values = np.array(data["m"])
-        s_values = np.array(data["s"])
-
-        # Interpolate LMS parameters if exact x value not found
-        return interpolate_lms(x_values=x_, l_values=l_values, m_values=m_values, s_values=s_values, x=x)
-
-    def _setup(self):
-        """Sets up the data for various anthropometric measurements based on the child's age and preterm status."""
-
-        sex = self.sex.lower()
-
-        self.growth_stature = self._read_data(f"{TableFiles.GROWTH_STATURE}-{sex}-lms.csv")
-        self.growth_weight = self._read_data(f"{TableFiles.GROWTH_WEIGHT}-{sex}-lms.csv")
-        self.growth_head_circumference = self._read_data(f"{TableFiles.GROWTH_HEAD_CIRCUMFERENCE}-{sex}-lms.csv")
-        self.growth_body_mass_index = self._read_data(f"{TableFiles.GROWTH_BODY_MASS_INDEX}-{sex}-lms.csv")
-
-        self.growth_weight_length = self._read_data(f"{TableFiles.GROWTH_WEIGHT_LENGTH}-{sex}-lms.csv")
-        self.growth_weight_height = self._read_data(f"{TableFiles.GROWTH_WEIGHT_HEIGHT}-{sex}-lms.csv")
-
-        self.growth_weight_velocity = self._read_data(f"{TableFiles.GROWTH_WEIGHT_VELOCITY}-{sex}-lms.csv")
-        self.growth_length_velocity = self._read_data(f"{TableFiles.GROWTH_LENGTH_VELOCITY}-{sex}-lms.csv")
-        self.growth_circumference_velocity = self._read_data(f"{TableFiles.GROWTH_CIRCUMFERENCE_VELOCITY}-{sex}-lms.csv")
-
-        self.very_preterm_growth_length = self._read_data(f"{TableFiles.VERY_PRETERM_LENGTH}-{sex}-lms.csv")
-        self.very_preterm_growth_weight = self._read_data(f"{TableFiles.VERY_PRETERM_WEIGHT}-{sex}-lms.csv")
-        self.very_preterm_growth_head_circumference = self._read_data(f"{TableFiles.VERY_PRETERM_HEAD_CIRCUMFERENCE}-{sex}-lms.csv")
-
-        self.newborn_size_length = self._read_data(f"{TableFiles.BIRTH_LENGTH}-{sex}-lms.csv")
-        self.newborn_size_weight = self._read_data(f"{TableFiles.BIRTH_WEIGHT}-{sex}-lms.csv")
-        self.newborn_size_head_circumference = self._read_data(f"{TableFiles.BIRTH_HEAD_CIRCUMFERENCE}-{sex}-lms.csv")
-
-    def _read_data(self, name: str) -> dict[str, list[int | float]]:
-        """
-        Reads LMS data from a CSV file and returns a dictionary with keys 'x', 'l', 'm', 's'.
-        Assumes the CSV has columns: x, l, m, s (with or without header).
-        """
-
-        data_path = os.path.join("data/tabular", name)
-        result: dict[str, list[float]] = {"x": [], "l": [], "m": [], "s": []}
-
-        with open(data_path, "r", newline="") as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                result["x"].append(float(row["x"]))
-                result["l"].append(float(row["L"]))
-                result["m"].append(float(row["M"]))
-                result["s"].append(float(row["S"]))
-
-        return result
-
-    def _calculate_z_score(self, y: float, lamb: float, mu: float, sigm: float) -> float:
-        def fix_extremes(z: float) -> float:
-            """
-            Fixes extreme z-scores by adjusting them based on the calculated values for z-scores of -3 and 3.
-            This is to ensure that extreme values do not skew the results.
-            # https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/computation.pdf
-            """
-
-            if lamb == 1:
-                return z
-
-            if z > 3:
-                sd3 = self._calculate_value_for_z_score(3, lamb, mu, sigm)
-                sd2 = self._calculate_value_for_z_score(2, lamb, mu, sigm)
-                return 3 + ((y - sd3) / (sd3 - sd2))
-            elif z < -3:
-                sd3neg = self._calculate_value_for_z_score(-3, lamb, mu, sigm)
-                sd2neg = self._calculate_value_for_z_score(-2, lamb, mu, sigm)
-                return -3 + ((y - sd3neg) / (sd2neg - sd3neg))
-
-            return z
-
-        z = calculate_z_score(y, lamb, mu, sigm)
-        if -3 <= z <= 3:
-            return z
-
-        return fix_extremes(z)
-
-    def _calculate_value_for_z_score(self, z: float, lamb: float, mu: float, sigm: float) -> float:
-        # TODO: read literature to adapt logic for extremes
-
-        if z > 3:
-            sd3 = self._calculate_value_for_z_score(3, lamb, mu, sigm)
-            sd2 = self._calculate_value_for_z_score(2, lamb, mu, sigm)
-            return sd3 + (sd3 - sd2) * (z - 3)
-        elif z < -3:
-            sd3neg = self._calculate_value_for_z_score(-3, lamb, mu, sigm)
-            sd2neg = self._calculate_value_for_z_score(-2, lamb, mu, sigm)
-            return sd3neg + (sd2neg - sd3neg) * (z + 3)
-
-        return calculate_value_for_z_score(z, lamb, mu, sigm)
-
-    def _calculate_values_for_z_score_array(self, name: str, z: float) -> np.ndarray:
-        data = self.get_table(name)
-
-        return np.array([self._calculate_value_for_z_score(z, _l, _m, _s) for _l, _m, _s in zip(data["l"], data["m"], data["s"])])
-
-    def _calculate_values_for_centile_array(self, name: str, centile: float) -> np.ndarray:
-        """
-        Calculate values for a given centile based on the LMS parameters of the specified table.
-
-        :param name: The name of the table (e.g., "growth_stature").
-        :param centile: The centile value to calculate (e.g., 0.5 for 50th centile).
-        :return: A NumPy array of calculated values.
-        """
-
-        data = self.get_table(name)
-
-        zscore = norm.ppf(centile).item()
-
-        return np.array([calculate_value_for_z_score(zscore, _l, _m, _s) for _l, _m, _s in zip(data["l"], data["m"], data["s"])])
-
-
-"""    
-    # OLD
-    def _get_table(self, measurement_type: str, newborn: bool = False, very_preterm: bool = False) -> str:
-        if measurement_type in ["stature", "lfa", "hfa", "lhfa", "length", "height", "length_height"]:
-            if newborn:
-                return Tables.BIRTH_LENGTH
-            elif very_preterm:
-                return Tables.VERY_PRETERM_LENGTH
-            return Tables.GROWTH_STATURE
-
-        if measurement_type in ["w", "wfa", "weight"]:
-            if newborn:
-                return Tables.BIRTH_WEIGHT
-            elif very_preterm:
-                return Tables.VERY_PRETERM_WEIGHT
-            return Tables.GROWTH_WEIGHT
-
-        if measurement_type in ["hc", "hcfa", "head_circumference"]:
-            if newborn:
-                return Tables.BIRTH_HEAD_CIRCUMFERENCE
-            elif very_preterm:
-                return Tables.VERY_PRETERM_HEAD_CIRCUMFERENCE
-            return Tables.GROWTH_HEAD_CIRCUMFERENCE
-
-        if measurement_type in ["bmi", "body_mass_index"]:
-            return Tables.GROWTH_BODY_MASS_INDEX
-
-        if measurement_type in ["wlr", "weight_length", "weight_length_ratio"]:
-            return Tables.GROWTH_WEIGHT_LENGTH
-
-        if measurement_type in ["whr", "weight_height", "weight_height_ratio"]:
-            return Tables.GROWTH_WEIGHT_HEIGHT
-
-        if measurement_type in ["weight_velocity"]:
-            return Tables.GROWTH_WEIGHT_VELOCITY
-
-        if measurement_type in ["length_velocity"]:
-            return Tables.GROWTH_LENGTH_VELOCITY
-
-        if measurement_type in ["head_circumference_velocity"]:
-            return Tables.GROWTH_CIRCUMFERENCE_VELOCITY
-
-        raise ValueError(f"Unknown measurement type: {measurement_type}")
-"""
+    def get_point(self, data: ArrayTable, x: int | float) -> tuple[float, float, float]:
+        return data.get_point(x)

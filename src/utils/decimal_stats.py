@@ -75,7 +75,7 @@ def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) ->
     return D(lamb), D(mu), D(sigm)
 
 
-def interpolate_array(x_values: np.ndarray, y_values: np.ndarray, x: int | Number, n_points: int = 4) -> D:
+def interpolate_array(x: int | Number, x_values: np.ndarray, y_values: np.ndarray, n_points: int = 4) -> D:
     """
     Interpolate LMS parameters for a given x using the closest points from provided data.
 
@@ -97,7 +97,7 @@ def interpolate_array(x_values: np.ndarray, y_values: np.ndarray, x: int | Numbe
 
 
 def interpolate_lms(
-    x_values: np.ndarray, l_values: np.ndarray, m_values: np.ndarray, s_values: np.ndarray, x: int | Number, n_points: int = 4
+    x: int | float, x_values: np.ndarray, l_values: np.ndarray, m_values: np.ndarray, s_values: np.ndarray, n_points: int = 4
 ) -> tuple[D, D, D]:
     """
     Interpolate LMS parameters for a given x using the closest points from provided data.
@@ -117,8 +117,8 @@ def interpolate_lms(
     idx_sorted = np.argsort(np.abs(x_values - float(x)))
     idxs = np.sort(idx_sorted[:n_points])
 
-    m_interp = interpolate_array(x_values[idxs], m_values[idxs], x, -1)
-    l_interp = interpolate_array(x_values[idxs], l_values[idxs], x, -1)
-    s_interp = interpolate_array(x_values[idxs], s_values[idxs], x, -1)
+    m_interp = interpolate_array(x, x_values[idxs], m_values[idxs], -1)
+    l_interp = interpolate_array(x, x_values[idxs], l_values[idxs], -1)
+    s_interp = interpolate_array(x, x_values[idxs], s_values[idxs], -1)
 
     return l_interp, m_interp, s_interp

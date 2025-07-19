@@ -2,6 +2,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 SD_STYLES = {
+    "user": {"color": "#9A0E9A", "marker": "o", "linestyle": "solid", "linewidth": 2},
     "sd5neg": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.5},
     "sd4neg": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.7},
     "sd3neg": {"color": "#e53935", "linestyle": "dashed", "linewidth": 1.5},
@@ -16,6 +17,7 @@ SD_STYLES = {
 }
 
 PERCENTILE_STYLES = {
+    "user": {"color": "#93078A", "linestyle": "solid", "linewidth": 2},
     "p01": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.5},
     "p1": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.7},
     "p3": {"color": "#e53935", "linestyle": "dashed", "linewidth": 1.5},
@@ -29,18 +31,6 @@ PERCENTILE_STYLES = {
     "p97": {"color": "#e53935", "linestyle": "dashed", "linewidth": 1.5},
     "p99": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.7},
     "p999": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.5},
-}
-
-FILL_BETWEEN_STYLES = {
-    "sd2neg_sd2": {"color": "#fb8c00", "alpha": 0.08},
-    "sd1neg_sd1": {"color": "#43a047", "alpha": 0.08},
-    "sd3neg_sd2neg": {"color": "#e53935", "alpha": 0.05},
-    "sd2_sd3": {"color": "#e53935", "alpha": 0.05},
-    "sd0_sd1": {"color": "#43a047", "alpha": 0.10},
-    "sd0_sd1neg": {"color": "#43a047", "alpha": 0.10},
-    "p3_p97": {"color": "#e53935", "alpha": 0.05},
-    "p10_p90": {"color": "#43a047", "alpha": 0.08},
-    "p25_p75": {"color": "#1e88e5", "alpha": 0.10},
 }
 
 FIG_AXES_STYLE = {

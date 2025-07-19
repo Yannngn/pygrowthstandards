@@ -1,59 +1,90 @@
 import os
 import sys
-from datetime import timedelta
-from typing import Collection
+from typing import Any, Collection
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.axes import Axes
 
-from src.utils.constants import YEAR
+from src.calculator.table_data import TableData
+from src.utils.choices import (
+    AGE_GROUP_CHOICES,
+    AGE_GROUP_TYPE,
+    MEASUREMENT_TYPE_CHOICES,
+    MEASUREMENT_TYPE_TYPE,
+)
+from src.utils.errors import InvalidKeyPairError
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-from src.calculator.child import Child
-from src.calculator.handler import Handler
-from src.calculator.measurement import Measurement
-from src.calculator.table_data import TableData, TableFiles
+from src.calculator.mixins import HandlerMixin
 from src.utils.plot import style
 from src.utils.plot.xticks import set_xticks_by_range
 
 
-class Plotter(Handler):
-    def __init__(self, child: Child):
-        self.child = child
-        self._data = TableData(child.sex)
+class Plotter(HandlerMixin):
+    """A plotter for growth standards data visualization.
 
-        self._measurements: list[Measurement] = []
+    This class provides functionality to plot growth standards data including
+    percentile lines and measurement data points for children.
+
+    Args:
+        child: The Child object containing birth date and sex information.
+    """
+
+    def get_plot_data(
+        self,
+        age_group: AGE_GROUP_TYPE,
+        measurement_type: str,
+        unit_type: str = "age",
+        user_data: bool = True,
+        percentiles_or_zscores: Collection[int | float] = [-3, -2, 0, 2, 3],
+    ) -> dict[Any, np.ndarray]:
+        raise NotImplementedError("This method should be implemented in subclasses.")
 
     def plot_table(
         self,
-        measurement_type: str,
-        age_group: str = "0-2",
-        lines: Collection[int | float] = [-3, -2, 0, 2, 3],
+        measurement_type: MEASUREMENT_TYPE_TYPE,
+        age_group: AGE_GROUP_TYPE = "0-2",
+        unit_type: str = "age",
         ax: Axes | None = None,
         show: bool = False,
         output_path: str = "",
         **kwargs,
-    ):
+    ) -> Axes:
+        """Plot growth standards table with percentile lines.
+
+        Creates a plot showing the growth standards table with percentile lines
+        for the specified measurement type and age group. The plot can be displayed
+        as an age-based plot or measurement-based plot depending on the measurement type.
+
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight', 'height').
+            age_group: The age group for the plot (e.g., '0-2', '2-5'). Defaults to '0-2'.
+            lines: Collection of z-score values to plot as percentile lines.
+                Defaults to [-3, -2, 0, 2, 3].
+            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
+            show: Whether to display the plot immediately. Defaults to False.
+            output_path: Path to save the plot. If empty, plot is not saved.
+            **kwargs: Additional keyword arguments passed to matplotlib plot functions.
+
+        Returns:
+            The matplotlib Axes object containing the plot.
+
+        Raises:
+            ValueError: If the measurement_type is not supported.
         """
-        Plots the given measurements on a graph.
+        values = self.get_plot_data(age_group, measurement_type, unit_type, user_data=False)
 
-        :param name: The name of the measurement to plot.
-        :param ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
-        :param show: Whether to call plt.show(). Set to False if you want to add more lines before showing.
-        :param kwargs: Additional keyword arguments for plt.plot.
-        :return: The matplotlib Axes object with the plot.
-        """
-
-        name = self._data.get_table_name(measurement_type, age_group)
-
-        if name in [TableFiles.GROWTH_WEIGHT_LENGTH, TableFiles.GROWTH_WEIGHT_HEIGHT]:
-            ax = self._measurement_plot(measurement_type, lines, ax, **kwargs)
+        if unit_type in ["stature"]:
+            ax = self._measurement_plot(values, measurement_type, unit_type, ax, **kwargs)
+        elif measurement_type.endswith("_velocity"):
+            raise NotImplementedError("Velocity plots are not implemented yet.")
         else:
-            ax = self._age_plot(measurement_type, age_group, lines, ax, **kwargs)
+            ax = self._age_plot(values, measurement_type, unit_type, ax, **kwargs)
 
         if output_path:
-            output_path = output_path if output_path.endswith(".png") else os.path.join(output_path, f"{name}_plot.png")
+            output_path = output_path if output_path.endswith(".png") else os.path.join(output_path, f"{measurement_type}_{age_group}_plot.png")
             ax.figure.savefig(output_path, dpi=300)  # type: ignore
 
         if show:
@@ -64,49 +95,46 @@ class Plotter(Handler):
     def plot_measurements(
         self,
         measurement_type: str,
-        age_group: str = "0-2",
-        lines: Collection[int | float] = [-3, -2, 0, 2, 3],
+        age_group: AGE_GROUP_TYPE = "0-2",
+        unit_type: str = "age",
         ax: Axes | None = None,
         show: bool = False,
         output_path: str = "",
         **kwargs,
-    ):
-        name = self._data.get_table_name(measurement_type, age_group)
+    ) -> Axes:
+        """Plot child measurements with growth standards table.
 
-        start_table, end_table = self._data.get_table_cutoffs(measurement_type, age_group)
+        Creates a plot showing the child's measurements plotted against the growth
+        standards table with percentile lines. The measurements are filtered to
+        the appropriate date range based on the age group.
 
-        age_limits = self._get_age_limits(age_group)
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight', 'height').
+            age_group: The age group for the plot (e.g., '0-2', '2-5'). Defaults to '0-2'.
+            lines: Collection of z-score values to plot as percentile lines.
+                Defaults to [-3, -2, 0, 2, 3].
+            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
+            show: Whether to display the plot immediately. Defaults to False.
+            output_path: Path to save the plot. If empty, plot is not saved.
+            **kwargs: Additional keyword arguments passed to matplotlib plot functions.
 
-        start_age = int(max(age_limits[0] if age_limits else -float("inf"), start_table))
-        end_age = int(min(age_limits[1] if age_limits else float("inf"), end_table))
+        Returns:
+            The matplotlib Axes object containing the plot.
 
-        bd = self.child.birthday_date
+        Raises:
+            ValueError: If the measurement_type is not supported.
+        """
+        values = self.get_plot_data(age_group, measurement_type, unit_type, True)
 
-        if name in [TableFiles.GROWTH_WEIGHT_LENGTH, TableFiles.GROWTH_WEIGHT_HEIGHT]:
-            ax = self._measurement_plot(measurement_type, lines, ax, **kwargs)
-
-            start_date = bd if name in [TableFiles.GROWTH_WEIGHT_LENGTH] else bd + timedelta(YEAR * 2)
-            end_date = bd + timedelta(YEAR * 2) if name in [TableFiles.GROWTH_WEIGHT_LENGTH] else bd + timedelta(YEAR * 5)
-
+        if unit_type in ["stature"]:
+            ax = self._measurement_plot(values, measurement_type, unit_type, ax, **kwargs)
+        elif measurement_type.endswith("_velocity"):
+            raise NotImplementedError("Velocity plots are not implemented yet.")
         else:
-            ax = self._age_plot(measurement_type, age_group, lines, ax, **kwargs)
-
-            start_date = bd + timedelta(start_age)
-            end_date = bd + timedelta(end_age)
-
-        measurements = self.get_measurements_by_date_range(start_date, end_date)
-
-        label = self._data.get_measurement_type(name)
-
-        ages = [self.child.age(m.date).days for m in measurements]
-        values = [getattr(m, label) for m in measurements]
-
-        label = label.replace("_", " ").title()
-
-        ax.plot(ages, values, marker="o", linestyle="-", label=label, color="#2c2c2c", **kwargs)
+            ax = self._age_plot(values, measurement_type, unit_type, ax, **kwargs)
 
         if output_path:
-            output_path = output_path if output_path.endswith(".png") else os.path.join(output_path, f"{measurement_type}_plot.png")
+            output_path = output_path if output_path.endswith(".png") else os.path.join(output_path, f"{measurement_type}_{age_group}_plot.png")
             ax.figure.savefig(output_path, dpi=300)  # type: ignore
 
         if show:
@@ -114,50 +142,112 @@ class Plotter(Handler):
 
         return ax
 
-    def _age_plot(
+    def plot(
         self,
         measurement_type: str,
-        age_group: str = "0-2",
-        lines: Collection[int | float] = [-3, -2, 0, 2, 3],
-        ax: Axes | None = None,
+        age_group: AGE_GROUP_TYPE = "0-2",
+        output_path: str = "",
+        show: bool = True,
         **kwargs,
-    ):
-        values = self._data.get_plot_data(measurement_type, age_group, values=lines)
+    ) -> Axes:
+        """Plots the child's measurements against growth standards.
 
-        start_age, end_age = self._get_age_limits(age_group)
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight', 'stature').
+            age_group: The age group for the plot (e.g., '0-2', '2-5'). Defaults to 'none'.
+            **kwargs: Additional keyword arguments passed to the plotting function.
+        """
 
-        filtered_indices = [idx for idx, age in enumerate(values["x"]) if start_age <= age <= end_age]
-        for k in list(values.keys()):
-            values[k] = [values[k][idx] for idx in filtered_indices]
+        return self.plot_measurements(measurement_type, age_group, output_path=output_path, show=show, **kwargs)
 
-        y_label = measurement_type.replace("_", " ").title()
+    def save_plot(self, measurement_type: str, age_group: AGE_GROUP_TYPE = "0-2", output_path: str = "results", **kwargs):
+        """Saves a plot of the child's measurements against growth standards.
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight', 'stature').
+            age_group: The age group for the plot (e.g., '0-2', '2-5'). Defaults to 'none'.
+            output_path: The file path where the plot will be saved. Defaults to None, which uses the current directory.
+            **kwargs: Additional keyword arguments passed to the plotting function.
+        """
+        _ = self.plot(measurement_type, age_group, output_path=output_path, show=False, **kwargs)
 
-        return self._plot(values, x_label="Age", y_label=y_label, ax=ax, **kwargs)
+    def plot_all_standards(self, output_path: str = "results", show: bool = False, **kwargs) -> None:
+        """Plot all growth standards.
 
-    def _measurement_plot(self, measurement_type: str, lines: Collection[int | float] = [-3, -2, 0, 2, 3], ax: Axes | None = None, **kwargs):
-        values = self._data.get_plot_data(measurement_type, values=lines)
+        This method iterates through all available measurement types and age groups,
+        plotting each one using the `plot_measurements` method. The plots are saved
+        to the specified output path.
 
-        y_label = measurement_type.split("_")[0].title()
-        x_label = measurement_type.split("_")[-1].title()
+        Args:
+            output_path: The directory where the plots will be saved. Defaults to 'results'.
+            show: Whether to display the plots immediately. Defaults to True.
+            **kwargs: Additional keyword arguments passed to the plotting function.
+        """
+        self._data = TableData(None, None, None)
+        for measurement_type in MEASUREMENT_TYPE_CHOICES:
+            for age_group in AGE_GROUP_CHOICES:
+                try:
+                    self.plot_table(measurement_type, age_group, output_path=output_path, show=show, **kwargs)  # type: ignore
+                except InvalidKeyPairError:
+                    continue
+                except NotImplementedError as e:
+                    print(e)
 
-        return self._plot(values, x_label=x_label, y_label=y_label, ax=ax, **kwargs)
+                plt.close()
+
+    def plot_all_measurements(self, output_path: str = "results", show: bool = False, **kwargs) -> None:
+        """Plot all measurements for the child.
+
+        This method iterates through all available measurement types and age groups,
+
+        """
+        for measurement_type in MEASUREMENT_TYPE_CHOICES:
+            for age_group in AGE_GROUP_CHOICES:
+                try:
+                    self.plot_table(measurement_type, age_group, output_path=output_path, show=show, **kwargs)  # type: ignore
+                except InvalidKeyPairError:
+                    continue
+                except NotImplementedError as e:
+                    print(e)
+
+                plt.close()
 
     def _plot(
         self,
-        values: dict[str, list[float]],
+        values: dict[str, np.ndarray],
         x_label: str = "x",
         y_label: str = "y",
         ax: Axes | None = None,
         **kwargs,
-    ):
+    ) -> Axes:
+        """Create a generic plot with the given values and labels.
+
+        This is a helper method that creates a matplotlib plot with the provided
+        data and styling. It handles the creation of the figure and axes if needed,
+        applies styling, and sets labels and titles.
+
+        Args:
+            values: Dictionary containing plot data where 'x' key contains x-axis values
+                and other keys contain y-axis values for different lines.
+            x_label: Label for the x-axis. Defaults to 'x'.
+            y_label: Label for the y-axis. Defaults to 'y'.
+            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
+            **kwargs: Additional keyword arguments passed to matplotlib plot functions.
+
+        Returns:
+            The matplotlib Axes object containing the plot.
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
         x = values.pop("x")
+        user = values.pop("user", None)
         for idx, y_points in values.items():
             label = style.get_label_name(int(idx))
             ax.plot(x, y_points, label=label, **style.get_label_style(label), **kwargs)
+
+        if user is not None:
+            ax.plot(x, user, label="User", **style.get_label_style("user"), **kwargs)
 
         set_xticks_by_range(ax, min(x), max(x))
 
@@ -169,106 +259,45 @@ class Plotter(Handler):
 
         return ax
 
-    '''
-    def _stats_plot(
-        self,
-        name: str,
-        age_limits: str = "0-2",
-        lines: Collection[int | float] = [-3, -2, 0, 2, 3],
-        ax: Axes | None = None,
-        show: bool = False,
-        output_path: str = "",
-        **kwargs,
-    ):
-        start_age = end_age = None
+    def _age_plot(self, values: dict[str, np.ndarray], measurement_type: str, unit_type: str = "age", ax: Axes | None = None, **kwargs) -> Axes:
+        """Create an age-based plot for the given measurement type.
 
-        values = self._data.get_plot_data(name, values=lines)
+        This method creates a plot where age is on the x-axis and the measurement
+        values are on the y-axis. The plot is filtered to the specified age group.
 
-        if age_limits is not None and name not in [Tables.GROWTH_WEIGHT_LENGTH, Tables.GROWTH_WEIGHT_HEIGHT]:
-            start_age, end_age = age_limits
-            values = {k: v for k, v in values.items() if start_age <= k <= end_age}
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight', 'height').
+            age_group: The age group for the plot (e.g., '0-2', '2-5'). Defaults to '0-2'.
+            lines: Collection of z-score values to plot as percentile lines.
+                Defaults to [-3, -2, 0, 2, 3].
+            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
+            **kwargs: Additional keyword arguments passed to matplotlib plot functions.
 
-        title = " ".join(name.split("_")).title()
-
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            set_style(fig, ax)
-
-        for line in lines:
-            label = get_label_name(line)
-            ax.axhline(y=line, label=label, **get_label_style(label), **kwargs)
-
-        x = values.pop("x")
-
-        if start_age is not None and end_age is not None:
-            x.extend([start_age, end_age])
-
-        set_xticks_by_range(ax, min(x), max(x))
-
-        title = name.split("-")[-1].title()
-        x_label = "Age"
-        if name in [Tables.GROWTH_WEIGHT_LENGTH, Tables.GROWTH_WEIGHT_HEIGHT]:
-            title = name.split("-")[-1].split("_")[0].title()
-            x_label = name.split("-")[-1].split("_")[-1].title()
-
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(title)
-        ax.set_title(f"{title} for {x_label}")
-        ax.legend()
-        ax.figure.tight_layout()  # type: ignore
-
-        if output_path:
-            output_path = output_path if output_path.endswith(".png") else os.path.join(output_path, f"{name}_plot.png")
-            ax.figure.savefig(output_path, dpi=300)  # type: ignore
-
-        if show:
-            plt.show()
-
-        return ax
-
-    # TODO: Add shadow plot functionality
-    def _shadow_table_plot(self, name: str, ax: Axes | None = None, show: bool = True, **kwargs):
+        Returns:
+            The matplotlib Axes object containing the plot.
         """
-        Plots the given measurements on a graph with filled area between min and max percentiles.
+        x_label = unit_type.replace("_", " ").title()
+        y_label = measurement_type.replace("_", " ").title()
 
-        :param name: The name of the measurement to plot.
-        :param ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
-        :param show: Whether to call plt.show(). Set to False if you want to add more lines before showing.
-        :param kwargs: Additional keyword arguments for plt.plot.
-        :return: The matplotlib Axes object with the plot.
+        return self._plot(values, x_label=x_label, y_label=y_label, ax=ax, **kwargs)
+
+    def _measurement_plot(self, values: dict[str, np.ndarray], measurement_type: str, unit_type: str, ax: Axes | None = None, **kwargs) -> Axes:
+        """Create a measurement-based plot for weight-for-length/height type measurements.
+
+        This method creates a plot where another measurement (length/height) is on the
+        x-axis and the primary measurement (weight) is on the y-axis.
+
+        Args:
+            measurement_type: The type of measurement to plot (e.g., 'weight_length').
+            lines: Collection of z-score values to plot as percentile lines.
+                Defaults to [-3, -2, 0, 2, 3].
+            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes.
+            **kwargs: Additional keyword arguments passed to matplotlib plot functions.
+
+        Returns:
+            The matplotlib Axes object containing the plot.
         """
+        x_label = unit_type.replace("_", " ").title()
+        y_label = measurement_type.replace("_", " ").title()
 
-        x, y = self._data.get_plot_data(name)
-
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            set_style(fig, ax)
-
-        # Plot all lines
-        for label, y_points in y.items():
-            ax.plot(x, y_points, label=label, **get_label_style(label), **kwargs)
-
-        # Fill between min and max percentiles if possible
-        y_values = list(y.values())
-        if len(y_values) >= 2:
-            y_min = y_values[0]
-            y_max = y_values[-1]
-            ax.fill_between(x, y_min, y_max, color="gray", alpha=0.2, label="Range")
-
-        set_xticks_by_range(ax, min(x), max(x))
-
-        ax.set_xlabel("Age")
-        ax.set_ylabel(name)
-        ax.set_title(f"{name} for age (with range fill)")
-        ax.legend()
-        ax.figure.tight_layout()  # type: ignore
-
-        if show:
-            plt.show()
-
-        return ax
-'''
-
-    def save_plot(self, filename):
-        raise NotImplementedError("Subclasses should implement this method")
-        raise NotImplementedError("Subclasses should implement this method")
+        return self._plot(values, x_label=x_label, y_label=y_label, ax=ax, **kwargs)
