@@ -1,3 +1,3 @@
-from .calculator import percentile, zscore
+from calculator import percentile, zscore
 
-__all__ = ["zscore", "percentile"]
+__all__ = ["percentile", "zscore"]

@@ -1,55 +1,15 @@
-from src.utils.choices import (
-    AGE_GROUP_CHOICES,
-    MEASUREMENT_TYPE_CHOICES,
-    TABLE_NAME_CHOICES,
-)
+class NoReferenceDataException(Exception):
+    """Raised when no reference data is found for the specified parameters."""
 
+    def __init__(self, measurement_type: str, age_type: str, age_value: int, sex: str | None = None):
+        self.measurement_type = measurement_type
+        self.age_type = age_type
+        self.age_value = age_value
+        self.sex = sex
 
-class InvalidChoiceError(ValueError):
-    """
-    Exception raised when an invalid choice is provided.
-    """
+        if sex:
+            message = f"No reference data found for measurement type '{measurement_type}', age {age_value} {age_type}, sex '{sex}'"
+        else:
+            message = f"No reference data found for measurement type '{measurement_type}', age {age_value} {age_type}"
 
-    def __init__(self, choice, valid_choices):
-        message = f"Invalid choice: {choice}. Valid choices are: {', '.join(map(str, valid_choices))}"
-        super().__init__(message)
-
-
-class InvalidTableNameError(ValueError):
-    """
-    Exception raised when an invalid Table Name choice is provided.
-    """
-
-    def __init__(self, choice):
-        message = f"Invalid Table Name: {choice}. Valid choices are: {', '.join(map(str, TABLE_NAME_CHOICES))}"
-        super().__init__(message)
-
-
-class InvalidAgeGroupError(ValueError):
-    """
-    Exception raised when an invalid Age Group choice is provided.
-    """
-
-    def __init__(self, choice):
-        message = f"Invalid Age Group: {choice}. Valid choices are: {', '.join(map(str, AGE_GROUP_CHOICES))}"
-        super().__init__(message)
-
-
-class InvalidMeasurementTypeError(ValueError):
-    """
-    Exception raised when an invalid Measurement Type choice is provided.
-    """
-
-    def __init__(self, choice):
-        message = f"Invalid Measurement Type: {choice}. Valid choices are: {', '.join(map(str, MEASUREMENT_TYPE_CHOICES))}"
-        super().__init__(message)
-
-
-class InvalidKeyPairError(KeyError):
-    """
-    Exception raised when an invalid Age Group and Measurement Type pair is provided.
-    """
-
-    def __init__(self, age_group, measurement_type):
-        message = f"Invalid Age Group and Measurement Type pair: ({age_group}, {measurement_type})."
         super().__init__(message)

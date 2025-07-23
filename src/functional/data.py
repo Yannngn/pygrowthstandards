@@ -1,104 +1,107 @@
-import json
 import os
 import sys
-from typing import Any, Literal
+from typing import Literal
 
-import numpy as np
+import pandas as pd
+
+from src.utils import stats
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-from src.utils.constants import YEAR
-from src.utils.stats import interpolate_lms
+from src.data.load import GrowthTable
+from src.utils.constants import WEEK, YEAR
 
-MEASUREMENTS = Literal[
-    "head_circumference",
-    "height",
-    "length",
-    "height_length",
-    "stature",
-    "weight",
-    "body_mass_index",
-]
+MEASUREMENTS = Literal["head_circumference", "stature", "weight", "body_mass_index", "weight_stature"]
+
 
 MEASUREMENT_ALIASES = {
-    "stature": {"height", "length", "height_length", "stature", "lfa", "hfa", "lhfa"},
-    "weight": {"weight", "wfa"},
-    "head_circumference": {"head_circumference", "hcfa"},
-    "body_mass_index": {"bmi", "body_mass_index", "bfa"},
+    "head_circumference": {"hcfa", "hc"},
+    "stature": {"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"},
+    "weight": {"wfa", "w"},
+    "body_mass_index": {"bmi", "bfa"},
+    "weight_stature": {
+        "wfs",
+        "wfl",
+        "wfh",
+        "weight_length",
+        "weight_height",
+        "weight_for_stature",
+        "weight_for_length",
+        "weight_for_height",
+    },
 }
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data", "functional")
+DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
 
 
-def get_filename(
+def get_keys(
     measurement: MEASUREMENTS,
-    age_days: int,
     sex: Literal["M", "F", "U"] = "U",
-    birth: bool = False,
-    very_preterm: bool = False,
-    fetal: bool = False,
-) -> str:
+    age_days: int | None = None,
+    gestational_age: int | None = None,
+) -> tuple[str, str, str, str]:
+    if age_days is None and gestational_age is None:
+        raise ValueError("Either age_days or gestational_age must be provided.")
+
     def normalized_measurement() -> str:
         for key, aliases in MEASUREMENT_ALIASES.items():
-            if measurement in aliases:
+            normalized = measurement.lower().replace("-", "_")
+            if normalized in aliases | {key}:
                 return key
         raise ValueError(f"Unknown measurement: {measurement}")
 
-    def get_source() -> str:
-        if fetal:
-            raise NotImplementedError("Fetal references are not implemented yet.")
-        if birth:
-            return "intergrowth-newborn_size"
-        if very_preterm:
-            return "intergrowth-very_preterm-growth"
+    measurement_type = normalized_measurement()
+    sex = sex.lower() if sex in ["M", "F"] else "f"  # type: ignore
 
-        return "who-growth"
+    name = ""
+    x_var_type = ""
 
-    key = normalized_measurement()
-    source = get_source()
-    sex = sex.lower()  # type: ignore
+    if age_days is not None:
+        x_var_type = "age"
+        if measurement_type in ["head_circumference", "weight_stature"] and age_days > 5 * YEAR:
+            raise ValueError(f"No reference for {measurement_type} after 5 years.")
 
-    if key in ["body_mass_index"] and any((birth, fetal, very_preterm)):
-        raise ValueError("No reference for BMI at birth or fetal age.")
+        if measurement_type in ["weight"] and age_days > 10 * YEAR:
+            raise ValueError(f"No reference for {measurement_type} after 10 years.")
 
-    if key in ["head_circumference"] and age_days > 5 * YEAR:
-        raise ValueError("No reference for head circumference after 5 years.")
+        name = "growth" if age_days > 5 * YEAR else "child_growth"
 
-    if key in ["weight"] and age_days > 10 * YEAR:
-        raise ValueError("No reference for weight after 10 years.")
+        if gestational_age is not None and age_days < 64 * WEEK:
+            if gestational_age < 28:
+                name = "very_preterm_growth"
 
-    if key in ["stature"] and any((birth, fetal, very_preterm)):
-        key = "length"
+    if gestational_age is not None and (age_days == 0 or age_days is None):
+        x_var_type = "gestational_age"
+        if measurement_type in ["body_mass_index"]:
+            raise ValueError(f"No reference for {measurement_type} at birth or fetal age.")
 
-    return f"{source}-{key}-{sex}-lms.json"
+        if gestational_age > 28:
+            if measurement_type in ["weight_stature"]:
+                raise ValueError(f"No reference for {measurement_type} at birth or fetal age.")
+            name = "newborn"
+        else:
+            name = "very_preterm_newborn"
+
+    return name, measurement_type, sex, x_var_type
 
 
-def get_data(filename: str) -> dict[str, float]:
-    with open(os.path.join(DATA_DIR, filename), "r") as f:
-        data: dict = json.load(f)
+def get_table(data: pd.DataFrame, keys: tuple) -> GrowthTable:
+    # data = load_reference()
+    name, measurement, sex, x_var_type = keys
+    return GrowthTable.from_data(data, name, measurement, sex, x_var_type)
 
-    return data
 
+def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
+    """
+    Get the L, M, S values for a given x from the GrowthTable.
 
-def get_lms(data: dict[str, Any], x: int | float) -> tuple[float, float, float]:
-    points = data.get("points", [])
+    :param table: The GrowthTable instance.
+    :param x: The x value (e.g., age in days).
+    :return: A tuple of (L, M, S).
+    """
+    if x not in table.x:
+        return stats.interpolate_lms(x, table.x, table.L, table.M, table.S)
 
-    if not points:
-        raise ValueError("No data points available for the given measurement.")
+    index = list(table.x).index(x)
 
-    point = next((p for p in points if float(p["x"]) == float(x)), None)
-
-    if point:
-        return float(point["L"]), float(point["M"]), float(point["S"])
-
-    x_values = np.array([float(p["x"]) for p in points])
-    l_values = np.array([float(p["L"]) for p in points])
-    m_values = np.array([float(p["M"]) for p in points])
-    s_values = np.array([float(p["S"]) for p in points])
-
-    entry = interpolate_lms(x_values, l_values, m_values, s_values, x)
-
-    if entry is None:
-        raise ValueError(f"No data available for age {x} days")
-
-    return entry
+    return table.L[index], table.M[index], table.S[index]
