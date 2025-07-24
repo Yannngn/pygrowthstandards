@@ -110,6 +110,8 @@ def main():
     plotter.plot(age_group="5-10", measurement_type="stature", show=False, output_path="results/user_table_5_10_stature.png")
     plotter.plot(age_group="10-19", measurement_type="stature", show=False, output_path="results/user_table_10_19_stature.png")
 
+    print(patient.display_measurements())
+
 
 if __name__ == "__main__":
     main()
