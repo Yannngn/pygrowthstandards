@@ -1,12 +1,11 @@
 import datetime
 
-from src import Calculator, MeasurementGroup, Patient, Plotter
+from src import MeasurementGroup, Patient, Plotter
 
 
 def main():
     patient = Patient(birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=38)
     # calculator.plot_all_standards()
-    calculator = Calculator(patient)
 
     patient.add_measurements(
         MeasurementGroup(
@@ -121,7 +120,7 @@ def main():
             date=datetime.date(2024, 7, 1),
         )
     )
-    calculator.calculate_all()
+    patient.calculate_all()
 
     plotter = Plotter(patient)
     for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:

@@ -3,7 +3,7 @@ import datetime
 import pytest
 
 from src.functional.calculator import percentile, zscore
-from src.patient.patient import Patient
+from src.oop.patient import Patient
 
 
 @pytest.mark.parametrize(
