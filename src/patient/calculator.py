@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import sys
 
@@ -7,7 +8,6 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 
-from src.data.load import GrowthTable
 from src.patient.measurement import MeasurementGroup, TableNames
 from src.patient.patient import Patient
 from src.utils import stats
@@ -19,7 +19,6 @@ class Calculator:
     A class to perform calculations based on growth standards.
     """
 
-    a = GrowthTable
     path = "data"
     version = "0.1.0"
 
@@ -39,6 +38,12 @@ class Calculator:
         """
         self.patient = patient
         self.data = pd.read_parquet(os.path.join(self.path, f"pygrowthstandards_{self.version}.parquet"))
+
+    def calculate_all(self):
+        """
+        Calculates all measurements for the patient and updates the patient's z_scores.
+        """
+        self.patient.z_scores = self.calculate_measurements()
 
     def calculate_z_score(self, table_name: TableNames, measurement_type: str, date: datetime.date | None = None):
         """
@@ -86,11 +91,11 @@ class Calculator:
                 continue
 
             try:
-                print(key)
                 z_score = self.calculate_z_score(table_name, key, date)
                 setattr(z_score_group, key, z_score)
             except NoReferenceDataException as e:
-                print(f"Skipping {key} for date {date}: {e}")
+                logging.debug(f"Skipping {key} for date {date}: {e}")
+
         return z_score_group
 
     def calculate_measurements(self) -> list[MeasurementGroup]:

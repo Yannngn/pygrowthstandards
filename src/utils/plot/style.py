@@ -2,7 +2,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 SD_STYLES = {
-    "user": {"color": "#9A0E9A", "marker": "o", "linestyle": "solid", "linewidth": 2},
+    "user": {"color": "#43a047", "marker": "o", "linestyle": "solid", "linewidth": 2},
     "sd5neg": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.5},
     "sd4neg": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.7},
     "sd3neg": {"color": "#e53935", "linestyle": "dashed", "linewidth": 1.5},
@@ -17,7 +17,7 @@ SD_STYLES = {
 }
 
 PERCENTILE_STYLES = {
-    "user": {"color": "#93078A", "linestyle": "solid", "linewidth": 2},
+    "user": {"color": "#43a047", "linestyle": "solid", "linewidth": 2},
     "p01": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.5},
     "p1": {"color": "#424242", "linestyle": "dotted", "linewidth": 1, "alpha": 0.7},
     "p3": {"color": "#e53935", "linestyle": "dashed", "linewidth": 1.5},

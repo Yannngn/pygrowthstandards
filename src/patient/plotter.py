@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 
@@ -61,18 +60,29 @@ class Plotter:
         """
         self.patient = patient
         self.calculator = Calculator(self.patient)
+        self.setup()
+
+    def setup(self):
+        """
+        Sets up the Plotter by calculating all measurements for the patient.
+        """
+        self.calculator.calculate_all()
 
     def get_user_data(self, age_group: str, measurement_type: str) -> pd.DataFrame:
         lower_limit, upper_limit = self.limits[age_group]
-        logging.warning(f"{lower_limit}, {upper_limit}")
         x_var_type = self.x_var_types[age_group]
 
         filtered_measurements = []
         for entry in self.patient.measurements:
+            if age_group in ["newborn", "very_preterm_newborn"]:
+                if self.patient.get_age("age", entry.date) != 0:
+                    continue
+
             if x_var_type in ["gestational_age", "age"]:
-                x_value = self.patient.get_age(x_var_type, entry.date)  # type: ignore
+                x_value = self.patient.get_age(x_var_type, entry.date)
             else:
                 x_value: float = getattr(entry, x_var_type)
+
             if lower_limit <= x_value <= upper_limit and hasattr(entry, measurement_type) and getattr(entry, measurement_type) is not None:
                 filtered_measurements.append((x_value, getattr(entry, measurement_type)))
 

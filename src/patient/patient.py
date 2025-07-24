@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from src.patient.measurement import Measurement, MeasurementGroup
-from src.utils.constants import WEEK
 
 
 @dataclass
@@ -19,6 +18,7 @@ class Patient:
     gestational_age_days: int = 0
 
     measurements: list[MeasurementGroup] = field(default_factory=list)
+    z_scores: list[MeasurementGroup] = field(default_factory=list, init=False)
 
     gestational_age: datetime.timedelta = field(init=False)
     is_born: bool = field(init=False)
@@ -46,24 +46,6 @@ class Patient:
             return date - (self.birthday_date - self.gestational_age)
 
         return date - self.gestational_age  # type: ignore
-
-    def robust_age(self, date: datetime.date | None = None) -> tuple[str, int]:
-        date = date or datetime.date.today()
-        chronological_days = self.chronological_age(date).days
-
-        if self.birthday_date is not None:  # if is born
-            age_days = self.age(date).days
-
-            if age_days == 0:
-                chronological_days = self.chronological_age(date).days
-                return ("gestational_age", chronological_days)
-
-            if self.is_very_preterm and chronological_days <= 64 * WEEK:
-                return ("gestational_age", chronological_days)
-
-            return ("age", age_days)
-
-        return ("gestational_age", chronological_days)
 
     def get_age(self, age_type: str = "age", date: datetime.date | None = None) -> int:
         """Returns the age in days or gestational age in weeks."""

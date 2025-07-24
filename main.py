@@ -19,9 +19,9 @@ def main():
             date=datetime.date(2025, 6, 1),
         )
     )
-
     patient.add_measurements(
         MeasurementGroup(
+            table_name="newborn",
             stature=50.0,
             weight=3.5,
             head_circumference=37.0,
@@ -124,7 +124,7 @@ def main():
             date=datetime.date(2024, 7, 1),
         )
     )
-    print(calculator.calculate_measurements())
+    calculator.calculate_all()
 
     plotter = Plotter(patient)
     for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
