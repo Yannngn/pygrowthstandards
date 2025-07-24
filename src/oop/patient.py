@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Literal
 
-from src.patient.measurement import Measurement, MeasurementGroup
+from src.oop.measurement import Measurement, MeasurementGroup
 
 
 @dataclass

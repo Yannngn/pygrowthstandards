@@ -1,9 +1,6 @@
 import datetime
 
-from src.patient.calculator import Calculator
-from src.patient.measurement import MeasurementGroup
-from src.patient.patient import Patient
-from src.patient.plotter import Plotter
+from src import Calculator, MeasurementGroup, Patient, Plotter
 
 
 def main():

@@ -43,8 +43,12 @@ class GrowthTable:
         :return: An instance of GrowthTable.
         """
         filtered = data[
-            (data["measurement_type"] == measurement_type) & (data["sex"] == sex) & (data["x_var_type"] == x_var_type) & (data["name"] == name)
+            (data["name"] == name)
+            & (data["measurement_type"] == measurement_type)
+            & (data["sex"] == sex.upper())
+            & (data["x_var_type"] == x_var_type)
         ]
+
         return cls(
             source=filtered["source"].iat[0],
             name=name,

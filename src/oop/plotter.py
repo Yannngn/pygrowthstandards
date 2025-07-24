@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 from matplotlib.axes import Axes
 
-from src.patient.calculator import Calculator
+from src.oop.calculator import Calculator
 from src.utils.constants import WEEK, YEAR
 from src.utils.plot.xticks import set_xticks_by_range
 
@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 
 
 from src.data.load import GrowthTable
-from src.patient.patient import Patient
+from src.oop.patient import Patient
 from src.utils.plot import style
 
 

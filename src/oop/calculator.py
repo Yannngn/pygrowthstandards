@@ -8,8 +8,8 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 
-from src.patient.measurement import MeasurementGroup, TableNames
-from src.patient.patient import Patient
+from src.oop.measurement import MeasurementGroup, TableNames
+from src.oop.patient import Patient
 from src.utils import stats
 from src.utils.errors import NoReferenceDataException
 
