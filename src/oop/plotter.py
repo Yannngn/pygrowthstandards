@@ -1,26 +1,21 @@
 import os
 import sys
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
-
-from src.oop.calculator import Calculator
-from src.utils.constants import WEEK, YEAR
-from src.utils.plot.xticks import set_xticks_by_range
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 
 from src.data.load import GrowthTable
 from src.oop.patient import Patient
+from src.utils.constants import WEEK, YEAR
 from src.utils.plot import style
+from src.utils.plot.xticks import set_xticks_by_range
 
 
 class Plotter:
-    """
-    A class to perform calculations based on growth standards.
-    """
-
     limits = {
         "very_preterm_newborn": (168, 230),
         "newborn": (230, 300),
@@ -53,20 +48,12 @@ class Plotter:
     }
 
     def __init__(self, patient: Patient):
-        """
-        Initializes the Plotter with a Patient object.
-
-        :param patient: An instance of the Patient class.
-        """
         self.patient = patient
-        self.calculator = Calculator(self.patient)
+
         self.setup()
 
     def setup(self):
-        """
-        Sets up the Plotter by calculating all measurements for the patient.
-        """
-        self.calculator.calculate_all()
+        self.patient.calculate_all()
 
     def get_user_data(self, age_group: str, measurement_type: str) -> pd.DataFrame:
         lower_limit, upper_limit = self.limits[age_group]
@@ -92,33 +79,19 @@ class Plotter:
         return pd.DataFrame({"x": x, "child": y})
 
     def get_reference_data(self, age_group: str, measurement_type: str) -> GrowthTable:
-        """
-        Retrieves the plot data for a specific age group and measurement type.
-
-        :param age_group: The age group to filter the data.
-        :param measurement_type: The type of measurement (e.g., stature, weight
-        """
-
         if age_group not in self.limits:
             raise ValueError(f"Invalid age group: {age_group}")
 
         name = self.names[age_group]
         x_var_type = self.x_var_types[age_group]
 
-        data = GrowthTable.from_data(self.calculator.data, name, measurement_type, self.patient.sex, x_var_type)
+        data = GrowthTable.from_data(self.patient.calculator.data, name, measurement_type, self.patient.sex, x_var_type)
 
         data.cut_data(*self.limits[age_group])
 
         return data
 
     def get_plot_data(self, age_group: str, measurement_type: str) -> pd.DataFrame:
-        """
-        Retrieves the plot data for a specific age group and measurement type.
-
-        :param age_group: The age group to filter the data.
-        :param measurement_type: The type of measurement (e.g., stature, weight).
-        :return: A DataFrame containing the plot data.
-        """
         user_data = self.get_user_data(age_group, measurement_type)
         reference_data = self.get_reference_data(age_group, measurement_type)
 
@@ -127,14 +100,6 @@ class Plotter:
         return reference_data.to_plot_data()
 
     def plot(self, age_group: str, measurement_type: str, ax: Axes | None = None, show: bool = False, output_path: str = "") -> Axes:
-        """
-        Plots the growth data for a specific age group and measurement type.
-
-        :param age_group: The age group to filter the data.
-        :param measurement_type: The type of measurement (e.g., stature, weight).
-        """
-        import matplotlib.pyplot as plt
-
         user_data = self.get_user_data(age_group, measurement_type)
         ax = self.reference_plot(age_group, measurement_type, ax, False, "")
 
@@ -151,14 +116,6 @@ class Plotter:
         return ax
 
     def reference_plot(self, age_group: str, measurement_type: str, ax: Axes | None = None, show: bool = False, output_path: str = "") -> Axes:
-        """
-        Plots the reference data for a specific age group and measurement type.
-
-        :param age_group: The age group to filter the data.
-        :param measurement_type: The type of measurement (e.g., stature, weight).
-        """
-        import matplotlib.pyplot as plt
-
         plot_data = self.get_reference_data(age_group, measurement_type).to_plot_data()
 
         if ax is None:

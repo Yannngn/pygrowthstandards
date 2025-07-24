@@ -4,15 +4,8 @@ import pandas as pd
 
 
 def str_dataframe(results: list[dict], date_list: list[datetime.date], age_list: list[int]) -> str:
-    """Converts a DataFrame to a string representation with specific formatting.
+    # This helper function is added to format the output
 
-    Args:
-        df (pd.DataFrame): The DataFrame to convert.
-        date_list (list[str]): A list of dates corresponding to the DataFrame's index.
-
-    Returns:
-        str: A string representation of the DataFrame with formatted dates.
-    """
     # Flatten results for DataFrame with MultiIndex columns
     rows = []
     columns = set()
@@ -31,6 +24,9 @@ def str_dataframe(results: list[dict], date_list: list[datetime.date], age_list:
                 row[(mtype, subkey)] = mvals[subkey]
                 columns.add((mtype, subkey))
         rows.append(row)
+
+    if not rows:
+        return "No data to display."
 
     # Ensure consistent column order: Idx, Date, Age (days), then each measurement type with subkeys in order
     measurement_types = sorted({mtype for mtype, _ in columns if mtype not in ["Idx", "Date", "Age (days)"]})

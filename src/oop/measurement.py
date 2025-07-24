@@ -33,9 +33,6 @@ class MeasurementGroup:
         self._setup()
 
     def to_dict(self) -> dict:
-        """
-        Converts the MeasurementGroup to a dictionary representation.
-        """
         data = {
             "date": self.date,
             "stature": self.stature,
@@ -51,9 +48,6 @@ class MeasurementGroup:
         return data
 
     def to_measurements(self) -> list[Measurement]:
-        """
-        Converts the section data to a list of Measurement objects using to_dict.
-        """
         measurements = []
         data = self.to_dict()
 
@@ -66,9 +60,6 @@ class MeasurementGroup:
 
     @classmethod
     def from_measurements(cls, measurements: list[Measurement]) -> "MeasurementGroup":
-        """
-        Creates a MeasurementSection from a list of Measurement objects.
-        """
         section = cls()
         for measurement in measurements:
             if measurement.measurement_type == "stature":

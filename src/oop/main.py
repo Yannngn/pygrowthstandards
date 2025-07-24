@@ -3,7 +3,6 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-from src.oop.calculator import Calculator
 from src.oop.measurement import MeasurementGroup
 from src.oop.patient import Patient
 from src.oop.plotter import Plotter
@@ -98,8 +97,9 @@ def main():
         print(group.to_dict())
 
     # Calculate z-scores for all measurements
-    calculator = Calculator(patient)
-    z_scores = calculator.calculate_measurements()
+    patient.calculate_all()
+    z_scores = patient.z_scores
+
     print("Z-scores for all measurement groups:")
     for group in z_scores:
         print(group.to_dict())
