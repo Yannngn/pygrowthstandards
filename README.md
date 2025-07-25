@@ -1,59 +1,147 @@
 # pygrowthstandards
 
-A Python library for calculating and visualizing child growth standards using WHO and Intergrowth 21st reference data.
+<!-- [![PyPI version](https://badge.fury.io/py/pygrowthstandards.svg)](https://badge.fury.io/py/pygrowthstandards)
+[![Python Version](https://img.shields.io/pypi/pyversions/pygrowthstandards.svg)](https://pypi.org/project/pygrowthstandards) -->
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/pygrowthstandards)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/Yannngn/pygrowthstandards/actions/workflows/main.yml/badge.svg)](https://github.com/Yannngn/pygrowthstandards/actions)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
+A Python library for calculating and visualizing child growth standards using data from the World Health Organization (WHO) and the INTERGROWTH-21st Project.
+
+This toolkit provides a simple and flexible API to assess child growth by calculating z-scores and percentiles for common anthropometric measurements, including height, weight, BMI, and head circumference.
+
+## Data Sources
+
+This library implements standards from internationally recognized sources:
+
+- **[WHO Child Growth Standards](https://www.who.int/tools/child-growth-standards):** For infants and children from birth to 5 years.
+- **[WHO Growth Reference Data for 5-19 years](https://www.who.int/tools/growth-reference-data-for-5to19-years):** For school-aged children and adolescents.
+- **[The INTERGROWTH-21st Project](https://intergrowth21.tghn.org/):** For newborn, preterm, and postnatal growth.
 
 ## Features
 
-- Calculate z-scores and percentiles for height, weight, and BMI
-- Support for WHO and Intergrowth 21st growth and birth standards
-- Plot customizable growth charts for individual children
+- Calculate z-scores and percentiles for stature (length/height), weight, BMI, and head circumference.
+- Support for both WHO and INTERGROWTH-21st growth standards.
+- A simple object-oriented `Calculator` for tracking a `Patient`'s measurements over time.
+- A straightforward functional API for one-off calculations.
+- Generate and save customizable growth charts.
 
 ## Installation
 
+To install for development, clone the repository and install in editable mode:
+
 ```bash
-git clone https://www.github.com/Yannngn/pygrowthstandards.git
+git clone https://github.com/Yannngn/pygrowthstandards.git
+cd pygrowthstandards
+pip install -e .[dev,tests]
+```
+
+To install the latest stable release from PyPI [In Progress]:
+
+```bash
+pip install pygrowthstandards
 ```
 
 ## Quick Start
 
+### Object-Oriented Approach
+
+The object-oriented API is ideal for tracking a patient's growth over time. It uses a `Patient` object to store measurements and a `Plotter` to visualize them.
+
 ```python
+# filepath: main.py
 import datetime
+from src.oop.patient import Patient
+from src.oop.measurement import MeasurementGroup
+from src.oop.plotter import Plotter
 
-from pygrowthstandards import Calculator
-
-calculator = Calculator.from_kid(birthday_date=datetime.date(2020, 1, 1), sex="M")
-calculator.add_measurement(
-    length_height=115.0,
-    weight=21.0,
-    head_circumference=52.0,
-    date=datetime.date(2025, 6, 1),
+# 1. Create a Patient
+patient = Patient(
+    sex="M",
+    birthday_date=datetime.date(2022, 1, 1),
 )
 
-calculator.add_measurements([[...], ...]) # list of measurements, follow the args order, use None if no data
+# 2. Add measurements over time
+measurements = [
+    MeasurementGroup(date=datetime.date(2022, 7, 1), weight=8.6, stature=68.4, head_circumference=44.5),
+    MeasurementGroup(date=datetime.date(2023, 1, 1), weight=10.2, stature=75.7, head_circumference=46.5),
+    MeasurementGroup(date=datetime.date(2024, 1, 1), weight=12.6, stature=87.8, head_circumference=48.5),
+]
+for mg in measurements:
+    patient.add_measurements(mg)
 
-print(calculator.display_results())
+# 3. Calculate z-scores for all measurements
+patient.calculate_all()
 
-calculator.plot_measurements(m, output_path=f"weight_measurements_plot.png")
+# 4. Display a summary table
+print(patient.display_measurements())
+
+# 5. Plot the growth charts
+plotter = Plotter(patient)
+plotter.plot(
+    age_group="0-2",
+    measurement_type="stature",
+    show=False,
+    output_path="stature_growth_chart.png"
+)
 ```
 
-For functional
+#### Example Output
+
+After running the above code, you can view the generated growth chart:
+
+![Stature Growth Chart](results/user_table_0_2_stature.png)
+
+### Functional Approach
+
+For quick, single, stateless calculations, the functional API provides direct access to the z-score calculation engine. This is useful when you don't need to track a patient's history.
 
 ```python
-import datetime
+# filepath: main.py
+from src import functional as F
 
-from pygrowthstandards import functional as F
+# Calculate z-scores for various measurements and ages
+z1 = F.zscore("stature", 50, "F", age_days=0, gestational_age=280)
+z2 = F.zscore("weight", 5, "F", age_days=30)
+z3 = F.zscore("head_circumference", 40, "F", age_days=180)
+z4 = F.zscore("stature", 80, "F", age_days=365)
+z5 = F.zscore("weight", 12, "F", age_days=730)
+z6 = F.zscore("head_circumference", 48, "F", age_days=1460)
 
-print(F.zscore('height', 115, "M", birthday_date=datetime.date(2020, 1, 1), measurement_date=datetime.date(2025, 6, 1)))
+print(f"{z1:.2f}\n{z2:.2f}\n{z3:.2f}\n{z4:.2f}\n{z5:.2f}\n{z6:.2f}")
 ```
 
-## Documentation
+The output of this script is:
 
-[TODO]
+```
+0.45
+1.34
+-1.64
+2.33
+0.36
+-0.94
+```
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Contributions are welcome! Please feel free to open an issue to report a bug or suggest a feature, or submit a pull request with your improvements.
+
+Before contributing, please set up the development environment and run the pre-commit hooks and tests.
+
+```bash
+# Install hooks
+pre-commit install
+
+# Run tests
+pytest
+```
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+This package is built upon the publicly available data provided by the **World Health Organization (WHO)** and **The INTERGROWTH-21st Project**. We are grateful for their commitment to open data and global health.

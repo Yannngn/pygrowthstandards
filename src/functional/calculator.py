@@ -13,6 +13,7 @@ DATA = load_reference()
 
 def zscore(
     measurement: MEASUREMENTS,
+    value: float,
     sex: Literal["M", "F", "U"] = "U",
     age_days: int | None = None,
     gestational_age: int | None = None,
@@ -27,15 +28,16 @@ def zscore(
     data = get_table(DATA, keys)
     lms = get_lms(data, x)
 
-    return calculate_z_score(x, *lms)
+    return calculate_z_score(value, *lms)
 
 
 def percentile(
     measurement: MEASUREMENTS,
+    value: float,
     sex: Literal["M", "F", "U"] = "U",
     age_days: int | None = None,
     gestational_age: int | None = None,
 ) -> float:
-    z = zscore(measurement, sex, age_days, gestational_age)
+    z = zscore(measurement, value, sex, age_days, gestational_age)
 
     return normal_cdf(z)
