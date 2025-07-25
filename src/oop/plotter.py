@@ -122,7 +122,7 @@ class Plotter:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
-        x_label = "Gestational Age (days)" if self.x_var_types[age_group] == "gestational_age" else "Age (days)"
+        x_label = "Gestational Age" if self.x_var_types[age_group] == "gestational_age" else "Age"
         y_label = measurement_type.replace("_", " ").capitalize()
 
         for z in [-3, -2, 0, 2, 3]:
