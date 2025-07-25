@@ -5,7 +5,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/pygrowthstandards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/Yannngn/pygrowthstandards/actions/workflows/main.yml/badge.svg)](https://github.com/Yannngn/pygrowthstandards/actions)
+[![Python package](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml/badge.svg)](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 A Python library for calculating and visualizing child growth standards using data from the World Health Organization (WHO) and the INTERGROWTH-21st Project.
