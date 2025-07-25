@@ -31,11 +31,14 @@ This library implements standards from internationally recognized sources:
 ## Installation
 
 To install for development, clone the repository and install in editable mode:
+Use uv
 
 ```bash
 git clone https://github.com/Yannngn/pygrowthstandards.git
 cd pygrowthstandards
-pip install -e .[dev,tests]
+uv venv --python 3.11
+source .venv/bin/activate
+uv sync
 ```
 
 To install the latest stable release from PyPI [In Progress]:
