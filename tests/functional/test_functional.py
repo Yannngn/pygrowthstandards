@@ -10,17 +10,17 @@ from src.functional import calculator, data
 class TestFunctionalCalculator(unittest.TestCase):
     def test_zscore_age(self):
         # Example: stature, male, age_days=365
-        result = calculator.zscore("stature", sex="M", age_days=365)
+        result = calculator.zscore("stature", 78, sex="M", age_days=365)
         self.assertIsInstance(result, float)
 
     def test_zscore_gestational_age(self):
         # Example: weight, female, gestational_age=280
-        result = calculator.zscore("weight", sex="F", gestational_age=280)
+        result = calculator.zscore("weight", 3.5, sex="F", gestational_age=280)
         self.assertIsInstance(result, float)
 
     def test_percentile(self):
         # Example: head_circumference, unknown sex, age_days=100
-        result = calculator.percentile("head_circumference", sex="U", age_days=100)
+        result = calculator.percentile("head_circumference", 42, sex="U", age_days=100)
         self.assertIsInstance(result, float)
         self.assertGreaterEqual(result, 0.0)
         self.assertLessEqual(result, 1.0)
