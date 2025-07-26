@@ -6,7 +6,7 @@ from typing import Literal
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-TableNames = Literal["newborn", "growth"]
+TableNames = Literal["newborn", "growth", 'child_growth']
 
 
 @dataclass
