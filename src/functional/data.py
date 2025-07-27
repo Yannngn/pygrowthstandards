@@ -6,12 +6,16 @@ import pandas as pd
 
 from src.utils import stats
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+)
 
 from src.data.load import GrowthTable
 from src.utils.constants import WEEK, YEAR
 
-MEASUREMENTS = Literal["head_circumference", "stature", "weight", "body_mass_index", "weight_stature"]
+MEASUREMENTS = Literal[
+    "head_circumference", "stature", "weight", "body_mass_index", "weight_stature"
+]
 
 
 MEASUREMENT_ALIASES = {
@@ -58,7 +62,10 @@ def get_keys(
 
     if age_days is not None:
         x_var_type = "age"
-        if measurement_type in ["head_circumference", "weight_stature"] and age_days > 5 * YEAR:
+        if (
+            measurement_type in ["head_circumference", "weight_stature"]
+            and age_days > 5 * YEAR
+        ):
             raise ValueError(f"No reference for {measurement_type} after 5 years.")
 
         if measurement_type in ["weight"] and age_days > 10 * YEAR:
@@ -73,11 +80,15 @@ def get_keys(
     if gestational_age is not None and (age_days == 0 or age_days is None):
         x_var_type = "gestational_age"
         if measurement_type in ["body_mass_index"]:
-            raise ValueError(f"No reference for {measurement_type} at birth or fetal age.")
+            raise ValueError(
+                f"No reference for {measurement_type} at birth or fetal age."
+            )
 
         if gestational_age > 28:
             if measurement_type in ["weight_stature"]:
-                raise ValueError(f"No reference for {measurement_type} at birth or fetal age.")
+                raise ValueError(
+                    f"No reference for {measurement_type} at birth or fetal age."
+                )
             name = "newborn"
         else:
             name = "very_preterm_newborn"
@@ -88,7 +99,7 @@ def get_keys(
 def get_table(data: pd.DataFrame, keys: tuple) -> GrowthTable:
     # data = load_reference()
     name, measurement, sex, x_var_type = keys
-    return GrowthTable.from_data(data, name, measurement, sex, x_var_type)
+    return GrowthTable.from_data(data, name, None, measurement, sex, x_var_type)
 
 
 def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:

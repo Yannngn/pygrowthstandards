@@ -2,7 +2,9 @@ import datetime
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+)
 from src.oop.measurement import MeasurementGroup
 from src.oop.patient import Patient
 from src.oop.plotter import Plotter
@@ -64,7 +66,28 @@ def main():
         150.0,
         150.5,
     ]
-    weights = [3.4, 4.5, 5.5, 6.2, 7.5, 9.5, 12.5, 14.5, 16.5, 18.5, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 37.0, 38.0, 39.0, 39.2]
+    weights = [
+        3.4,
+        4.5,
+        5.5,
+        6.2,
+        7.5,
+        9.5,
+        12.5,
+        14.5,
+        16.5,
+        18.5,
+        21.0,
+        24.0,
+        27.0,
+        30.0,
+        33.0,
+        36.0,
+        37.0,
+        38.0,
+        39.0,
+        39.2,
+    ]
     head_circumferences = [
         35.0,
         37.0,
@@ -88,27 +111,42 @@ def main():
         55.0,
     ]
 
-    for date, stature, weight, hc in zip(measurement_dates, statures, weights, head_circumferences):
-        mg = MeasurementGroup(date=date, stature=stature, weight=weight, head_circumference=hc)
+    for date, stature, weight, hc in zip(
+        measurement_dates, statures, weights, head_circumferences
+    ):
+        mg = MeasurementGroup(
+            date=date, stature=stature, weight=weight, head_circumference=hc
+        )
         patient.add_measurements(mg)
-
-    print("Z-scores for all measurement groups:")
-    for group in patient.measurements:
-        print(group.to_dict())
 
     # Calculate z-scores for all measurements
     patient.calculate_all()
-    z_scores = patient.z_scores
-
-    print("Z-scores for all measurement groups:")
-    for group in z_scores:
-        print(group.to_dict())
 
     plotter = Plotter(patient)
-    plotter.plot(age_group="0-2", measurement_type="stature", show=False, output_path="results/user_table_0_2_stature.png")
-    plotter.plot(age_group="2-5", measurement_type="stature", show=False, output_path="results/user_table_2_5_stature.png")
-    plotter.plot(age_group="5-10", measurement_type="stature", show=False, output_path="results/user_table_5_10_stature.png")
-    plotter.plot(age_group="10-19", measurement_type="stature", show=False, output_path="results/user_table_10_19_stature.png")
+    plotter.plot(
+        age_group="0-2",
+        measurement_type="stature",
+        show=False,
+        output_path="results/user_table_0_2_stature.png",
+    )
+    plotter.plot(
+        age_group="2-5",
+        measurement_type="stature",
+        show=False,
+        output_path="results/user_table_2_5_stature.png",
+    )
+    plotter.plot(
+        age_group="5-10",
+        measurement_type="stature",
+        show=False,
+        output_path="results/user_table_5_10_stature.png",
+    )
+    plotter.plot(
+        age_group="10-19",
+        measurement_type="stature",
+        show=False,
+        output_path="results/user_table_10_19_stature.png",
+    )
 
     print(patient.display_measurements())
 
