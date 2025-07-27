@@ -7,7 +7,9 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+)
 
 
 from src.utils.constants import MONTH, WEEK
@@ -23,7 +25,10 @@ class DataPoint:
     is_derived: bool = False
 
     def __post_init__(self):
-        if not all(isinstance(value, (int, float)) for value in (self.x, self.L, self.M, self.S)):
+        if not all(
+            isinstance(value, (int, float))
+            for value in (self.x, self.L, self.M, self.S)
+        ):
             raise ValueError("All attributes must be numeric values.")
 
     def to_dict(self) -> dict:
@@ -33,7 +38,13 @@ class DataPoint:
         Returns:
             dict: A dictionary representation of the DataPoint.
         """
-        return {"x": self.x, "l": self.L, "m": self.M, "s": self.S, "is_derived": self.is_derived}
+        return {
+            "x": self.x,
+            "l": self.L,
+            "m": self.M,
+            "s": self.S,
+            "is_derived": self.is_derived,
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> "DataPoint":
@@ -74,16 +85,29 @@ class DataPoint:
 class RawTable:
     source: str
     name: str
-    measurement_type: str
+    age_group: str
     sex: str
+    measurement_type: str
     x_var_type: str
     x_var_unit: str
     points: list[DataPoint]
 
     def __post_init__(self):
-        if not all(isinstance(value, str) for value in (self.source, self.name, self.measurement_type, self.x_var_type)):
-            raise ValueError("Source, name, measurement_type, and x_var_type must be strings.")
-        if not isinstance(self.points, list) or not all(isinstance(point, DataPoint) for point in self.points):
+        if not all(
+            isinstance(value, str)
+            for value in (
+                self.source,
+                self.name,
+                self.measurement_type,
+                self.x_var_type,
+            )
+        ):
+            raise ValueError(
+                "Source, name, measurement_type, and x_var_type must be strings."
+            )
+        if not isinstance(self.points, list) or not all(
+            isinstance(point, DataPoint) for point in self.points
+        ):
             raise ValueError("Points must be a list of DataPoint instances.")
 
     def to_dict(self) -> dict:
@@ -96,8 +120,9 @@ class RawTable:
         return {
             "source": self.source,
             "name": self.name,
-            "measurement_type": self.measurement_type,
+            "age_group": self.age_group,
             "sex": self.sex,
+            "measurement_type": self.measurement_type,
             "x_var_type": self.x_var_type,
             "x_var_unit": self.x_var_unit,
             "points": [point.to_dict() for point in self.points],
@@ -128,8 +153,9 @@ class RawTable:
             return cls(
                 source=source,
                 name=table,
-                measurement_type=measurement_type,
                 sex=sex,
+                age_group="0-2" if x_column in ["length"] else "2-5",
+                measurement_type=measurement_type,
                 x_var_type="stature",
                 x_var_unit="cm",
                 points=cls._get_points(df),
@@ -153,20 +179,24 @@ class RawTable:
             return cls(
                 source=source,
                 name=table,
-                measurement_type=measurement_type,
+                age_group="0-1",
                 sex=sex,
+                measurement_type=measurement_type,
                 x_var_type=x_var_type,
-                x_var_unit="days",
+                x_var_unit="day",
                 points=cls._get_points(df),
             )
 
         df["x"] = df[x_column].astype(float).astype(int)
 
-        measurement_type = measurement_type.replace("weight_stature", "weight_stature_ratio")
+        measurement_type = measurement_type.replace(
+            "weight_stature", "weight_stature_ratio"
+        )
 
         return cls(
             source=source,
             name=table,
+            age_group=table,
             measurement_type=measurement_type,
             sex=sex,
             x_var_type=x_var_type,
@@ -194,7 +224,9 @@ class RawTable:
 
         # Use the Excel file name (without extension) for the temp CSV file
         base_name = os.path.splitext(os.path.basename(xlsx_path))[0]
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", prefix=base_name + "-", delete=False) as tmpfile:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".csv", prefix=base_name + "-", delete=False
+        ) as tmpfile:
             first_sheet_data.to_csv(tmpfile.name, index=False)
             tmp_csv_path = tmpfile.name
 
@@ -254,7 +286,9 @@ class RawTable:
 def main():
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
 
 
 if __name__ == "__main__":

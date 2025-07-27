@@ -5,10 +5,12 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+)
 
 from src.data.extract import RawTable
-from src.utils.constants import MONTH, WEEK
+from src.utils.constants import MONTH, WEEK, YEAR
 
 
 def transform_age_to_days(data: RawTable) -> RawTable:
@@ -19,6 +21,7 @@ def transform_age_to_days(data: RawTable) -> RawTable:
     :return: A new RawTable object with age converted to days.
     """
     if data.x_var_unit.lower().startswith("da"):
+        data.x_var_unit = "day"
         return data
 
     for point in data.points:
@@ -27,7 +30,7 @@ def transform_age_to_days(data: RawTable) -> RawTable:
         elif data.x_var_unit.lower().startswith("mo"):
             point.x = int(round(point.x * MONTH))
 
-    data.x_var_unit = "days"
+    data.x_var_unit = "day"
 
     return data
 
@@ -51,7 +54,9 @@ class GrowthData:
         """
         for i, table in enumerate(self.tables):
             self.tables[i] = transform_age_to_days(table)
-            print(f"Transformed table {table.name} with {len(table.points)} points to days.")
+            print(
+                f"Transformed table {table.name} with {len(table.points)} points to days."
+            )
 
     def join_data(self) -> pd.DataFrame:
         """
@@ -68,7 +73,34 @@ class GrowthData:
                 record = {**table_dict, **point}
                 records.append(record)
 
-        return pd.DataFrame(records)
+        df = pd.DataFrame(records)
+
+        for idx, row in df.iterrows():
+            if row["age_group"] in [
+                "very_preterm_newborn",
+                "newborn",
+                "very_preterm_growth",
+            ]:
+                continue
+
+            if row["x_var_type"] == "stature":
+                df.at[idx, "x_var_unit"] = "cm"  # TODO: fix at extracting/reading code
+                continue
+
+            if row["age_group"] == row["name"]:
+                if row["x"] < 2 * YEAR:
+                    df.at[idx, "age_group"] = "0-2"
+                    continue
+                if row["x"] < 5 * YEAR:
+                    df.at[idx, "age_group"] = "2-5"
+                    continue
+                if row["x"] < 10 * YEAR:
+                    df.at[idx, "age_group"] = "5-10"
+                    continue
+
+                df.at[idx, "age_group"] = "10-19"
+
+        return df
 
     def save_parquet(self, path: str = "data") -> None:
         """
@@ -82,21 +114,29 @@ class GrowthData:
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
-        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
+        df.to_parquet(
+            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
+        )
+        df.to_csv(
+            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
+        )
 
 
 def main():
     data = GrowthData()
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
     for f in glob.glob("data/raw/**/*.csv"):
         if "cdc" in f:
             continue
         dataset = RawTable.from_csv(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
     data.transform_all()
     data.save_parquet()
