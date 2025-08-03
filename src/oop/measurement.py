@@ -1,16 +1,8 @@
 import datetime
-import os
-import sys
 from dataclasses import dataclass, field
 from typing import Literal
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-TableNames = Literal[
-    "newborn", "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn"
-]
+TableNames = Literal["newborn", "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn"]
 
 
 @dataclass
@@ -58,9 +50,7 @@ class MeasurementGroup:
         for key, value in data.items():
             if value is None or key == "date":
                 continue
-            measurements.append(
-                Measurement(value=value, measurement_type=key, date=data["date"])
-            )
+            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
 
         return measurements
 

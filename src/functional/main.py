@@ -1,12 +1,4 @@
-import os
-import sys
-
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-
-from src import functional as F
+from .. import functional as F
 
 
 def main():

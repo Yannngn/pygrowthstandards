@@ -1,6 +1,6 @@
 import datetime
 
-from src import MeasurementGroup, Patient, Plotter
+from .src import MeasurementGroup, Patient, Plotter
 
 
 def main():

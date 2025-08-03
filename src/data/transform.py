@@ -1,16 +1,11 @@
 import glob
 import os
-import sys
 from dataclasses import dataclass, field
 
 import pandas as pd
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-from src.data.extract import RawTable
-from src.utils.constants import MONTH, WEEK, YEAR
+from ..utils.constants import MONTH, WEEK, YEAR
+from .extract import RawTable
 
 
 def transform_age_to_days(data: RawTable) -> RawTable:
@@ -37,7 +32,7 @@ def transform_age_to_days(data: RawTable) -> RawTable:
 
 @dataclass
 class GrowthData:
-    version: str = "0.1.0"
+    version: str = "0.1.1"
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
@@ -54,9 +49,7 @@ class GrowthData:
         """
         for i, table in enumerate(self.tables):
             self.tables[i] = transform_age_to_days(table)
-            print(
-                f"Transformed table {table.name} with {len(table.points)} points to days."
-            )
+            print(f"Transformed table {table.name} with {len(table.points)} points to days.")
 
     def join_data(self) -> pd.DataFrame:
         """
@@ -114,29 +107,21 @@ class GrowthData:
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(
-            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
-        )
-        df.to_csv(
-            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
-        )
+        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
+        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
 
 
 def main():
     data = GrowthData()
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
+        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
         data.add_table(dataset)
     for f in glob.glob("data/raw/**/*.csv"):
         if "cdc" in f:
             continue
         dataset = RawTable.from_csv(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
+        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
         data.add_table(dataset)
     data.transform_all()
     data.save_parquet()

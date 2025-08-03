@@ -1,15 +1,10 @@
 import os
-import sys
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-from src.utils.stats import numpy_calculate_value_for_z_score
+from ..utils.stats import numpy_calculate_value_for_z_score
 
 
 # TODO: Age Group == array of strs?
@@ -55,9 +50,7 @@ class GrowthTable:
         :return: An instance of GrowthTable.
         """
 
-        assert not all([name is None, age_group is None]), (
-            "Either name or age_group must be provided."
-        )
+        assert not all([name is None, age_group is None]), "Either name or age_group must be provided."
         filtered: pd.DataFrame = data.copy()
 
         if name is not None:
@@ -69,10 +62,7 @@ class GrowthTable:
         if x_var_type is not None:
             filtered = filtered[(filtered["x_var_type"] == x_var_type)]
 
-        filtered = filtered[
-            (filtered["measurement_type"] == measurement_type)
-            & (filtered["sex"] == sex.upper())
-        ]
+        filtered = filtered[(filtered["measurement_type"] == measurement_type) & (filtered["sex"] == sex.upper())]
 
         unique_sources = filtered["source"].unique()
         unique_names = filtered["name"].unique()
@@ -80,12 +70,8 @@ class GrowthTable:
         unique_x_var_types = filtered["x_var_type"].unique()
         unique_x_var_units = filtered["x_var_unit"].unique()
 
-        assert len(unique_sources) == 1, (
-            f"Expected one source, found {len(unique_sources)}: {unique_sources}"
-        )
-        assert len(unique_names) == 1, (
-            f"Expected one name, found {len(unique_names)}: {unique_names}"
-        )
+        assert len(unique_sources) == 1, f"Expected one source, found {len(unique_sources)}: {unique_sources}"
+        assert len(unique_names) == 1, f"Expected one name, found {len(unique_names)}: {unique_names}"
 
         if len(unique_age_groups) > 1:
             unique_age_groups = None  # = unique_names
@@ -134,10 +120,7 @@ class GrowthTable:
             {
                 "x": self.x,
                 "is_derived": self.is_derived,
-                **{
-                    z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S)
-                    for z in z_scores
-                },
+                **{z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S) for z in z_scores},
             }
         )
 
@@ -152,12 +135,8 @@ class GrowthTable:
 
         :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
         """
-        if not isinstance(child_data, pd.DataFrame) or not all(
-            col in child_data.columns for col in ["x", "child"]
-        ):
-            raise ValueError(
-                "child_data must be a DataFrame with 'x' and 'child' columns."
-            )
+        if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
+            raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
 
         # Add new x values from child_data to self.x
         x = child_data["x"].to_numpy()
@@ -198,7 +177,7 @@ def load_reference():
         os.pardir,
         os.pardir,
         "data",
-        "pygrowthstandards_0.1.0.parquet",
+        "pygrowthstandards_0.1.1.parquet",
     )
     if not os.path.exists(data_path):
         raise FileNotFoundError(f"Growth reference data file not found at {data_path}")

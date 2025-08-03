@@ -1,10 +1,6 @@
-import os
-import sys
 from decimal import Decimal as D
 from enum import Enum, StrEnum
 from typing import Literal
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 X_TEMPLATE = D("0.00")
 MU_TEMPLATE = D("0.0000")

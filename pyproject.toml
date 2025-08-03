@@ -1,6 +1,6 @@
 [project]
 name = "pygrowthstandards"
-version = "0.1.0"
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -12,14 +12,8 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "openpyxl>=3.1.5",
-    "pre-commit>=4.2.0",
-    "pytest>=8.4.1",
-]
-pdf = [
-    "docling>=2.42.2",
-]
+dev = ["openpyxl>=3.1.5", "pre-commit>=4.2.0", "pytest>=8.4.1"]
+pdf = ["docling>=2.42.2"]
 
 tests = ["pytest>=8.4.0"]
 

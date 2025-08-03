@@ -1,13 +1,8 @@
 import datetime
-import os
-import sys
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-from src.oop.measurement import MeasurementGroup
-from src.oop.patient import Patient
-from src.oop.plotter import Plotter
+from .measurement import MeasurementGroup
+from .patient import Patient
+from .plotter import Plotter
 
 
 def main():
@@ -111,12 +106,8 @@ def main():
         55.0,
     ]
 
-    for date, stature, weight, hc in zip(
-        measurement_dates, statures, weights, head_circumferences
-    ):
-        mg = MeasurementGroup(
-            date=date, stature=stature, weight=weight, head_circumference=hc
-        )
+    for date, stature, weight, hc in zip(measurement_dates, statures, weights, head_circumferences):
+        mg = MeasurementGroup(date=date, stature=stature, weight=weight, head_circumference=hc)
         patient.add_measurements(mg)
 
     # Calculate z-scores for all measurements
