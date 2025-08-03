@@ -1,9 +1,9 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+# No need to modify sys.path - use relative imports instead
 
-from src import functional
-from src.oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
+from . import functional
+from .oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
 
 __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter"]

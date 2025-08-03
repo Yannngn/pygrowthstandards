@@ -3,7 +3,7 @@ from scipy.interpolate import interp1d
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 
-from src.utils.errors import NoReferenceDataException
+from .errors import NoReferenceDataException
 
 
 def normal_cdf(z: float) -> float:

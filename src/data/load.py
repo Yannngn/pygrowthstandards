@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+# Use relative imports instead of modifying sys.path
 
-from src.utils.stats import numpy_calculate_value_for_z_score
+from ..utils.stats import numpy_calculate_value_for_z_score
 
 
 @dataclass
