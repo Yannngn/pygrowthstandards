@@ -1,6 +1,3 @@
-
-# No need to modify sys.path - use relative imports instead
-
 from .. import functional as F
 
 

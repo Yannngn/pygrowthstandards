@@ -1,12 +1,8 @@
-import os
-import sys
 from typing import Literal
 
-# Use relative imports instead of modifying sys.path
-
 from ..data.load import load_reference
-from .data import MEASUREMENTS, get_keys, get_lms, get_table
 from ..utils.stats import calculate_z_score, normal_cdf
+from .data import MEASUREMENTS, get_keys, get_lms, get_table
 
 DATA = load_reference()
 
@@ -40,4 +36,5 @@ def percentile(
 ) -> float:
     z = zscore(measurement, value, sex, age_days, gestational_age)
 
+    return normal_cdf(z)
     return normal_cdf(z)

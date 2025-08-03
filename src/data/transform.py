@@ -1,14 +1,11 @@
 import glob
 import os
-import sys
 from dataclasses import dataclass, field
 
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-from src.data.extract import RawTable
-from src.utils.constants import MONTH, WEEK
+from ..utils.constants import MONTH, WEEK
+from .extract import RawTable
 
 
 def transform_age_to_days(data: RawTable) -> RawTable:

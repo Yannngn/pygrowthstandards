@@ -1,15 +1,11 @@
 import logging
 import os
-import sys
 
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-
-from src.oop.measurement import MeasurementGroup
-from src.utils import stats
-from src.utils.errors import NoReferenceDataException
+from ..utils import stats
+from ..utils.errors import NoReferenceDataException
+from .measurement import MeasurementGroup
 
 
 class Calculator:

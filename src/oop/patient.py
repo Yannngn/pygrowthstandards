@@ -2,9 +2,9 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Literal
 
+from ..utils.results import str_dataframe
 from .calculator import Calculator
 from .measurement import Measurement, MeasurementGroup
-from ..utils.results import str_dataframe
 
 
 @dataclass

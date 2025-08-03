@@ -1,11 +1,8 @@
 import datetime
-import os
-import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-from src.oop.measurement import MeasurementGroup
-from src.oop.patient import Patient
-from src.oop.plotter import Plotter
+from .measurement import MeasurementGroup
+from .patient import Patient
+from .plotter import Plotter
 
 
 def main():
