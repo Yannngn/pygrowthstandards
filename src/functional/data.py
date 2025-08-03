@@ -84,7 +84,7 @@ def get_keys(
 def get_table(data: pd.DataFrame, keys: tuple) -> GrowthTable:
     # data = load_reference()
     name, measurement, sex, x_var_type = keys
-    return GrowthTable.from_data(data, name, measurement, sex, x_var_type)
+    return GrowthTable.from_data(data, name, None, measurement, sex, x_var_type)
 
 
 def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
@@ -100,5 +100,4 @@ def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
 
     index = list(table.x).index(x)
 
-    return table.L[index], table.M[index], table.S[index]
     return table.L[index], table.M[index], table.S[index]

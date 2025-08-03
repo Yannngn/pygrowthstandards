@@ -29,7 +29,13 @@ class DataPoint:
         Returns:
             dict: A dictionary representation of the DataPoint.
         """
-        return {"x": self.x, "l": self.L, "m": self.M, "s": self.S, "is_derived": self.is_derived}
+        return {
+            "x": self.x,
+            "l": self.L,
+            "m": self.M,
+            "s": self.S,
+            "is_derived": self.is_derived,
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> "DataPoint":
@@ -70,14 +76,23 @@ class DataPoint:
 class RawTable:
     source: str
     name: str
-    measurement_type: str
+    age_group: str
     sex: str
+    measurement_type: str
     x_var_type: str
     x_var_unit: str
     points: list[DataPoint]
 
     def __post_init__(self):
-        if not all(isinstance(value, str) for value in (self.source, self.name, self.measurement_type, self.x_var_type)):
+        if not all(
+            isinstance(value, str)
+            for value in (
+                self.source,
+                self.name,
+                self.measurement_type,
+                self.x_var_type,
+            )
+        ):
             raise ValueError("Source, name, measurement_type, and x_var_type must be strings.")
         if not isinstance(self.points, list) or not all(isinstance(point, DataPoint) for point in self.points):
             raise ValueError("Points must be a list of DataPoint instances.")
@@ -92,8 +107,9 @@ class RawTable:
         return {
             "source": self.source,
             "name": self.name,
-            "measurement_type": self.measurement_type,
+            "age_group": self.age_group,
             "sex": self.sex,
+            "measurement_type": self.measurement_type,
             "x_var_type": self.x_var_type,
             "x_var_unit": self.x_var_unit,
             "points": [point.to_dict() for point in self.points],
@@ -124,8 +140,9 @@ class RawTable:
             return cls(
                 source=source,
                 name=table,
-                measurement_type=measurement_type,
                 sex=sex,
+                age_group="0-2" if x_column in ["length"] else "2-5",
+                measurement_type=measurement_type,
                 x_var_type="stature",
                 x_var_unit="cm",
                 points=cls._get_points(df),
@@ -149,10 +166,11 @@ class RawTable:
             return cls(
                 source=source,
                 name=table,
-                measurement_type=measurement_type,
+                age_group="0-1",
                 sex=sex,
+                measurement_type=measurement_type,
                 x_var_type=x_var_type,
-                x_var_unit="days",
+                x_var_unit="day",
                 points=cls._get_points(df),
             )
 
@@ -163,6 +181,7 @@ class RawTable:
         return cls(
             source=source,
             name=table,
+            age_group=table,
             measurement_type=measurement_type,
             sex=sex,
             x_var_type=x_var_type,

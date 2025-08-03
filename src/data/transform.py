@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-from ..utils.constants import MONTH, WEEK
+from ..utils.constants import MONTH, WEEK, YEAR
 from .extract import RawTable
 
 
@@ -16,6 +16,7 @@ def transform_age_to_days(data: RawTable) -> RawTable:
     :return: A new RawTable object with age converted to days.
     """
     if data.x_var_unit.lower().startswith("da"):
+        data.x_var_unit = "day"
         return data
 
     for point in data.points:
@@ -24,14 +25,14 @@ def transform_age_to_days(data: RawTable) -> RawTable:
         elif data.x_var_unit.lower().startswith("mo"):
             point.x = int(round(point.x * MONTH))
 
-    data.x_var_unit = "days"
+    data.x_var_unit = "day"
 
     return data
 
 
 @dataclass
 class GrowthData:
-    version: str = "0.1.0"
+    version: str = "0.1.1"
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
@@ -65,7 +66,34 @@ class GrowthData:
                 record = {**table_dict, **point}
                 records.append(record)
 
-        return pd.DataFrame(records)
+        df = pd.DataFrame(records)
+
+        for idx, row in df.iterrows():
+            if row["age_group"] in [
+                "very_preterm_newborn",
+                "newborn",
+                "very_preterm_growth",
+            ]:
+                continue
+
+            if row["x_var_type"] == "stature":
+                df.at[idx, "x_var_unit"] = "cm"  # TODO: fix at extracting/reading code
+                continue
+
+            if row["age_group"] == row["name"]:
+                if row["x"] < 2 * YEAR:
+                    df.at[idx, "age_group"] = "0-2"
+                    continue
+                if row["x"] < 5 * YEAR:
+                    df.at[idx, "age_group"] = "2-5"
+                    continue
+                if row["x"] < 10 * YEAR:
+                    df.at[idx, "age_group"] = "5-10"
+                    continue
+
+                df.at[idx, "age_group"] = "10-19"
+
+        return df
 
     def save_parquet(self, path: str = "data") -> None:
         """

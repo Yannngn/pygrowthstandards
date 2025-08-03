@@ -37,4 +37,3 @@ def percentile(
     z = zscore(measurement, value, sex, age_days, gestational_age)
 
     return normal_cdf(z)
-    return normal_cdf(z)

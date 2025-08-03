@@ -72,16 +72,25 @@ class Plotter:
 
         return pd.DataFrame({"x": x, "child": y})
 
-    def get_reference_data(self, age_group: str, measurement_type: str) -> GrowthTable:
+    def get_reference_data(
+        self, age_group: str, measurement_type: str
+    ) -> GrowthTable:  # , x_var_type: Literal["gestational_age", "age", "stature"] | None = None
         if age_group not in self.limits:
             raise ValueError(f"Invalid age group: {age_group}")
 
         name = self.names[age_group]
         x_var_type = self.x_var_types[age_group]
 
-        data = GrowthTable.from_data(self.patient.calculator.data, name, measurement_type, self.patient.sex, x_var_type)
+        data = GrowthTable.from_data(
+            self.patient.calculator.data,
+            name=name,
+            age_group=age_group,
+            measurement_type=measurement_type,
+            sex=self.patient.sex,
+            x_var_type=x_var_type,
+        )
 
-        data.cut_data(*self.limits[age_group])
+        # data.cut_data(*self.limits[age_group])
 
         return data
 
@@ -91,13 +100,25 @@ class Plotter:
 
         reference_data.add_child_data(user_data)
 
-        return reference_data.to_plot_data()
+        return reference_data.convert_z_scores_to_values()
 
-    def plot(self, age_group: str, measurement_type: str, ax: Axes | None = None, show: bool = False, output_path: str = "") -> Axes:
+    def plot(
+        self,
+        age_group: str,
+        measurement_type: str,
+        ax: Axes | None = None,
+        show: bool = False,
+        output_path: str = "",
+    ) -> Axes:
         user_data = self.get_user_data(age_group, measurement_type)
         ax = self.reference_plot(age_group, measurement_type, ax, False, "")
 
-        ax.plot(user_data["x"], user_data["child"], label="user", **style.get_label_style("user"))
+        ax.plot(
+            user_data["x"],
+            user_data["child"],
+            label="user",
+            **style.get_label_style("user"),
+        )
 
         set_xticks_by_range(ax, self.limits[age_group][0], self.limits[age_group][1])
 
@@ -109,19 +130,31 @@ class Plotter:
 
         return ax
 
-    def reference_plot(self, age_group: str, measurement_type: str, ax: Axes | None = None, show: bool = False, output_path: str = "") -> Axes:
-        plot_data = self.get_reference_data(age_group, measurement_type).to_plot_data()
+    def reference_plot(
+        self,
+        age_group: str,
+        measurement_type: str,
+        ax: Axes | None = None,
+        show: bool = False,
+        output_path: str = "",
+    ) -> Axes:
+        plot_data = self.get_reference_data(age_group, measurement_type).convert_z_scores_to_values()
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
-        x_label = "Gestational Age" if self.x_var_types[age_group] == "gestational_age" else "Age"
+        x_label = "Age" if self.x_var_types[age_group] == "age" else "Gestational Age"
         y_label = measurement_type.replace("_", " ").capitalize()
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
-            ax.plot(plot_data["x"], plot_data[z], label=f"{y_label} (Z={z})", **style.get_label_style(label))
+            ax.plot(
+                plot_data["x"],
+                plot_data[z],
+                label=f"{y_label} (Z={z})",
+                **style.get_label_style(label),
+            )
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)

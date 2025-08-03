@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Literal
 
-TableNames = Literal["newborn", "growth", "child_growth"]
+TableNames = Literal["newborn", "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn"]
 
 
 @dataclass
