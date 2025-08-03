@@ -4,11 +4,11 @@ from typing import Literal
 
 import pandas as pd
 
-from src.utils import stats
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
 from src.data.load import GrowthTable
+from src.utils import stats
 from src.utils.constants import WEEK, YEAR
 
 MEASUREMENTS = Literal["head_circumference", "stature", "weight", "body_mass_index", "weight_stature"]

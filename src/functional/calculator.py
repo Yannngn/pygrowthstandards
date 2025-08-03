@@ -2,11 +2,11 @@ import os
 import sys
 from typing import Literal
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+# Use relative imports instead of modifying sys.path
 
-from src.data.load import load_reference
-from src.functional.data import MEASUREMENTS, get_keys, get_lms, get_table
-from src.utils.stats import calculate_z_score, normal_cdf
+from ..data.load import load_reference
+from .data import MEASUREMENTS, get_keys, get_lms, get_table
+from ..utils.stats import calculate_z_score, normal_cdf
 
 DATA = load_reference()
 
