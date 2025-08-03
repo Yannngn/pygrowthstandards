@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.axes import Axes
 
-from src.utils.constants import MONTH, WEEK, YEAR
+from ..constants import MONTH, WEEK, YEAR
 
 
 # Helper to set ticks and labels

@@ -1,17 +1,13 @@
 import glob
 import os
-import sys
 import tempfile
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-
-from src.utils.constants import MONTH, WEEK
-from src.utils.stats import estimate_lms_from_sd
+from ..utils.constants import MONTH, WEEK
+from ..utils.stats import estimate_lms_from_sd
 
 
 @dataclass

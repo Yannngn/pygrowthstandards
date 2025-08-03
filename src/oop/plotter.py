@@ -1,18 +1,12 @@
-import os
-import sys
-
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-
-from src.data.load import GrowthTable
-from src.oop.patient import Patient
-from src.utils.constants import WEEK, YEAR
-from src.utils.plot import style
-from src.utils.plot.xticks import set_xticks_by_range
+from ..data.load import GrowthTable
+from ..utils.constants import WEEK, YEAR
+from ..utils.plot import style
+from ..utils.plot.xticks import set_xticks_by_range
+from .patient import Patient
 
 
 class Plotter:

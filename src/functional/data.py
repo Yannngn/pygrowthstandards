@@ -1,15 +1,11 @@
 import os
-import sys
 from typing import Literal
 
 import pandas as pd
 
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-from src.data.load import GrowthTable
-from src.utils import stats
-from src.utils.constants import WEEK, YEAR
+from ..data.load import GrowthTable
+from ..utils import stats
+from ..utils.constants import WEEK, YEAR
 
 MEASUREMENTS = Literal["head_circumference", "stature", "weight", "body_mass_index", "weight_stature"]
 
@@ -104,4 +100,5 @@ def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
 
     index = list(table.x).index(x)
 
+    return table.L[index], table.M[index], table.S[index]
     return table.L[index], table.M[index], table.S[index]

@@ -1,13 +1,7 @@
 import glob
-import os
-import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
-
-from src.data.extract import RawTable
-from src.data.transform import GrowthData
-
-# TODO: Add a curated list of growth tables to load
+from .extract import RawTable
+from .transform import GrowthData
 
 
 def main():
