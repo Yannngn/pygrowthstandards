@@ -18379,7 +18379,6 @@ intergrowth,very_preterm_growth,very_preterm_growth,F,head_circumference,age,day
 intergrowth,very_preterm_growth,very_preterm_growth,F,head_circumference,age,day,434.0,1.0000010546770643,41.8,0.027853725195297524,True
 intergrowth,very_preterm_growth,very_preterm_growth,F,head_circumference,age,day,441.0,0.8743307119623891,42.0,0.02789355146060597,True
 intergrowth,very_preterm_growth,very_preterm_growth,F,head_circumference,age,day,448.0,0.9999999995810012,42.2,0.028436018957353336,True
-intergrowth,very_preterm_growth,very_preterm_growth,F,head_circumference,age,day,448.0,0.34757466727229014,42.2,0.020564609581348592,True
 intergrowth,very_preterm_growth,very_preterm_growth,F,weight,age,day,189.0,-0.017687318744545346,0.61,0.20777854936330092,True
 intergrowth,very_preterm_growth,very_preterm_growth,F,weight,age,day,196.0,0.017321857994023485,0.76,0.19675186916358367,True
 intergrowth,very_preterm_growth,very_preterm_growth,F,weight,age,day,203.0,-0.05082422024307903,0.91,0.18752134828564093,True
