@@ -1,3 +1,17 @@
+"""Object-oriented API for growth standard calculations.
+
+This module defines the Calculator class which reads precomputed reference data
+and computes z-scores for measurement groups.
+
+Classes:
+    Calculator: Performs z-score and MeasurementGroup calculations.
+
+Example:
+    >>> from src.oop.calculator import Calculator
+    >>> calc = Calculator()
+    >>> mg = MeasurementGroup(stature=75.0, weight=10.0)
+    >>> z = calc.calculate_z_score(mg, 'stature', 365)
+"""
 import logging
 import os
 

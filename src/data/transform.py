@@ -1,3 +1,20 @@
+"""Transform and manage raw LMS growth data.
+
+This module provides functions and classes to convert and aggregate LMS reference tables:
+
+Functions:
+    transform_age_to_days: Convert a RawTable's age units to days.
+
+Classes:
+    GrowthData: Collects multiple RawTable instances, transforms data, joins, and exports.
+
+Examples:
+    python -m src.data.transform
+
+Todo:
+    * Add CLI support for custom output paths and formats.
+"""
+
 import glob
 import os
 from dataclasses import dataclass, field
@@ -10,10 +27,13 @@ from .extract import RawTable
 
 def transform_age_to_days(data: RawTable) -> RawTable:
     """
-    Transforms the age in weeks to days for each DataPoint in the RawTable.
+    Transforms the age values in a RawTable to days.
 
-    :param data: The RawTable object containing the data points.
-    :return: A new RawTable object with age converted to days.
+    Args:
+        data (RawTable): The table whose data points are to be converted.
+
+    Returns:
+        RawTable: The same table with x values converted to days and unit updated.
     """
     if data.x_var_unit.lower().startswith("da"):
         data.x_var_unit = "day"
@@ -29,23 +49,31 @@ def transform_age_to_days(data: RawTable) -> RawTable:
 
     return data
 
-
+# TODO: Assert types
 @dataclass
 class GrowthData:
+    """
+    Aggregates multiple RawTable instances and transforms them for output.
+
+    Attributes:
+        version (str): Version identifier for output files.
+        tables (list[RawTable]): List of raw tables added.
+    """
     version: str = "0.1.1"
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
         """
-        Adds a RawTable to the GrowthData collection.
+        Adds a RawTable to the collection.
 
-        :param table: The RawTable object to add.
+        Args:
+            table (RawTable): The table to append.
         """
         self.tables.append(table)
 
     def transform_all(self) -> None:
         """
-        Transforms all tables in the GrowthData collection by converting age to days.
+        Converts all tables' x values to days in place.
         """
         for i, table in enumerate(self.tables):
             self.tables[i] = transform_age_to_days(table)
@@ -53,9 +81,10 @@ class GrowthData:
 
     def join_data(self) -> pd.DataFrame:
         """
-        Joins all RawTables in the GrowthData collection into a single DataFrame.
+        Joins all tables into one DataFrame of records.
 
-        :return: A pandas DataFrame containing all data points from the tables.
+        Returns:
+            pandas.DataFrame: DataFrame with merged table and point fields.
         """
         records = []
         for table in self.tables:
@@ -77,7 +106,7 @@ class GrowthData:
                 continue
 
             if row["x_var_type"] == "stature":
-                df.at[idx, "x_var_unit"] = "cm"  # TODO: fix at extracting/reading code
+                df.at[idx, "x_var_unit"] = "cm"  # TODO: set this in extracting module
                 continue
 
             if row["age_group"] == row["name"]:
@@ -97,9 +126,10 @@ class GrowthData:
 
     def save_parquet(self, path: str = "data") -> None:
         """
-        Saves the joined data to a Parquet file for efficient storage.
+        Writes the joined data to Parquet (and CSV) in the specified path.
 
-        :param path: The file path to save the Parquet file.
+        Args:
+            path (str): Directory or filepath for output.
         """
         df = self.join_data()
 

@@ -1,5 +1,4 @@
 from decimal import Decimal as D
-from enum import Enum, StrEnum
 from typing import Literal
 
 X_TEMPLATE = D("0.00")
@@ -19,16 +18,25 @@ UNITS = {
     "head_circumference_velocity": "cm/month",
 }
 
-DataSourceType = Literal["who", "intergrowth"]
-DataSexType = Literal["M", "F", "U"]
-DataUnitType = Literal["days", "cm"]
-DataUnitNameType = Literal["age", "gestational_age", "stature"]
+DataSourceLiteral = Literal["who", "intergrowth"]
+DATA_SOURCE_CHOICES: frozenset[DataSourceLiteral] = frozenset(["who", "intergrowth"])
 
-TABLE_NAME_TYPE = Literal["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"]
-TABLE_NAME_CHOICES = frozenset(["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"])
+SexLiteral = Literal["M", "F", "U"]
+SEX_CHOICES: frozenset[SexLiteral] = frozenset(["M", "F", "U"])
+
+XVarNameLiteral = Literal["age", "gestational_age", "stature"]
+X_VAR_NAME_CHOICES: frozenset[XVarNameLiteral] = frozenset(["age", "gestational_age", "stature"])
+
+XVarUnitLiteral = Literal["day", "cm"]
+X_VAR_UNIT_CHOICES: frozenset[XVarUnitLiteral] = frozenset(["day", "cm"])
+
+TableNameLiteral = Literal["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"]
+TABLE_NAME_CHOICES: frozenset[TableNameLiteral] = frozenset(
+    ["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"]
+)
 
 
-AGE_GROUP_TYPE = Literal[
+AgeGroupLiteral = Literal[
     "0-1",
     "0-2",
     "2-5",
@@ -38,7 +46,7 @@ AGE_GROUP_TYPE = Literal[
     "very_preterm_newborn",
     "very_preterm_growth",
 ]
-AGE_GROUP_CHOICES = frozenset(
+AGE_GROUP_CHOICES: frozenset[AgeGroupLiteral] = frozenset(
     [
         "0-1",
         "0-2",
@@ -50,52 +58,47 @@ AGE_GROUP_CHOICES = frozenset(
         "very_preterm_growth",
     ]
 )
-
-MEASUREMENT_TYPE_CHOICES = frozenset(
-    [
-        "body_mass_index",
-        "head_circumference",
-        "stature",
-        "weight",
-        "weight_stature",
-        "head_circumference_velocity",
-        "length_velocity",
-        "weight_velocity",
-    ]
-)
-MEASUREMENT_TYPE_TYPE = Literal[
+MeasurementTypeLiteral = Literal[
     "stature",
     "weight",
-    "weight_stature",
+    "weight_stature_ratio",
     "head_circumference",
     "body_mass_index",
     "weight_velocity",
     "length_velocity",
     "head_circumference_velocity",
 ]
+MEASUREMENT_TYPE_CHOICES: frozenset[MeasurementTypeLiteral] = frozenset(
+    [
+        "stature",
+        "weight",
+        "weight_stature_ratio",
+        "head_circumference",
+        "body_mass_index",
+        "weight_velocity",
+        "length_velocity",
+        "head_circumference_velocity",
+    ]
+)
 
 
-class PlotAgeChoices(StrEnum):
-    """Enum for age choices with associated age group and range."""
-
-    ZERO_ONE_YEARS = "0-1"
-    ZERO_TWO_YEARS = "0-2"
-    TWO_FIVE_YEARS = "2-5"
-    FIVE_TEN_YEARS = "5-10"
-    TEN_NINETEEN_YEARS = "10-19"
-    NEWBORN = "newborn"
-    VERY_PRETERM_NEWBORN = "very_preterm_newborn"
-    VERY_PRETERM = "very_preterm"
-
-
-class PlotAgeValues(Enum):
-    """Enum for age values with associated age group and range."""
-
-    ZERO_ONE_YEARS = (0, 1)
-    ZERO_TWO_YEARS = (0, 2)
-    TWO_FIVE_YEARS = (2, 5)
-    FIVE_TEN_YEARS = (5, 10)
-    TEN_NINETEEN_YEARS = (10, 19)
-    NEWBORN = (231, 300)
-    VERY_PRETERM_NEWBORN = (168, 230)
-    VERY_PRETERM = (189, 448)
+MEASUREMENT_ALIASES: dict[MeasurementTypeLiteral, set[str]] = {
+    "head_circumference": {"hcfa", "hc"},
+    "stature": {"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"},
+    "weight": {"wfa", "w"},
+    "body_mass_index": {"bmi", "bfa"},
+    "weight_stature_ratio": {
+        "wfs",
+        "wfl",
+        "wfh",
+        "weight_stature",
+        "weight_length",
+        "weight_height",
+        "weight_for_stature",
+        "weight_for_length",
+        "weight_for_height",
+    },
+    "weight_velocity": set(),
+    "length_velocity": set(),
+    "head_circumference_velocity": set(),
+}

@@ -1,8 +1,33 @@
+"""Load and manipulate growth standard reference data.
+
+This module provides:
+
+- GrowthTable: Dataclass for storing LMS parameters and transforming child data.
+- load_reference: Function to read the compiled growth reference Parquet file.
+- main: Demonstration entry point for loading and printing reference data.
+
+Example:
+    python -m src.data.load
+
+Todo:
+    * Support custom data paths and CLI integration.
+"""
+
 import os
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+
+from src.utils.choices import (
+    AgeGroupLiteral,
+    DataSourceLiteral,
+    MeasurementTypeLiteral,
+    SexLiteral,
+    TableNameLiteral,
+    XVarNameLiteral,
+    XVarUnitLiteral,
+)
 
 from ..utils.stats import numpy_calculate_value_for_z_score
 
@@ -11,16 +36,31 @@ from ..utils.stats import numpy_calculate_value_for_z_score
 @dataclass
 class GrowthTable:
     """
-    Represents a growth table containing data points for growth standards.
+    Stores LMS parameters and supports z-score/value transformations.
+
+    Attributes:
+        source (str): Origin of the data.
+        name (str): Table identifier.
+        age_group (str|None): Age group or None.
+        measurement_type (str): Measurement category.
+        sex (str): Sex code.
+        x_var_type (str): Type of x variable.
+        x_var_unit (str): Unit of x variable.
+        x (np.ndarray): Independent variable values.
+        L (np.ndarray): Lambda parameters.
+        M (np.ndarray): Mu parameters.
+        S (np.ndarray): Sigma parameters.
+        is_derived (np.ndarray): Flags for derived LMS.
+        y (np.ndarray): Child data values (populated by add_child_data).
     """
 
-    source: str
-    name: str
-    age_group: str | None
-    measurement_type: str
-    sex: str
-    x_var_type: str
-    x_var_unit: str
+    source: DataSourceLiteral
+    name: TableNameLiteral
+    age_group: AgeGroupLiteral | None
+    measurement_type: MeasurementTypeLiteral
+    sex: SexLiteral
+    x_var_type: XVarNameLiteral
+    x_var_unit: XVarUnitLiteral
     x: np.ndarray
     L: np.ndarray
     M: np.ndarray
@@ -33,24 +73,32 @@ class GrowthTable:
     def from_data(
         cls,
         data: pd.DataFrame,
-        name: str | None,
-        age_group: str | None,
-        measurement_type: str,
-        sex: str,
-        x_var_type: str | None,
+        name: TableNameLiteral | None,
+        age_group: AgeGroupLiteral | None,
+        measurement_type: MeasurementTypeLiteral,
+        sex: SexLiteral,
+        x_var_type: XVarNameLiteral | None,
     ) -> "GrowthTable":
         """
-        Loads a GrowthTable from a DataFrame, filtering by measurement_type, sex, and x_var_type.
+        Creates a GrowthTable by filtering reference DataFrame.
 
-        :param data: The DataFrame containing the growth data.
-        :param name: The name of the growth table.
-        :param measurement_type: The type of measurement (e.g., length, weight).
-        :param sex: The sex of the subjects (e.g., male, female).
-        :param x_var_type: The type of the x variable (e.g., age, height).
-        :return: An instance of GrowthTable.
+        Args:
+            data (pandas.DataFrame): Reference data loaded.
+            name (str|None): Specific table name filter.
+            age_group (str|None): Age group filter.
+            measurement_type (str): Measurement type to select.
+            sex (str): Sex code to select.
+            x_var_type (str|None): X variable type filter.
+
+        Returns:
+            GrowthTable: Populated growth table instance.
+
+        Raises:
+            AssertionError: If both name and age_group are None.
         """
 
-        assert not all([name is None, age_group is None]), "Either name or age_group must be provided."
+        if all([name is None, age_group is None]):
+            raise ValueError("Either name or age_group must be provided.")
         filtered: pd.DataFrame = data.copy()
 
         if name is not None:
@@ -70,8 +118,10 @@ class GrowthTable:
         unique_x_var_types = filtered["x_var_type"].unique()
         unique_x_var_units = filtered["x_var_unit"].unique()
 
-        assert len(unique_sources) == 1, f"Expected one source, found {len(unique_sources)}: {unique_sources}"
-        assert len(unique_names) == 1, f"Expected one name, found {len(unique_names)}: {unique_names}"
+        if len(unique_sources) != 1:
+            raise ValueError(f"Expected one source, found {len(unique_sources)}: {unique_sources}")
+        if len(unique_names) != 1:
+            raise ValueError(f"Expected one name, found {len(unique_names)}: {unique_names}")
 
         if len(unique_age_groups) > 1:
             unique_age_groups = None  # = unique_names
@@ -111,9 +161,13 @@ class GrowthTable:
 
     def convert_z_scores_to_values(self, z_scores=[-3, -2, 0, 2, 3]) -> pd.DataFrame:
         """
-        Converts the GrowthTable to a DataFrame suitable for plotting.
+        Computes measurement values at specified z-scores.
 
-        :return: A DataFrame with columns for x, L, M, S, and is_derived.
+        Args:
+            z_scores (list[int]): Z-scores to convert.
+
+        Returns:
+            pandas.DataFrame: Table with x, is_derived, and value columns per z-score.
         """
 
         data = pd.DataFrame(
@@ -131,9 +185,13 @@ class GrowthTable:
 
     def add_child_data(self, child_data: pd.DataFrame) -> None:
         """
-        Adds child data to the GrowthTable.
+        Inserts child measurement series into the table.
 
-        :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
+        Args:
+            child_data (pandas.DataFrame): Must contain 'x' and 'child' columns.
+
+        Raises:
+            ValueError: If child_data is improperly formatted.
         """
         if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
             raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
@@ -153,10 +211,11 @@ class GrowthTable:
 
     def cut_data(self, lower_limit: float, upper_limit: float) -> None:
         """
-        Cuts the data in the GrowthTable to the specified limits.
+        Filters table rows by x variable limits.
 
-        :param lower_limit: The lower limit for the x variable.
-        :param upper_limit: The upper limit for the x variable.
+        Args:
+            lower_limit (float): Minimum x value to keep.
+            upper_limit (float): Maximum x value to keep.
         """
         mask = (self.x >= lower_limit) & (self.x <= upper_limit)
         self.x = self.x[mask]
@@ -168,9 +227,13 @@ class GrowthTable:
 
 def load_reference():
     """
-    Loads the growth reference data from a CSV file and returns a DataFrame.
+    Retrieves the compiled growth reference dataset.
 
-    :return: A DataFrame containing the growth reference data.
+    Returns:
+        pandas.DataFrame: Loaded growth standards data.
+
+    Raises:
+        FileNotFoundError: If the parquet data file is missing.
     """
     data_path = os.path.join(
         os.path.dirname(__file__),

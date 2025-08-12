@@ -1,3 +1,19 @@
+"""Extract and load raw LMS reference data.
+
+This module provides classes to represent and load LMS (Lambda-Mu-Sigma)
+growth standard reference data from CSV and Excel files into Python objects.
+
+Classes:
+    DataPoint: Represents a single LMS data point.
+    RawTable: Contains metadata and a collection of DataPoint instances.
+
+Example:
+    $ python -m src.data.extract
+
+Todo:
+    * Support additional file formats for RawTable.
+"""
+
 import glob
 import os
 import tempfile
@@ -6,12 +22,38 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from src.utils.choices import (
+    AGE_GROUP_CHOICES,
+    DATA_SOURCE_CHOICES,
+    MEASUREMENT_TYPE_CHOICES,
+    SEX_CHOICES,
+    TABLE_NAME_CHOICES,
+    X_VAR_NAME_CHOICES,
+    X_VAR_UNIT_CHOICES,
+    DataSourceLiteral,
+    MeasurementTypeLiteral,
+    SexLiteral,
+    TableNameLiteral,
+    XVarNameLiteral,
+)
+
 from ..utils.constants import MONTH, WEEK
 from ..utils.stats import estimate_lms_from_sd
 
 
 @dataclass
 class DataPoint:
+    """
+    Represents a single LMS (Lambda-Mu-Sigma) reference data point.
+
+    Attributes:
+        x (float): The independent variable value (e.g., age or gestational age).
+        L (float): Box-Cox transformation parameter Lambda.
+        M (float): Median parameter Mu.
+        S (float): Coefficient of variation Sigma.
+        is_derived (bool): True if LMS values were estimated from standard deviations.
+    """
+
     x: float
     L: float
     M: float
@@ -43,10 +85,12 @@ class DataPoint:
         Create a DataPoint instance from a dictionary.
 
         Args:
-            data (dict): Dictionary containing 'x', 'L', 'M', and 'S' keys.
+            data (dict): Dictionary containing keys 'x', 'l', 'm', and 's' for LMS values,
+                or SD columns ('sd3neg' to 'sd3') to estimate LMS parameters.
 
         Returns:
-            DataPoint: An instance of DataPoint.
+            DataPoint: An instance of DataPoint. The 'is_derived' flag is True when LMS values
+            are estimated from SD fields.
         """
         if "l" in data and "m" in data and "s" in data:
             return cls(
@@ -74,12 +118,28 @@ class DataPoint:
 
 @dataclass
 class RawTable:
-    source: str
-    name: str
+    """
+    Container for raw reference data loaded from CSV or XLSX files.
+
+    Holds metadata describing the data source plus a list of DataPoint entries.
+
+    Attributes:
+        source (str): Origin of the dataset (e.g., 'who', 'intergrowth').
+        name (str): Table identifier, often representing the age group.
+        age_group (str): Age group category (e.g., '0-2', '5-10').
+        sex (str): Sex code ('M', 'F', or 'U').
+        measurement_type (str): Measurement category (e.g., 'stature', 'weight').
+        x_var_type (str): Type of x variable ('age', 'gestational_age', etc.).
+        x_var_unit (str): Unit for the x variable ('cm', 'day', etc.).
+        points (list[DataPoint]): List of LMS data points.
+    """
+
+    source: DataSourceLiteral
+    name: TableNameLiteral
     age_group: str
-    sex: str
-    measurement_type: str
-    x_var_type: str
+    sex: SexLiteral
+    measurement_type: MeasurementTypeLiteral
+    x_var_type: XVarNameLiteral
     x_var_unit: str
     points: list[DataPoint]
 
@@ -124,8 +184,9 @@ class RawTable:
             csv_path (str): Path to the CSV file.
 
         Returns:
-            Dataset: An instance of Dataset.
+            RawTable: An instance of RawTable.
         """
+
         df = pd.read_csv(csv_path, dtype=str, encoding="utf-8")
 
         source, table, sex, measurement_type, x_var_type = cls._process_path(csv_path)
@@ -176,7 +237,11 @@ class RawTable:
 
         df["x"] = df[x_column].astype(float).astype(int)
 
-        measurement_type = measurement_type.replace("weight_stature", "weight_stature_ratio")
+        # TODO: fix age group logic, here is one table but on transform it will be separated into age_groups
+        if table not in ["growth", "child_growth"] + list(AGE_GROUP_CHOICES):
+            raise ValueError(f"table name {table} don't match any age_group")
+        if x_column not in ["month", "weeks", "days"] + list(X_VAR_UNIT_CHOICES):
+            raise ValueError(f"Invalid x_var_unit: {x_column}")
 
         return cls(
             source=source,
@@ -232,7 +297,7 @@ class RawTable:
         return data_points
 
     @staticmethod
-    def _process_path(filepath: str) -> tuple[str, str, str, str, str]:
+    def _process_path(filepath: str) -> tuple[DataSourceLiteral, TableNameLiteral, SexLiteral, MeasurementTypeLiteral, XVarNameLiteral]:
         filename = os.path.splitext(os.path.basename(filepath))[0]
 
         parts = filename.split("-")
@@ -241,7 +306,7 @@ class RawTable:
 
         sex = parts.pop().upper()
 
-        if sex not in ["M", "F", "U"]:  # 1mon and 2mon from velocity datasets
+        if sex not in SEX_CHOICES:  # 1mon and 2mon from velocity datasets
             sex = parts.pop().upper()
 
         measurement_type = parts.pop()
@@ -252,6 +317,19 @@ class RawTable:
         if measurement_type in ["weight_length", "weight_height"]:
             measurement_type = "weight"
             x_var_type = "stature"
+
+        measurement_type = measurement_type.replace("weight_stature", "weight_stature_ratio")
+
+        if source not in DATA_SOURCE_CHOICES:
+            raise ValueError(f"Invalid data source: {source}")
+        if table not in TABLE_NAME_CHOICES:
+            raise ValueError(f"Invalid table name: {table}")
+        if sex not in SEX_CHOICES:
+            raise ValueError(f"Invalid sex: {sex}")
+        if measurement_type not in MEASUREMENT_TYPE_CHOICES:
+            raise ValueError(f"Invalid measurement type: {measurement_type}")
+        if x_var_type not in X_VAR_NAME_CHOICES:
+            raise ValueError(f"Invalid x variable type: {x_var_type}")
 
         return source, table, sex, measurement_type, x_var_type
 
