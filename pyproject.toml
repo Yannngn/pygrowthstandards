@@ -9,16 +9,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "pandas[excel]>=2.3.0",
-    "pre-commit>=4.2.0",
-    "pytest>=8.4.1",
-    "pydocstyle>=6.1.1",
-]
+dev = ["pandas[excel]>=2.3.0", "pre-commit>=4.2.0", "pydocstyle>=6.1.1"]
 
 pdf = ["docling>=2.42.2"]
 
-tests = ["pytest>=8.4.0"]
+tests = ["pytest>=8.4.0", "pytest-benchmark>=3.4.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

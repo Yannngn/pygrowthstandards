@@ -13,6 +13,8 @@ Example:
     >>> p = percentile('stature', 50.0, 'M', age_days=365)
 """
 
+from datetime import datetime, timedelta
+
 from ..data.load import load_reference
 from ..utils.choices import MeasurementTypeLiteral, SexLiteral
 from ..utils.stats import calculate_z_score, normal_cdf
@@ -83,3 +85,46 @@ def percentile(
     z = zscore(measurement, value, sex, age_days, gestational_age)
 
     return normal_cdf(z)
+
+
+# Helpers
+
+
+def age_in_days(birth_date: datetime, measurement_date: datetime | None = None) -> int:
+    """
+    Calculate the age in days from birth date to measurement date.
+
+    Args:
+        birth_date: The date of birth.
+        measurement_date: The date of measurement. Defaults to today if None.
+
+    Returns:
+        Age in days as an integer.
+    """
+    if measurement_date is None:
+        measurement_date = datetime.now()
+
+    delta = measurement_date - birth_date
+    return delta.days
+
+
+def gestational_age_in_days(estimated_due_date: datetime, birth_or_measurement_date: datetime | None = None) -> int:
+    """
+    Calculate the gestational age in days from the estimated due date to the birth or fetal measurement date.
+
+    Args:
+        estimated_due_date: The estimated due date.
+        birth_or_measurement_date: The date of birth or fetal measurement. Defaults to today if None.
+
+    Returns:
+        Gestational age in days as an integer.
+    """
+    if birth_or_measurement_date is None:
+        birth_or_measurement_date = datetime.now()
+
+    max_allowed_date = estimated_due_date + timedelta(weeks=4)
+    if birth_or_measurement_date > max_allowed_date:
+        raise ValueError("Measurement date cannot be more than 4 weeks after the estimated due date (max 44 weeks gestational age).")
+
+    delta = estimated_due_date - birth_or_measurement_date
+    return delta.days
