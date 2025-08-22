@@ -57,7 +57,6 @@ class Patient:
         raise ValueError(f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'chronological_age'.")
 
     def add_measurement(self, measurement: Measurement) -> None:
-
         for group in self.measurements:
             if group.date == measurement.date:
                 setattr(group, measurement.measurement_type, measurement.value)

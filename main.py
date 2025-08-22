@@ -1,6 +1,7 @@
 import datetime
 
-from .src import MeasurementGroup, Patient, Plotter
+from src import MeasurementGroup, Patient, Plotter
+from src.utils.errors import InvalidChoicesError
 
 
 def main():
@@ -126,9 +127,9 @@ def main():
     for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
         for measurement_type in ["stature", "weight", "head_circumference", "body_mass_index"]:
             try:
-                plotter.plot(age_group, measurement_type, output_path=f"results/user_table_{age_group}_{measurement_type}.png")
-            except Exception as e:
-                print(f"Error plotting {age_group} {measurement_type}: {e}")
+                plotter.plot(age_group, measurement_type, output_path=f"results/user_table_{age_group}_{measurement_type}.png")  # type: ignore
+            except InvalidChoicesError as e:
+                print(e)
 
 
 if __name__ == "__main__":

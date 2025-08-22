@@ -1,38 +1,26 @@
+import logging
 import os
-from typing import Literal
 
 import pandas as pd
 
-from ..data.load import GrowthTable
+from ..data.load import GrowthTable, load_reference
 from ..utils import stats
+from ..utils.config import MEASUREMENT_ALIASES, DataSexType, MeasurementTypeType
 from ..utils.constants import WEEK, YEAR
-
-MEASUREMENTS = Literal["head_circumference", "stature", "weight", "body_mass_index", "weight_stature"]
-
-
-MEASUREMENT_ALIASES = {
-    "head_circumference": {"hcfa", "hc"},
-    "stature": {"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"},
-    "weight": {"wfa", "w"},
-    "body_mass_index": {"bmi", "bfa"},
-    "weight_stature": {
-        "wfs",
-        "wfl",
-        "wfh",
-        "weight_length",
-        "weight_height",
-        "weight_for_stature",
-        "weight_for_length",
-        "weight_for_height",
-    },
-}
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
 
 
+try:
+    DATA = load_reference()
+except FileNotFoundError:
+    logging.warning("Growth reference data file not found. Please ensure the data file is available.")
+    DATA = None
+
+
 def get_keys(
-    measurement: MEASUREMENTS,
-    sex: Literal["M", "F", "U"] = "U",
+    measurement: MeasurementTypeType,
+    sex: DataSexType = "U",
     age_days: int | None = None,
     gestational_age: int | None = None,
 ) -> tuple[str, str, str, str]:

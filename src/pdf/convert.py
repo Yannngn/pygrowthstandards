@@ -2,7 +2,11 @@ import glob
 import os
 
 import pandas as pd
-from docling.document_converter import DocumentConverter
+
+try:
+    from docling.document_converter import DocumentConverter  # type: ignore
+except ImportError:
+    raise ImportError("Please install the 'docling' package or `pdf` extra to use this script.")
 
 # some manual changes are needed to the csv files after this script runs
 

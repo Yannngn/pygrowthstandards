@@ -2,64 +2,34 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
 
+from src.utils.config import AGE_GROUP_CONFIG, MEASUREMENT_CONFIG, AgeGroupType, MeasurementTypeType
+
 from ..data.load import GrowthTable
-from ..utils.constants import WEEK, YEAR
 from ..utils.plot import style
 from ..utils.plot.xticks import set_xticks_by_range
 from .patient import Patient
 
 
 class Plotter:
-    limits = {
-        "very_preterm_newborn": (168, 230),
-        "newborn": (230, 300),
-        "very_preterm_growth": (27 * WEEK, 64 * WEEK),
-        "0-1": (0, int(round(1 * YEAR))),
-        "0-2": (0, int(round(2 * YEAR))),
-        "2-5": (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))),
-        "5-10": (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))),
-        "10-19": (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))),
-    }
-    names = {
-        "very_preterm_newborn": "very_preterm_newborn",
-        "newborn": "newborn",
-        "very_preterm_growth": "very_preterm_growth",
-        "0-1": "velocity",
-        "0-2": "child_growth",
-        "2-5": "child_growth",
-        "5-10": "growth",
-        "10-19": "growth",
-    }
-    x_var_types = {
-        "very_preterm_newborn": "gestational_age",
-        "newborn": "gestational_age",
-        "very_preterm_growth": "gestational_age",
-        "0-1": "age",
-        "0-2": "age",
-        "2-5": "age",
-        "5-10": "age",
-        "10-19": "age",
-    }
-
     def __init__(self, patient: Patient):
         self.patient = patient
-
         self.setup()
 
     def setup(self):
         self.patient.calculate_all()
 
-    def get_user_data(self, age_group: str, measurement_type: str) -> pd.DataFrame:
-        lower_limit, upper_limit = self.limits[age_group]
-        x_var_type = self.x_var_types[age_group]
+    def get_user_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
+        config = AGE_GROUP_CONFIG[age_group]
+        lower_limit, upper_limit = config.limits
+        x_var_type = config.x_type
 
         filtered_measurements = []
         for entry in self.patient.measurements:
-            if age_group in ["newborn", "very_preterm_newborn"]:
+            if age_group in {"newborn", "very_preterm_newborn"}:
                 if self.patient.get_age("age", entry.date) != 0:
                     continue
 
-            if x_var_type in ["gestational_age", "age"]:
+            if x_var_type in {"gestational_age", "age"}:
                 x_value = self.patient.get_age(x_var_type, entry.date)
             else:
                 x_value: float = getattr(entry, x_var_type)
@@ -72,14 +42,13 @@ class Plotter:
 
         return pd.DataFrame({"x": x, "child": y})
 
-    def get_reference_data(
-        self, age_group: str, measurement_type: str
-    ) -> GrowthTable:  # , x_var_type: Literal["gestational_age", "age", "stature"] | None = None
-        if age_group not in self.limits:
+    def get_reference_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> GrowthTable:
+        if age_group not in AGE_GROUP_CONFIG:
             raise ValueError(f"Invalid age group: {age_group}")
 
-        name = self.names[age_group]
-        x_var_type = self.x_var_types[age_group]
+        config = AGE_GROUP_CONFIG[age_group]
+        name = config.table_name
+        x_var_type = config.x_type
 
         data = GrowthTable.from_data(
             self.patient.calculator.data,
@@ -90,22 +59,19 @@ class Plotter:
             x_var_type=x_var_type,
         )
 
-        # data.cut_data(*self.limits[age_group])
-
         return data
 
-    def get_plot_data(self, age_group: str, measurement_type: str) -> pd.DataFrame:
+    def get_plot_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
         user_data = self.get_user_data(age_group, measurement_type)
         reference_data = self.get_reference_data(age_group, measurement_type)
 
         reference_data.add_child_data(user_data)
-
         return reference_data.convert_z_scores_to_values()
 
     def plot(
         self,
-        age_group: str,
-        measurement_type: str,
+        age_group: AgeGroupType,
+        measurement_type: MeasurementTypeType,
         ax: Axes | None = None,
         show: bool = False,
         output_path: str = "",
@@ -120,7 +86,8 @@ class Plotter:
             **style.get_label_style("user"),
         )
 
-        set_xticks_by_range(ax, self.limits[age_group][0], self.limits[age_group][1])
+        config = AGE_GROUP_CONFIG[age_group]
+        set_xticks_by_range(ax, *config.limits)
 
         if show:
             plt.show()
@@ -132,8 +99,8 @@ class Plotter:
 
     def reference_plot(
         self,
-        age_group: str,
-        measurement_type: str,
+        age_group: AgeGroupType,
+        measurement_type: MeasurementTypeType,
         ax: Axes | None = None,
         show: bool = False,
         output_path: str = "",
@@ -144,22 +111,25 @@ class Plotter:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
-        x_label = "Age" if self.x_var_types[age_group] == "age" else "Gestational Age"
-        y_label = measurement_type.replace("_", " ").capitalize()
+        config = AGE_GROUP_CONFIG[age_group]
+        measurement_config = MEASUREMENT_CONFIG[measurement_type]
+
+        x_label = config.x_type.replace("_", " ").title()
+        y_label = f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
             ax.plot(
                 plot_data["x"],
                 plot_data[z],
-                label=f"{y_label} (Z={z})",
+                label=f"{measurement_type.replace('_', ' ').title()} (Z={z})",
                 **style.get_label_style(label),
             )
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(f"{y_label} Reference Plot ({self.patient.sex})")
-        set_xticks_by_range(ax, self.limits[age_group][0], self.limits[age_group][1])
+        ax.set_title(f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
+        set_xticks_by_range(ax, *config.limits)
 
         if show:
             plt.show()

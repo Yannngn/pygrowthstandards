@@ -1,6 +1,6 @@
 [project]
 name = "pygrowthstandards"
-version = "0.1.1"
+version = "0.1.2"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -10,14 +10,16 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pandas[excel]>=2.3.0",
-    "pre-commit>=4.2.0",
-    "pytest>=8.4.1",
+    { include-group = "lint" },
+    { include-group = "test" },
+    { include-group = "excel" },
 ]
 
+excel = ["pandas[excel]>=2.3.0"]
 pdf = ["docling>=2.42.2"]
 
-tests = ["pytest>=8.4.0"]
+lint = ["ruff"]
+test = ["pytest"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

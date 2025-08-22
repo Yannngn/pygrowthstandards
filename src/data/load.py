@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from src.utils.errors import InvalidChoicesError
+
+from ..utils.config import AgeGroupType, DataSexType, DataSourceType, DataXTypeType, MeasurementTypeType, TableNameType
 from ..utils.stats import numpy_calculate_value_for_z_score
 
 
@@ -14,13 +17,12 @@ class GrowthTable:
     Represents a growth table containing data points for growth standards.
     """
 
-    source: str
-    name: str
-    age_group: str | None
-    measurement_type: str
-    sex: str
-    x_var_type: str
-    x_var_unit: str
+    source: DataSourceType
+    name: TableNameType
+    age_group: AgeGroupType | None
+    measurement_type: MeasurementTypeType
+    sex: DataSexType
+    x_var_type: DataXTypeType
     x: np.ndarray
     L: np.ndarray
     M: np.ndarray
@@ -33,11 +35,11 @@ class GrowthTable:
     def from_data(
         cls,
         data: pd.DataFrame,
-        name: str | None,
-        age_group: str | None,
-        measurement_type: str,
-        sex: str,
-        x_var_type: str | None,
+        name: TableNameType | None,
+        age_group: AgeGroupType | None,
+        measurement_type: MeasurementTypeType,
+        sex: DataSexType,
+        x_var_type: DataXTypeType | None,
     ) -> "GrowthTable":
         """
         Loads a GrowthTable from a DataFrame, filtering by measurement_type, sex, and x_var_type.
@@ -68,31 +70,23 @@ class GrowthTable:
         unique_names = filtered["name"].unique()
         unique_age_groups = filtered["age_group"].unique()
         unique_x_var_types = filtered["x_var_type"].unique()
-        unique_x_var_units = filtered["x_var_unit"].unique()
 
-        assert len(unique_sources) == 1, f"Expected one source, found {len(unique_sources)}: {unique_sources}"
-        assert len(unique_names) == 1, f"Expected one name, found {len(unique_names)}: {unique_names}"
+        if filtered.empty:
+            raise InvalidChoicesError(measurement_type, age_group)
 
         if len(unique_age_groups) > 1:
             unique_age_groups = None  # = unique_names
 
         # as default use 'age'/'gestational_age' for x_var_type if multiple types are found
         if len(unique_x_var_types) > 1:
-            if age_group in [
-                "very_preterm_newborn",
-                "newborn",
-                "very_preterm_growth",
-            ] or name in [
-                "very_preterm_newborn",
-                "newborn",
-                "very_preterm_growth",
-            ]:
+            gestational = {"very_preterm_newborn", "newborn", "very_preterm_growth"}
+
+            if age_group in gestational or name in gestational:
                 filtered = filtered[(filtered["x_var_type"] == "gestational_age")]
             else:
                 filtered = filtered[(filtered["x_var_type"] == "age")]
 
             unique_x_var_types = filtered["x_var_type"].unique()
-            unique_x_var_units = filtered["x_var_unit"].unique()
 
         return cls(
             source=unique_sources[0],
@@ -101,7 +95,6 @@ class GrowthTable:
             measurement_type=measurement_type,
             sex=sex,
             x_var_type=unique_x_var_types[0],
-            x_var_unit=unique_x_var_units[0],
             x=filtered["x"].to_numpy(),
             L=filtered["l"].to_numpy(),
             M=filtered["m"].to_numpy(),
@@ -177,7 +170,7 @@ def load_reference():
         os.pardir,
         os.pardir,
         "data",
-        "pygrowthstandards_0.1.1.parquet",
+        "pygrowthstandards_0.1.2.parquet",
     )
     if not os.path.exists(data_path):
         raise FileNotFoundError(f"Growth reference data file not found at {data_path}")

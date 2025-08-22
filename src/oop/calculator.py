@@ -14,14 +14,14 @@ class Calculator:
     """
 
     path = "data"
-    version = "0.1.1"
+    version = "0.1.2"
 
     x_var_types = {
         "very_preterm_newborn": "gestational_age",
         "newborn": "gestational_age",
         "very_preterm_growth": "gestational_age",
-        "growth": "age",
         "child_growth": "age",
+        "growth": "age",
     }
 
     def __init__(self):
