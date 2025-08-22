@@ -29,8 +29,7 @@ class DataPoint:
 
     def __post_init__(self):
         if not all(
-            isinstance(value, (int, float))
-            for value in (self.x, self.L, self.M, self.S)
+            isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)
         ):
             raise ValueError("All attributes must be numeric values.")
 

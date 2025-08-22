@@ -22,7 +22,9 @@ class Plotter:
     def setup(self):
         self.patient.calculate_all()
 
-    def get_user_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
+    def get_user_data(
+        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
+    ) -> pd.DataFrame:
         config = AGE_GROUP_CONFIG[age_group]
         lower_limit, upper_limit = config.limits
         x_var_type = config.x_type
@@ -38,15 +40,23 @@ class Plotter:
             else:
                 x_value: float = getattr(entry, x_var_type)
 
-            if lower_limit <= x_value <= upper_limit and hasattr(entry, measurement_type) and getattr(entry, measurement_type) is not None:
-                filtered_measurements.append((x_value, getattr(entry, measurement_type)))
+            if (
+                lower_limit <= x_value <= upper_limit
+                and hasattr(entry, measurement_type)
+                and getattr(entry, measurement_type) is not None
+            ):
+                filtered_measurements.append(
+                    (x_value, getattr(entry, measurement_type))
+                )
 
         x = [item[0] for item in filtered_measurements]
         y = [item[1] for item in filtered_measurements]
 
         return pd.DataFrame({"x": x, "child": y})
 
-    def get_reference_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> GrowthTable:
+    def get_reference_data(
+        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
+    ) -> GrowthTable:
         if age_group not in AGE_GROUP_CONFIG:
             raise ValueError(f"Invalid age group: {age_group}")
 
@@ -65,7 +75,9 @@ class Plotter:
 
         return data
 
-    def get_plot_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
+    def get_plot_data(
+        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
+    ) -> pd.DataFrame:
         user_data = self.get_user_data(age_group, measurement_type)
         reference_data = self.get_reference_data(age_group, measurement_type)
 
@@ -109,7 +121,9 @@ class Plotter:
         show: bool = False,
         output_path: str = "",
     ) -> Axes:
-        plot_data = self.get_reference_data(age_group, measurement_type).convert_z_scores_to_values()
+        plot_data = self.get_reference_data(
+            age_group, measurement_type
+        ).convert_z_scores_to_values()
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -119,7 +133,9 @@ class Plotter:
         measurement_config = MEASUREMENT_CONFIG[measurement_type]
 
         x_label = config.x_type.replace("_", " ").title()
-        y_label = f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
+        y_label = (
+            f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
+        )
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
@@ -132,7 +148,9 @@ class Plotter:
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
+        ax.set_title(
+            f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})"
+        )
         set_xticks_by_range(ax, *config.limits)
 
         if show:

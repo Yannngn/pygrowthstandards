@@ -12,7 +12,9 @@ def str_dataframe(
     rows = []
     columns = set()
     subkey_order = ["value", "z"]
-    for idx, (result, date, age) in enumerate(zip(results, date_list, age_list), 1):
+    for idx, (result, date, age) in enumerate(
+        zip(results, date_list, age_list, strict=False), 1
+    ):
         row: dict = {("Idx", ""): idx}
         # Add measurement date and child age (in days)
         row[("Date", "")] = date

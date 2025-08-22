@@ -107,7 +107,7 @@ def main():
     ]
 
     for date, stature, weight, hc in zip(
-        measurement_dates, statures, weights, head_circumferences
+        measurement_dates, statures, weights, head_circumferences, strict=False
     ):
         mg = MeasurementGroup(
             date=date, stature=stature, weight=weight, head_circumference=hc

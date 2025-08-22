@@ -75,7 +75,9 @@ AgeGroupType = Literal[
     "very_preterm_newborn",
     "very_preterm_growth",
 ]
-TableNameType = Literal["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"]
+TableNameType = Literal[
+    "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"
+]
 
 
 @dataclass(frozen=True)
@@ -103,21 +105,37 @@ class MeasurementConfig:
 
 # Configuration mappings
 AGE_GROUP_CONFIG: dict[AgeGroupType, AgeGroupConfig] = {
-    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig((168, 230), "gestational_age", "very_preterm_newborn"),
+    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(
+        (168, 230), "gestational_age", "very_preterm_newborn"
+    ),
     AgeGroup.NEWBORN: AgeGroupConfig((230, 300), "gestational_age", "newborn"),
-    AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig((27 * WEEK, 64 * WEEK), "gestational_age", "very_preterm_growth"),
+    AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig(
+        (27 * WEEK, 64 * WEEK), "gestational_age", "very_preterm_growth"
+    ),
     AgeGroup.ZERO_ONE: AgeGroupConfig((0, int(round(1 * YEAR))), "age", "child_growth"),
     AgeGroup.ZERO_TWO: AgeGroupConfig((0, int(round(2 * YEAR))), "age", "child_growth"),
-    AgeGroup.TWO_FIVE: AgeGroupConfig((int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"),
-    AgeGroup.FIVE_TEN: AgeGroupConfig((int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"),
-    AgeGroup.TEN_NINETEEN: AgeGroupConfig((int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"),
+    AgeGroup.TWO_FIVE: AgeGroupConfig(
+        (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"
+    ),
+    AgeGroup.FIVE_TEN: AgeGroupConfig(
+        (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"
+    ),
+    AgeGroup.TEN_NINETEEN: AgeGroupConfig(
+        (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"
+    ),
 }  # type: ignore
 
 MEASUREMENT_CONFIG: dict[MeasurementTypeType, MeasurementConfig] = {
-    MeasurementType.STATURE: MeasurementConfig("cm", frozenset({"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"})),
+    MeasurementType.STATURE: MeasurementConfig(
+        "cm", frozenset({"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"})
+    ),
     MeasurementType.WEIGHT: MeasurementConfig("kg", frozenset({"wfa", "w"})),
-    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig("cm", frozenset({"hcfa", "hc"})),
-    MeasurementType.BODY_MASS_INDEX: MeasurementConfig("kg/m²", frozenset({"bmi", "bfa"})),
+    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig(
+        "cm", frozenset({"hcfa", "hc"})
+    ),
+    MeasurementType.BODY_MASS_INDEX: MeasurementConfig(
+        "kg/m²", frozenset({"bmi", "bfa"})
+    ),
     MeasurementType.WEIGHT_STATURE: MeasurementConfig(
         "kg/cm",
         frozenset(
@@ -197,7 +215,17 @@ AGE_GROUP_CHOICES = frozenset([e.value for e in AgeGroup])
 
 # Legacy dictionaries (derived from configs)
 UNITS = {measurement: config.unit for measurement, config in MEASUREMENT_CONFIG.items()}
-AGE_GROUP_LIMITS = {age_group: config.limits for age_group, config in AGE_GROUP_CONFIG.items()}
-AGE_GROUP_X = {age_group: config.x_type for age_group, config in AGE_GROUP_CONFIG.items()}
-AGE_GROUP_TABLE_NAME = {age_group: config.table_name for age_group, config in AGE_GROUP_CONFIG.items()}
-MEASUREMENT_ALIASES = {measurement: config.aliases for measurement, config in MEASUREMENT_CONFIG.items() if config.aliases}
+AGE_GROUP_LIMITS = {
+    age_group: config.limits for age_group, config in AGE_GROUP_CONFIG.items()
+}
+AGE_GROUP_X = {
+    age_group: config.x_type for age_group, config in AGE_GROUP_CONFIG.items()
+}
+AGE_GROUP_TABLE_NAME = {
+    age_group: config.table_name for age_group, config in AGE_GROUP_CONFIG.items()
+}
+MEASUREMENT_ALIASES = {
+    measurement: config.aliases
+    for measurement, config in MEASUREMENT_CONFIG.items()
+    if config.aliases
+}

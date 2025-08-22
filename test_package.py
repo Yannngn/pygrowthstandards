@@ -60,7 +60,12 @@ def test_oop_api():
         print("✓ Patient created")
 
         # Add measurements
-        measurement = MeasurementGroup(date=datetime.date(2023, 1, 1), weight=10.5, stature=75.0, head_circumference=46.0)
+        measurement = MeasurementGroup(
+            date=datetime.date(2023, 1, 1),
+            weight=10.5,
+            stature=75.0,
+            head_circumference=46.0,
+        )
         patient.add_measurements(measurement)
         print("✓ Measurements added")
 

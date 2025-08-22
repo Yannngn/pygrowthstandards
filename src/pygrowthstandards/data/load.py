@@ -57,7 +57,9 @@ class GrowthTable:
         :return: An instance of GrowthTable.
         """
 
-        assert not all([name is None, age_group is None]), "Either name or age_group must be provided."
+        assert not all([name is None, age_group is None]), (
+            "Either name or age_group must be provided."
+        )
         filtered: pd.DataFrame = data.copy()
 
         if name is not None:
@@ -69,7 +71,10 @@ class GrowthTable:
         if x_var_type is not None:
             filtered = filtered[(filtered["x_var_type"] == x_var_type)]
 
-        filtered = filtered[(filtered["measurement_type"] == measurement_type) & (filtered["sex"] == sex.upper())]
+        filtered = filtered[
+            (filtered["measurement_type"] == measurement_type)
+            & (filtered["sex"] == sex.upper())
+        ]
 
         unique_sources = filtered["source"].unique()
         unique_names = filtered["name"].unique()
@@ -107,7 +112,9 @@ class GrowthTable:
             is_derived=filtered["is_derived"].to_numpy(),
         )
 
-    def convert_z_scores_to_values(self, z_scores: list[int] | None = None) -> pd.DataFrame:
+    def convert_z_scores_to_values(
+        self, z_scores: list[int] | None = None
+    ) -> pd.DataFrame:
         """
         Converts the GrowthTable to a DataFrame suitable for plotting.
 
@@ -120,7 +127,10 @@ class GrowthTable:
             {
                 "x": self.x,
                 "is_derived": self.is_derived,
-                **{z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S) for z in z_scores},
+                **{
+                    z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S)
+                    for z in z_scores
+                },
             }
         )
 
@@ -135,8 +145,12 @@ class GrowthTable:
 
         :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
         """
-        if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
-            raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
+        if not isinstance(child_data, pd.DataFrame) or not all(
+            col in child_data.columns for col in ["x", "child"]
+        ):
+            raise ValueError(
+                "child_data must be a DataFrame with 'x' and 'child' columns."
+            )
 
         # Add new x values from child_data to self.x
         x = child_data["x"].to_numpy()
@@ -177,7 +191,9 @@ def load_reference():
     data_path = get_data_path()
 
     if not data_exists():
-        raise FileNotFoundError(f"Growth reference data file not found at {data_path}. Please ensure the package was installed correctly.")
+        raise FileNotFoundError(
+            f"Growth reference data file not found at {data_path}. Please ensure the package was installed correctly."
+        )
 
     return pd.read_parquet(data_path)
 
