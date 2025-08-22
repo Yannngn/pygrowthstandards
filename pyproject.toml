@@ -1,6 +1,6 @@
 [project]
 name = "pygrowthstandards"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "A Python library for calculating child growth z-scores and percentiles using WHO and INTERGROWTH-21st standards"
 readme = "README.md"
 requires-python = ">=3.11"
