@@ -30,7 +30,9 @@ def main():
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
 
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
 
         data.add_table(dataset)
 
@@ -40,7 +42,9 @@ def main():
 
         dataset = RawTable.from_csv(f)
 
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
 
         data.add_table(dataset)
 
@@ -53,8 +57,13 @@ if __name__ == "__main__":
 
     # project_root -> .../pygrowthstandards (project root)
     project_root = Path(__file__).resolve().parents[3]
-    src_parquet = project_root / "data" / f"pygrowthstandards_{GrowthData.version}.parquet"
-    dst_parquet = Path(__file__).resolve().parent / f"pygrowthstandards_{GrowthData.version}.parquet"
+    src_parquet = (
+        project_root / "data" / f"pygrowthstandards_{GrowthData.version}.parquet"
+    )
+    dst_parquet = (
+        Path(__file__).resolve().parent
+        / f"pygrowthstandards_{GrowthData.version}.parquet"
+    )
 
     try:
         # Remove old parquet files in destination folder
