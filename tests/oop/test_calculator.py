@@ -8,15 +8,9 @@ sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 )
 
-import os
-import sys
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-from src.oop.measurement import Measurement, MeasurementGroup
-from src.oop.patient import Patient
+from src.pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
+from src.pygrowthstandards.oop.patient import Patient
 
 
 @pytest.fixture

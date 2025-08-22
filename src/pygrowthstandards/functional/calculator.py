@@ -1,5 +1,4 @@
-from src.utils.config import DataSexType, MeasurementTypeType
-
+from ..utils.config import DataSexType, MeasurementTypeType
 from ..utils.stats import calculate_z_score, normal_cdf
 from .data import DATA, get_keys, get_lms, get_table
 
