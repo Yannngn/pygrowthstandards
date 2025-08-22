@@ -8,9 +8,9 @@ __version__ = "0.1.1"
 try:
     from .src import functional
     from .src.oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
-    from .src.utils import choices, constants, stats
+    from .src import utils
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "choices", "constants", "stats"]
+    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
 
 except ImportError as e:
     # If dependencies are missing, provide a helpful error message
@@ -30,8 +30,6 @@ except ImportError as e:
     MeasurementGroup = None
     Patient = None
     Plotter = None
-    choices = None
-    constants = None
-    stats = None
+    utils = None
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "choices", "constants", "stats"]
+    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
