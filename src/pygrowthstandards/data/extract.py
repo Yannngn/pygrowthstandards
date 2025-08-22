@@ -28,9 +28,7 @@ class DataPoint:
     is_derived: bool = False
 
     def __post_init__(self):
-        if not all(
-            isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)
-        ):
+        if not all(isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)):
             raise ValueError("All attributes must be numeric values.")
 
     def to_dict(self) -> dict:
@@ -104,13 +102,9 @@ class RawTable:
                 self.x_var_type,
             }
         ):
-            raise ValueError(
-                "Source, name, measurement_type, and x_var_type must be strings."
-            )
+            raise ValueError("Source, name, measurement_type, and x_var_type must be strings.")
 
-        if not isinstance(self.points, list) or not all(
-            isinstance(point, DataPoint) for point in self.points
-        ):
+        if not isinstance(self.points, list) or not all(isinstance(point, DataPoint) for point in self.points):
             raise ValueError("Points must be a list of DataPoint instances.")
 
         # Validate using the new config system
@@ -201,9 +195,7 @@ class RawTable:
 
         # Use the Excel file name (without extension) for the temp CSV file
         base_name = os.path.splitext(os.path.basename(xlsx_path))[0]
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".csv", prefix=base_name + "-", delete=False
-        ) as tmpfile:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", prefix=base_name + "-", delete=False) as tmpfile:
             first_sheet_data.to_csv(tmpfile.name, index=False)
             tmp_csv_path = tmpfile.name
 
@@ -218,6 +210,7 @@ class RawTable:
     @staticmethod
     def _process_path(filepath: str) -> dict[str, str]:
         raw_kwargs = {}
+        x_var_type = ""
         filename = os.path.splitext(os.path.basename(filepath))[0]
 
         parts = filename.split("-")
@@ -226,9 +219,7 @@ class RawTable:
 
         # Handling sex with validation
         sex = parts.pop().upper()
-        if not ChoiceValidator.validate_choice(
-            sex, DATA_SEX_CHOICES
-        ):  # 1mon and 2mon from velocity datasets
+        if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):  # 1mon and 2mon from velocity datasets
             sex = parts.pop().upper()
 
         if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):
@@ -239,13 +230,11 @@ class RawTable:
         # Handling Measurement with alias resolution
         measurement_type = parts.pop()
         if measurement_type in {"weight_length", "weight_height"}:
+            x_var_type = measurement_type.replace("weight_", "")
             measurement_type = "weight"
-            x_var_type = "stature"
 
         # Try to resolve measurement alias
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
             measurement_type = resolved_measurement
 
@@ -258,19 +247,17 @@ class RawTable:
         source = parts.pop()
         raw_kwargs["source"] = source
 
-        x_var_type = "gestational_age" if "birth" in filename else "age"
+        if not x_var_type:
+            x_var_type = "gestational_age" if "birth" in filename else "age"
+
         raw_kwargs["x_var_type"] = x_var_type
 
         return raw_kwargs
 
     @staticmethod
-    def _handle_weight_for_length(
-        source: str, table_name: str, sex: str, measurement_type: str, **kwargs
-    ):
+    def _handle_weight_for_length(source: str, table_name: str, sex: str, measurement_type: str, x_var_type: str, **kwargs):
         # Resolve measurement alias if needed
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
             measurement_type = resolved_measurement
 
@@ -279,7 +266,7 @@ class RawTable:
             "name": table_name,
             "sex": sex,
             "measurement_type": measurement_type,
-            "x_var_type": "stature",
+            "x_var_type": x_var_type,
             "x_var_unit": "cm",
         }
 
@@ -320,14 +307,10 @@ class RawTable:
         **kwargs,
     ):
         # Handle measurement type resolution
-        measurement_type = measurement_type.replace(
-            "weight_stature", "weight_stature_ratio"
-        )
+        measurement_type = measurement_type.replace("weight_stature", "weight_stature_ratio")
 
         # Try to resolve measurement alias
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
             measurement_type = resolved_measurement
 
@@ -364,9 +347,7 @@ class RawTable:
 def main():
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        logging.info(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
+        logging.info(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
 
 
 if __name__ == "__main__":
