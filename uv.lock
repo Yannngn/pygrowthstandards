@@ -1923,10 +1923,7 @@ name = "pygrowthstandards"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "matplotlib" },
-    { name = "numpy" },
     { name = "pandas", extra = ["computation", "output-formatting", "parquet", "performance", "plot"] },
-    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -1955,12 +1952,7 @@ test = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "matplotlib", specifier = ">=3.5.0" },
-    { name = "numpy", specifier = ">=1.24.0" },
-    { name = "pandas", extras = ["performance", "computation", "plot", "output-formatting", "parquet"], specifier = ">=2.3.0" },
-    { name = "scipy", specifier = ">=1.10.0" },
-]
+requires-dist = [{ name = "pandas", extras = ["performance", "computation", "plot", "output-formatting", "parquet"], specifier = ">=2.3.0" }]
 
 [package.metadata.requires-dev]
 build = [
