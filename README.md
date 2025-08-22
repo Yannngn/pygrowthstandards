@@ -95,7 +95,7 @@ plotter.plot(
 
 After running the above code, you can view the generated growth chart:
 
-![Stature Growth Chart](results/user_table_0_2_stature.png)
+![Stature Growth Chart](results/user_table_0-2_stature.png)
 
 ### Functional Approach
 
