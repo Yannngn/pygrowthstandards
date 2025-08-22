@@ -158,8 +158,8 @@ def estimate_lms_from_sd(
             bounds=bounds,
             maxfev=10000,
         )
-    except Exception as e:
-        raise RuntimeError(f"Curve fitting failed: {e}")
+    except Exception as exc:
+        raise RuntimeError(f"Curve fitting failed: {exc}") from exc
 
     return lambda_fit, mu, sigma_fit
 

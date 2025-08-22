@@ -1,7 +1,7 @@
 import datetime
 
-from src import MeasurementGroup, Patient, Plotter
-from src.utils.errors import InvalidChoicesError
+from src.pygrowthstandards import MeasurementGroup, Patient, Plotter
+from src.pygrowthstandards.utils.errors import InvalidChoicesError
 
 
 def main():

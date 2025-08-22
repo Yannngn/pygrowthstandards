@@ -1,10 +1,7 @@
-import os
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
-
-from src.utils.errors import InvalidChoicesError
 
 from ..utils.config import (
     AgeGroupType,
@@ -14,6 +11,7 @@ from ..utils.config import (
     MeasurementTypeType,
     TableNameType,
 )
+from ..utils.errors import InvalidChoicesError
 from ..utils.stats import numpy_calculate_value_for_z_score
 
 
@@ -59,9 +57,7 @@ class GrowthTable:
         :return: An instance of GrowthTable.
         """
 
-        assert not all([name is None, age_group is None]), (
-            "Either name or age_group must be provided."
-        )
+        assert not all([name is None, age_group is None]), "Either name or age_group must be provided."
         filtered: pd.DataFrame = data.copy()
 
         if name is not None:
@@ -73,10 +69,7 @@ class GrowthTable:
         if x_var_type is not None:
             filtered = filtered[(filtered["x_var_type"] == x_var_type)]
 
-        filtered = filtered[
-            (filtered["measurement_type"] == measurement_type)
-            & (filtered["sex"] == sex.upper())
-        ]
+        filtered = filtered[(filtered["measurement_type"] == measurement_type) & (filtered["sex"] == sex.upper())]
 
         unique_sources = filtered["source"].unique()
         unique_names = filtered["name"].unique()
@@ -114,21 +107,20 @@ class GrowthTable:
             is_derived=filtered["is_derived"].to_numpy(),
         )
 
-    def convert_z_scores_to_values(self, z_scores=[-3, -2, 0, 2, 3]) -> pd.DataFrame:
+    def convert_z_scores_to_values(self, z_scores: list[int] | None = None) -> pd.DataFrame:
         """
         Converts the GrowthTable to a DataFrame suitable for plotting.
 
         :return: A DataFrame with columns for x, L, M, S, and is_derived.
         """
+        if not z_scores:
+            z_scores = [-3, -2, 0, 2, 3]
 
         data = pd.DataFrame(
             {
                 "x": self.x,
                 "is_derived": self.is_derived,
-                **{
-                    z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S)
-                    for z in z_scores
-                },
+                **{z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S) for z in z_scores},
             }
         )
 
@@ -143,12 +135,8 @@ class GrowthTable:
 
         :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
         """
-        if not isinstance(child_data, pd.DataFrame) or not all(
-            col in child_data.columns for col in ["x", "child"]
-        ):
-            raise ValueError(
-                "child_data must be a DataFrame with 'x' and 'child' columns."
-            )
+        if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
+            raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
 
         # Add new x values from child_data to self.x
         x = child_data["x"].to_numpy()
@@ -158,7 +146,7 @@ class GrowthTable:
         self.y = np.full_like(self.x, fill_value=None, dtype=object)
 
         x_indices = {val: idx for idx, val in enumerate(self.x)}
-        for x_val, y_val in zip(x, y):
+        for x_val, y_val in zip(x, y, strict=True):
             idx = x_indices.get(x_val)
             if idx is not None:
                 self.y[idx] = y_val
@@ -180,19 +168,16 @@ class GrowthTable:
 
 def load_reference():
     """
-    Loads the growth reference data from a CSV file and returns a DataFrame.
+    Loads the growth reference data from the packaged parquet file and returns a DataFrame.
 
     :return: A DataFrame containing the growth reference data.
     """
-    data_path = os.path.join(
-        os.path.dirname(__file__),
-        os.pardir,
-        os.pardir,
-        "data",
-        "pygrowthstandards_0.1.2.parquet",
-    )
-    if not os.path.exists(data_path):
-        raise FileNotFoundError(f"Growth reference data file not found at {data_path}")
+    from . import data_exists, get_data_path
+
+    data_path = get_data_path()
+
+    if not data_exists():
+        raise FileNotFoundError(f"Growth reference data file not found at {data_path}. Please ensure the package was installed correctly.")
 
     return pd.read_parquet(data_path)
 

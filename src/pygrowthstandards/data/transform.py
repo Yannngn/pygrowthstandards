@@ -11,7 +11,7 @@ from .extract import RawTable
 
 @dataclass
 class GrowthData:
-    version: str = "0.1.2"
+    version: str = "0.1.0"
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
@@ -81,8 +81,12 @@ class GrowthData:
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
-        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
+        df.to_parquet(
+            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
+        )
+        df.to_csv(
+            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
+        )
 
     @staticmethod
     def _transform_age_to_days(data: RawTable) -> RawTable:
@@ -101,7 +105,9 @@ class GrowthData:
         return data
 
     @staticmethod
-    def _extract_age_group(table_name: str, measurement_type: str, age: int) -> AgeGroupType:
+    def _extract_age_group(
+        table_name: str, measurement_type: str, age: int
+    ) -> AgeGroupType:
         if table_name in AGE_GROUP_CHOICES:
             return table_name  # type: ignore
 
@@ -123,13 +129,17 @@ def main():
     data = GrowthData()
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
     for f in glob.glob("data/raw/**/*.csv"):
         if "cdc" in f:
             continue
         dataset = RawTable.from_csv(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
 
     data.save_parquet()

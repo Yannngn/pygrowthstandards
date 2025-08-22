@@ -2,14 +2,25 @@
   "python.testing.pytestArgs": [
     "tests"
   ],
-  "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.analysis.exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    "**/.venv",
-    "**/.git",
-    "**/venv",
-    "**/tests"
-  ]
+      "**/.venv/*",
+      "build",
+      "dist",
+      "**/__pycache__",
+      "**/*.egg-info"
+  ],
+
+  // Ruff settings for VSCode
+  "ruff.exclude": [
+      "**/.venv/*",
+      "build",
+      "dist",
+      "**/__pycache__",
+      "**/*.egg-info"
+  ],
+  "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.egg-info": true
+  }
 }

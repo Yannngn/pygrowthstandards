@@ -14,7 +14,7 @@ class Calculator:
     """
 
     path = "data"
-    version = "0.1.2"
+    version = "0.1.0"
 
     x_var_types = {
         "very_preterm_newborn": "gestational_age",

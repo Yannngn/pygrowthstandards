@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import StrEnum
-from typing import FrozenSet, Literal
+from typing import Literal
 
-from src.utils.constants import WEEK, YEAR
+from .constants import WEEK, YEAR
 
 # Templates
 X_TEMPLATE = D("0.00")
@@ -97,7 +97,7 @@ class MeasurementConfig:
     """Configuration for measurements with units and aliases."""
 
     unit: str
-    aliases: FrozenSet[str] = frozenset()
+    aliases: frozenset[str] = frozenset()
 
     def matches_alias(self, alias: str) -> bool:
         return alias.lower() in self.aliases or alias == self.unit
@@ -179,7 +179,7 @@ class ChoiceValidator:
         return None
 
     @staticmethod
-    def validate_choice(value: str, choices: FrozenSet[str]) -> bool:
+    def validate_choice(value: str, choices: frozenset[str]) -> bool:
         """Validate if value is in choices."""
         return value in choices
 

@@ -1,8 +1,7 @@
 # pygrowthstandards
 
-<!-- [![PyPI version](https://badge.fury.io/py/pygrowthstandards.svg)](https://badge.fury.io/py/pygrowthstandards)
-[![Python Version](https://img.shields.io/pypi/pyversions/pygrowthstandards.svg)](https://pypi.org/project/pygrowthstandards) -->
-
+[![PyPI version](https://badge.fury.io/py/pygrowthstandards.svg)](https://badge.fury.io/py/pygrowthstandards)
+[![Python Version](https://img.shields.io/pypi/pyversions/pygrowthstandards.svg)](https://pypi.org/project/pygrowthstandards)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/pygrowthstandards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python package](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml/badge.svg)](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml)
@@ -30,8 +29,15 @@ This library implements standards from internationally recognized sources:
 
 ## Installation
 
-To install for development, clone the repository and install in editable mode:
-Use uv
+To install the latest stable release from PyPI:
+
+```bash
+pip install pygrowthstandards
+```
+
+### Development Installation
+
+To install for development, clone the repository and install in editable mode using uv:
 
 ```bash
 git clone https://github.com/Yannngn/pygrowthstandards.git
@@ -39,12 +45,6 @@ cd pygrowthstandards
 uv venv --python 3.11
 source .venv/bin/activate
 uv sync
-```
-
-To install the latest stable release from PyPI [In Progress]:
-
-```bash
-pip install pygrowthstandards
 ```
 
 ## Quick Start
@@ -56,9 +56,9 @@ The object-oriented API is ideal for tracking a patient's growth over time. It u
 ```python
 # filepath: main.py
 import datetime
-from src.oop.patient import Patient
-from src.oop.measurement import MeasurementGroup
-from src.oop.plotter import Plotter
+from pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.oop.plotter import Plotter
 
 # 1. Create a Patient
 patient = Patient(
@@ -103,7 +103,7 @@ For quick, single, stateless calculations, the functional API provides direct ac
 
 ```python
 # filepath: main.py
-from src import functional as F
+from pygrowthstandards import functional as F
 
 # Calculate z-scores for various measurements and ages
 z1 = F.zscore("stature", 50, "F", age_days=0, gestational_age=280)

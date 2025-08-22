@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include src/pygrowthstandards *.py
+recursive-include src/pygrowthstandards/data *.parquet
+recursive-exclude data/raw *
+exclude .github/*
+exclude .vscode/*
+exclude __pycache__
+exclude *.pyc

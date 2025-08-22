@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
 
-from src.utils.config import (
+from ..data.load import GrowthTable
+from ..utils.config import (
     AGE_GROUP_CONFIG,
     MEASUREMENT_CONFIG,
     AgeGroupType,
     MeasurementTypeType,
 )
-
-from ..data.load import GrowthTable
 from ..utils.plot import style
 from ..utils.plot.xticks import set_xticks_by_range
 from .patient import Patient

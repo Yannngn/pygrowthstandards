@@ -5,10 +5,10 @@ import pandas as pd
 
 try:
     from docling.document_converter import DocumentConverter  # type: ignore
-except ImportError:
+except ImportError as exc:
     raise ImportError(
         "Please install the 'docling' package or `pdf` extra to use this script."
-    )
+    ) from exc
 
 # some manual changes are needed to the csv files after this script runs
 

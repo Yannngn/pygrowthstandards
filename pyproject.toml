@@ -1,18 +1,54 @@
 [project]
 name = "pygrowthstandards"
-version = "0.1.2"
-description = "Add your description here"
+version = "0.1.0"
+description = "A Python library for calculating child growth z-scores and percentiles using WHO and INTERGROWTH-21st standards"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Yannngn", email = "contato.yannnob@gmail.com" }]
+maintainers = [{ name = "Yannngn", email = "contato.yannnob@gmail.com" }]
+keywords = [
+    "growth",
+    "pediatrics",
+    "who",
+    "intergrowth",
+    "z-score",
+    "percentile",
+    "anthropometry",
+    "children",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = [
     "pandas[performance, computation, plot, output-formatting, parquet]>=2.3.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Yannngn/pygrowthstandards"
+Repository = "https://github.com/Yannngn/pygrowthstandards"
+Issues = "https://github.com/Yannngn/pygrowthstandards/issues"
+Documentation = "https://github.com/Yannngn/pygrowthstandards#readme"
 
 [dependency-groups]
 dev = [
     { include-group = "lint" },
     { include-group = "test" },
     { include-group = "excel" },
+    { include-group = "build" },
 ]
 
 excel = ["pandas[excel]>=2.3.0"]
@@ -20,7 +56,53 @@ pdf = ["docling>=2.42.2"]
 
 lint = ["ruff"]
 test = ["pytest"]
+build = ["build>=1.3.0", "twine>=6.1.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pygrowthstandards"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/data/pygrowthstandards_0.1.0.parquet",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/CHANGELOG.md",
+    "/CONTRIBUTING.md",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

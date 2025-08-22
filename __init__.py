@@ -2,12 +2,19 @@
 PyGrowthStandards - A Python library for pediatric growth standard calculations.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.0"
 
 # Import main classes and functions, handling missing dependencies gracefully
 try:
-    from .src import functional, utils
-    from .src.oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
+    from .src.pygrowthstandards import (
+        Calculator,
+        Measurement,
+        MeasurementGroup,
+        Patient,
+        Plotter,
+        functional,
+        utils,
+    )
 
     __all__ = [
         "functional",
@@ -28,6 +35,7 @@ except ImportError as e:
         "Please install required packages: numpy, pandas, matplotlib, scipy. "
         "Run: pip install numpy pandas matplotlib scipy",
         ImportWarning,
+        stacklevel=1,
     )
 
     # Define placeholder variables that don't raise errors during import
