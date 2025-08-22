@@ -5,7 +5,9 @@ from src.utils.errors import InvalidChoicesError
 
 
 def main():
-    patient = Patient(birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=38)
+    patient = Patient(
+        birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=38
+    )
     # calculator.plot_all_standards()
 
     patient.add_measurements(
@@ -125,9 +127,18 @@ def main():
 
     plotter = Plotter(patient)
     for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
-        for measurement_type in ["stature", "weight", "head_circumference", "body_mass_index"]:
+        for measurement_type in [
+            "stature",
+            "weight",
+            "head_circumference",
+            "body_mass_index",
+        ]:
             try:
-                plotter.plot(age_group, measurement_type, output_path=f"results/user_table_{age_group}_{measurement_type}.png")  # type: ignore
+                plotter.plot(
+                    age_group,  # type: ignore
+                    measurement_type,  # type: ignore
+                    output_path=f"results/user_table_{age_group}_{measurement_type}.png",
+                )
             except InvalidChoicesError as e:
                 print(e)
 

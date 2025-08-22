@@ -17,7 +17,9 @@ def normal_cdf(z: float) -> float:
     return norm.cdf(z).item()
 
 
-def calculate_value_for_z_score(z_score: float, lamb: float, mu: float, sigm: float) -> float:
+def calculate_value_for_z_score(
+    z_score: float, lamb: float, mu: float, sigm: float
+) -> float:
     """
     Calculate the value for a given z-score based on the LMS method.
 
@@ -38,7 +40,9 @@ def calculate_value_for_z_score(z_score: float, lamb: float, mu: float, sigm: fl
     return mu * pow(1 + lamb * sigm * z_score, 1 / lamb)
 
 
-def numpy_calculate_value_for_z_score(z_score: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray) -> np.ndarray:
+def numpy_calculate_value_for_z_score(
+    z_score: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray
+) -> np.ndarray:
     """
     Calculate values for z-score using the LMS method.
 
@@ -59,7 +63,9 @@ def numpy_calculate_value_for_z_score(z_score: float, lamb: np.ndarray, mu: np.n
     # For lamb == 0, use the alternative formula
     result[mask] = mu[mask] * (1 + sigm[mask] * z_score)
     # For lamb != 0, use the main formula
-    result[~mask] = mu[~mask] * np.power(1 + lamb[~mask] * sigm[~mask] * z_score, 1 / lamb[~mask])
+    result[~mask] = mu[~mask] * np.power(
+        1 + lamb[~mask] * sigm[~mask] * z_score, 1 / lamb[~mask]
+    )
 
     return result
 
@@ -85,7 +91,9 @@ def calculate_z_score(value: float, lamb: float, mu: float, sigm: float) -> floa
     return (pow(value / mu, lamb) - 1) / (lamb * sigm)
 
 
-def numpy_calculate_z_score(value: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray) -> np.ndarray:
+def numpy_calculate_z_score(
+    value: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray
+) -> np.ndarray:
     """
     Calculate z-scores for a given value based on the LMS method.
 
@@ -107,12 +115,16 @@ def numpy_calculate_z_score(value: float, lamb: np.ndarray, mu: np.ndarray, sigm
     result[mask] = (value / mu[mask] - 1) / sigm[mask]
 
     # For lamb != 0, use the main formula
-    result[~mask] = (np.power(value / mu[~mask], lamb[~mask]) - 1) / (lamb[~mask] * sigm[~mask])
+    result[~mask] = (np.power(value / mu[~mask], lamb[~mask]) - 1) / (
+        lamb[~mask] * sigm[~mask]
+    )
 
     return result
 
 
-def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) -> tuple[float, float, float]:
+def estimate_lms_from_sd(
+    z_score_idx: np.ndarray, z_score_values: np.ndarray
+) -> tuple[float, float, float]:
     """Estimate L, M, S parameters from SD values and z-scores."""
 
     if 0 not in z_score_idx:
@@ -138,14 +150,23 @@ def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) ->
     # Set bounds for lambda and sigma to help optimizer
     bounds = ([-1.1, 1e-8], [1.1, 1])
     try:
-        (lambda_fit, sigma_fit), _ = curve_fit(lms_func, z_score_idx, z_score_values, p0=[0.1, S0], bounds=bounds, maxfev=10000)
+        (lambda_fit, sigma_fit), _ = curve_fit(
+            lms_func,
+            z_score_idx,
+            z_score_values,
+            p0=[0.1, S0],
+            bounds=bounds,
+            maxfev=10000,
+        )
     except Exception as e:
         raise RuntimeError(f"Curve fitting failed: {e}")
 
     return lambda_fit, mu, sigma_fit
 
 
-def interpolate_array(x: int | float, x_values: np.ndarray, y_values: np.ndarray, n_points: int = 5) -> float:
+def interpolate_array(
+    x: int | float, x_values: np.ndarray, y_values: np.ndarray, n_points: int = 5
+) -> float:
     """
     Interpolate LMS parameters for a given x using the closest points from provided data.
     Uses cubic spline interpolation if enough points, otherwise falls back to linear.
@@ -159,7 +180,9 @@ def interpolate_array(x: int | float, x_values: np.ndarray, y_values: np.ndarray
     if n_points == -1:
         n_points = 5  # Default to 5 points
 
-    n_points = min(max(n_points, 2), len(x_values))  # At least 2, at most available points
+    n_points = min(
+        max(n_points, 2), len(x_values)
+    )  # At least 2, at most available points
 
     # Find n_points closest x_values
     idx_sorted = np.argsort(np.abs(x_values - float(x)))
@@ -206,8 +229,14 @@ def interpolate_lms(
     idxs = np.array(idx_sorted[:n_points])
     sorted_indices = np.argsort(list(set(x_values[idxs])))  # because of add user data?
 
-    l_interp = interpolate_array(x, x_values[idxs][sorted_indices], l_values[idxs][sorted_indices], -1)
-    m_interp = interpolate_array(x, x_values[idxs][sorted_indices], m_values[idxs][sorted_indices], -1)
-    s_interp = interpolate_array(x, x_values[idxs][sorted_indices], s_values[idxs][sorted_indices], -1)
+    l_interp = interpolate_array(
+        x, x_values[idxs][sorted_indices], l_values[idxs][sorted_indices], -1
+    )
+    m_interp = interpolate_array(
+        x, x_values[idxs][sorted_indices], m_values[idxs][sorted_indices], -1
+    )
+    s_interp = interpolate_array(
+        x, x_values[idxs][sorted_indices], s_values[idxs][sorted_indices], -1
+    )
 
     return l_interp, m_interp, s_interp

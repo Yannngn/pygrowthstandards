@@ -34,7 +34,9 @@ class Patient:
 
         return date - self.birthday_date
 
-    def chronological_age(self, date: datetime.date | None = None) -> datetime.timedelta:
+    def chronological_age(
+        self, date: datetime.date | None = None
+    ) -> datetime.timedelta:
         date = date or datetime.date.today()
 
         if self.birthday_date is not None:
@@ -54,7 +56,9 @@ class Patient:
         elif age_type == "chronological_age":
             return self.chronological_age(date).days
 
-        raise ValueError(f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'chronological_age'.")
+        raise ValueError(
+            f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'chronological_age'."
+        )
 
     def add_measurement(self, measurement: Measurement) -> None:
         for group in self.measurements:
@@ -64,7 +68,9 @@ class Patient:
                 return
 
         new_group = MeasurementGroup(
-            table_name=measurement.table_name, date=measurement.date, **{measurement.measurement_type: measurement.value}
+            table_name=measurement.table_name,
+            date=measurement.date,
+            **{measurement.measurement_type: measurement.value},
         )
         self.measurements.append(new_group)
 
@@ -75,7 +81,12 @@ class Patient:
         """
         Calculates z-scores for all measurement groups in the patient.
         """
-        self.z_scores = [self.calculator.calculate_measurement_group(group, self.get_age(date=group.date)) for group in self.measurements]
+        self.z_scores = [
+            self.calculator.calculate_measurement_group(
+                group, self.get_age(date=group.date)
+            )
+            for group in self.measurements
+        ]
 
     def display_measurements(self) -> str:
         if not self.measurements:
@@ -115,11 +126,15 @@ class Patient:
 
             results_list.append(result_dict)
 
-        return str_dataframe(results=results_list, date_list=date_list, age_list=age_list)
+        return str_dataframe(
+            results=results_list, date_list=date_list, age_list=age_list
+        )
 
     def _setup(self):
         self.is_born = self.birthday_date is not None
-        self.gestational_age = datetime.timedelta(weeks=self.gestational_age_weeks, days=self.gestational_age_days)
+        self.gestational_age = datetime.timedelta(
+            weeks=self.gestational_age_weeks, days=self.gestational_age_days
+        )
 
         if self.is_born:
             self.is_very_preterm = self.gestational_age_weeks < 32

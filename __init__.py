@@ -9,7 +9,15 @@ try:
     from .src import functional, utils
     from .src.oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
+    __all__ = [
+        "functional",
+        "Calculator",
+        "Measurement",
+        "MeasurementGroup",
+        "Patient",
+        "Plotter",
+        "utils",
+    ]
 
 except ImportError as e:
     # If dependencies are missing, provide a helpful error message
@@ -31,4 +39,12 @@ except ImportError as e:
     Plotter = None
     utils = None
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
+    __all__ = [
+        "functional",
+        "Calculator",
+        "Measurement",
+        "MeasurementGroup",
+        "Patient",
+        "Plotter",
+        "utils",
+    ]

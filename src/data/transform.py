@@ -46,10 +46,25 @@ class GrowthData:
 
         df = pd.DataFrame(records)
 
-        df["age_group"] = df.apply(lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x"]), axis=1)
+        df["age_group"] = df.apply(
+            lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x"]),
+            axis=1,
+        )
 
         # ensure required columns exist
-        required = ["source", "age_group", "name", "sex", "measurement_type", "x_var_type", "x", "l", "m", "s", "is_derived"]
+        required = [
+            "source",
+            "age_group",
+            "name",
+            "sex",
+            "measurement_type",
+            "x_var_type",
+            "x",
+            "l",
+            "m",
+            "s",
+            "is_derived",
+        ]
 
         return df[required]
 
@@ -66,8 +81,12 @@ class GrowthData:
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
-        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
+        df.to_parquet(
+            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
+        )
+        df.to_csv(
+            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
+        )
 
     @staticmethod
     def _transform_age_to_days(data: RawTable) -> RawTable:
@@ -86,7 +105,9 @@ class GrowthData:
         return data
 
     @staticmethod
-    def _extract_age_group(table_name: str, measurement_type: str, age: int) -> AgeGroupType:
+    def _extract_age_group(
+        table_name: str, measurement_type: str, age: int
+    ) -> AgeGroupType:
         if table_name in AGE_GROUP_CHOICES:
             return table_name  # type: ignore
 
@@ -108,13 +129,17 @@ def main():
     data = GrowthData()
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
     for f in glob.glob("data/raw/**/*.csv"):
         if "cdc" in f:
             continue
         dataset = RawTable.from_csv(f)
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
         data.add_table(dataset)
 
     data.save_parquet()

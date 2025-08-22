@@ -1,3 +1,3 @@
-from . import choices, constants, stats
+from . import config, constants, stats
 
-__all__ = ["constants", "choices", "stats"]
+__all__ = ["constants", "config", "stats"]

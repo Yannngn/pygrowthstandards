@@ -6,7 +6,14 @@ import pandas as pd
 
 from src.utils.errors import InvalidChoicesError
 
-from ..utils.config import AgeGroupType, DataSexType, DataSourceType, DataXTypeType, MeasurementTypeType, TableNameType
+from ..utils.config import (
+    AgeGroupType,
+    DataSexType,
+    DataSourceType,
+    DataXTypeType,
+    MeasurementTypeType,
+    TableNameType,
+)
 from ..utils.stats import numpy_calculate_value_for_z_score
 
 
@@ -52,7 +59,9 @@ class GrowthTable:
         :return: An instance of GrowthTable.
         """
 
-        assert not all([name is None, age_group is None]), "Either name or age_group must be provided."
+        assert not all([name is None, age_group is None]), (
+            "Either name or age_group must be provided."
+        )
         filtered: pd.DataFrame = data.copy()
 
         if name is not None:
@@ -64,7 +73,10 @@ class GrowthTable:
         if x_var_type is not None:
             filtered = filtered[(filtered["x_var_type"] == x_var_type)]
 
-        filtered = filtered[(filtered["measurement_type"] == measurement_type) & (filtered["sex"] == sex.upper())]
+        filtered = filtered[
+            (filtered["measurement_type"] == measurement_type)
+            & (filtered["sex"] == sex.upper())
+        ]
 
         unique_sources = filtered["source"].unique()
         unique_names = filtered["name"].unique()
@@ -113,7 +125,10 @@ class GrowthTable:
             {
                 "x": self.x,
                 "is_derived": self.is_derived,
-                **{z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S) for z in z_scores},
+                **{
+                    z: numpy_calculate_value_for_z_score(z, self.L, self.M, self.S)
+                    for z in z_scores
+                },
             }
         )
 
@@ -128,8 +143,12 @@ class GrowthTable:
 
         :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
         """
-        if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
-            raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
+        if not isinstance(child_data, pd.DataFrame) or not all(
+            col in child_data.columns for col in ["x", "child"]
+        ):
+            raise ValueError(
+                "child_data must be a DataFrame with 'x' and 'child' columns."
+            )
 
         # Add new x values from child_data to self.x
         x = child_data["x"].to_numpy()
