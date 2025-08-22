@@ -28,7 +28,9 @@ def main():
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
 
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
 
         data.add_table(dataset)
 
@@ -38,7 +40,9 @@ def main():
 
         dataset = RawTable.from_csv(f)
 
-        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
+        print(
+            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
+        )
 
         data.add_table(dataset)
 

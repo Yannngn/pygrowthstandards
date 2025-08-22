@@ -2,7 +2,13 @@ import glob
 import os
 
 import pandas as pd
-from docling.document_converter import DocumentConverter
+
+try:
+    from docling.document_converter import DocumentConverter  # type: ignore
+except ImportError:
+    raise ImportError(
+        "Please install the 'docling' package or `pdf` extra to use this script."
+    )
 
 # some manual changes are needed to the csv files after this script runs
 
@@ -44,7 +50,9 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
         combined_df = pd.concat(tables, ignore_index=True)
 
         if "days" in combined_df.columns:
-            combined_df["days"] = combined_df["days"].apply(intergrowth_convert_weeks_days)
+            combined_df["days"] = combined_df["days"].apply(
+                intergrowth_convert_weeks_days
+            )
 
         combined_df.to_csv(element_csv_filename, index=False, header=header)
 

@@ -1,22 +1,22 @@
-import datetime
 from dataclasses import dataclass, field
-from typing import Literal
+from datetime import date as dt_date
+from datetime import datetime as dt_datetime
 
-TableNames = Literal["newborn", "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn"]
+from ..utils.config import MeasurementTypeType, TableNameType
 
 
 @dataclass
 class Measurement:
     value: float
-    measurement_type: str
-    table_name: TableNames = "growth"
-    date: datetime.date = field(default_factory=datetime.date.today)
+    measurement_type: MeasurementTypeType
+    table_name: TableNameType = "growth"
+    date: dt_datetime | dt_date = field(default_factory=dt_datetime.now)
 
 
 @dataclass
 class MeasurementGroup:
-    table_name: TableNames = "growth"
-    date: datetime.date = field(default_factory=datetime.date.today)
+    table_name: TableNameType = "growth"
+    date: dt_datetime | dt_date = field(default_factory=dt_datetime.now)
 
     stature: float | None = None
     weight: float | None = None
@@ -50,7 +50,9 @@ class MeasurementGroup:
         for key, value in data.items():
             if value is None or key == "date":
                 continue
-            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
+            measurements.append(
+                Measurement(value=value, measurement_type=key, date=data["date"])
+            )
 
         return measurements
 

@@ -2,15 +2,22 @@
 PyGrowthStandards - A Python library for pediatric growth standard calculations.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 # Import main classes and functions, handling missing dependencies gracefully
 try:
-    from .src import functional
+    from .src import functional, utils
     from .src.oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
-    from .src import utils
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
+    __all__ = [
+        "functional",
+        "Calculator",
+        "Measurement",
+        "MeasurementGroup",
+        "Patient",
+        "Plotter",
+        "utils",
+    ]
 
 except ImportError as e:
     # If dependencies are missing, provide a helpful error message
@@ -32,4 +39,12 @@ except ImportError as e:
     Plotter = None
     utils = None
 
-    __all__ = ["functional", "Calculator", "Measurement", "MeasurementGroup", "Patient", "Plotter", "utils"]
+    __all__ = [
+        "functional",
+        "Calculator",
+        "Measurement",
+        "MeasurementGroup",
+        "Patient",
+        "Plotter",
+        "utils",
+    ]

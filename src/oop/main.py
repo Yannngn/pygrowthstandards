@@ -106,8 +106,12 @@ def main():
         55.0,
     ]
 
-    for date, stature, weight, hc in zip(measurement_dates, statures, weights, head_circumferences):
-        mg = MeasurementGroup(date=date, stature=stature, weight=weight, head_circumference=hc)
+    for date, stature, weight, hc in zip(
+        measurement_dates, statures, weights, head_circumferences
+    ):
+        mg = MeasurementGroup(
+            date=date, stature=stature, weight=weight, head_circumference=hc
+        )
         patient.add_measurements(mg)
 
     # Calculate z-scores for all measurements
