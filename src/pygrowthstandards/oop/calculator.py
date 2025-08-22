@@ -3,6 +3,8 @@ import os
 
 import pandas as pd
 
+from pygrowthstandards.data.transform import GrowthData
+
 from ..utils import stats
 from ..utils.errors import NoReferenceDataException
 from .measurement import MeasurementGroup
@@ -14,7 +16,6 @@ class Calculator:
     """
 
     path = "data"
-    version = "0.1.0"
 
     x_var_types = {
         "very_preterm_newborn": "gestational_age",
@@ -26,7 +27,7 @@ class Calculator:
 
     def __init__(self):
         self.data = pd.read_parquet(
-            os.path.join(self.path, f"pygrowthstandards_{self.version}.parquet")
+            os.path.join(self.path, f"pygrowthstandards_{GrowthData.version}.parquet")
         )
 
     def calculate_z_score(

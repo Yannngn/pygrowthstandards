@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2025-08-22
+## [0.1.2] - 2025-08-22
 
 ### Added
 - Initial public release
@@ -31,9 +31,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data Visualization**: Matplotlib-based growth chart generation
 - **Performance Optimized**: Parquet-based data storage and NumPy operations
 
-### Dependencies
-- Python >=3.11
-- pandas >=2.3.0
-- numpy >=1.24.0
-- scipy >=1.10.0
-- matplotlib >=3.5.0

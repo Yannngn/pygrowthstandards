@@ -73,7 +73,7 @@ packages = ["src/pygrowthstandards"]
 include = [
     "/src",
     "/tests",
-    "/data/pygrowthstandards_0.1.0.parquet",
+    "/data/pygrowthstandards_0.1.2.parquet",
     "/README.md",
     "/LICENSE",
     "/pyproject.toml",
