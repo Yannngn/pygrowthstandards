@@ -20,7 +20,6 @@ def main():
     )
     patient.add_measurements(
         MeasurementGroup(
-            table_name="newborn",
             stature=50.0,
             weight=3.5,
             head_circumference=37.0,

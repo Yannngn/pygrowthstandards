@@ -221,7 +221,7 @@ def interpolate_lms(
     """
 
     if x < x_values.min() or x > x_values.max():
-        raise NoReferenceDataException("x", "x_values", int(x))
+        raise NoReferenceDataException()
 
     distances = np.abs(x_values - float(x))
     idx_sorted = np.argsort(distances)

@@ -37,4 +37,5 @@ class TestFunctionalData:
 
     def test_normalized_measurement_alias(self):
         keys = data.get_keys("wfa", sex="M", age_days=365)  # type: ignore
-        assert keys[1] == "weight"
+        print(keys)
+        assert keys[2] == "weight"

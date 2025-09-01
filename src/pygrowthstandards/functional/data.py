@@ -5,8 +5,15 @@ import pandas as pd
 
 from ..data.load import GrowthTable, load_reference
 from ..utils import stats
-from ..utils.config import MEASUREMENT_ALIASES, DataSexType, MeasurementTypeType
-from ..utils.constants import WEEK, YEAR
+from ..utils.config import (
+    AgeGroupType,
+    ChoiceValidator,
+    DataSexType,
+    DataXTypeType,
+    MeasurementTypeType,
+    TableNameType,
+    resolve_measurement,
+)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
 
@@ -21,67 +28,52 @@ except FileNotFoundError:
 
 
 def get_keys(
-    measurement: MeasurementTypeType,
+    measurement: str,
     sex: DataSexType = "U",
     age_days: int | None = None,
     gestational_age: int | None = None,
-) -> tuple[str, str, str, str]:
+) -> tuple[
+    TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType
+]:
     if age_days is None and gestational_age is None:
         raise ValueError("Either age_days or gestational_age must be provided.")
 
-    def normalized_measurement() -> str:
-        for key, aliases in MEASUREMENT_ALIASES.items():
-            normalized = measurement.lower().replace("-", "_")
-            if normalized in aliases | {key}:
-                return key
-        raise ValueError(f"Unknown measurement: {measurement}")
+    measurement_type = ChoiceValidator.resolve_measurement_alias(measurement)
+    age_group = ChoiceValidator.get_age_group_from_ages(age_days, gestational_age)
+    assert age_group is not None, "Could not determine age group from provided ages."
+    name = ChoiceValidator.get_table_name_from_age_group(age_group)
 
-    measurement_type = normalized_measurement()
+    measurement_type = resolve_measurement(measurement)
+
     sex = sex.lower() if sex in ["M", "F"] else "f"  # type: ignore
 
-    name = ""
-    x_var_type = ""
+    x_var_type = ChoiceValidator.get_age_type_from_age_group(age_group) or ""
 
-    if age_days is not None:
-        x_var_type = "age"
-        if (
-            measurement_type in ["head_circumference", "weight_stature"]
-            and age_days > 5 * YEAR
-        ):
-            raise ValueError(f"No reference for {measurement_type} after 5 years.")
+    if name in ["growth"] and measurement_type in [
+        "head_circumference",
+        "weight_stature",
+    ]:
+        raise ValueError(f"No reference for {measurement_type} after 5 years.")
 
-        if measurement_type in ["weight"] and age_days > 10 * YEAR:
-            raise ValueError(f"No reference for {measurement_type} after 10 years.")
+    if name in [
+        "newborn",
+        "very_preterm_newborn",
+        "very_preterm_growth",
+    ] and measurement_type in ["body_mass_index"]:
+        raise ValueError(f"No reference for {measurement_type} at birth or fetal age.")
 
-        name = "growth" if age_days > 5 * YEAR else "child_growth"
+    if name in ["newborn"] and measurement_type in ["weight_stature"]:
+        raise ValueError(f"No reference for {measurement_type} at birth.")
 
-        if gestational_age is not None and age_days < 64 * WEEK:
-            if gestational_age < 28:
-                name = "very_preterm_growth"
+    if age_group in ["10-19"] and measurement_type in ["weight"]:
+        raise ValueError(f"No reference for {measurement_type} after 10 years.")
 
-    if gestational_age is not None and (age_days == 0 or age_days is None):
-        x_var_type = "gestational_age"
-        if measurement_type in ["body_mass_index"]:
-            raise ValueError(
-                f"No reference for {measurement_type} at birth or fetal age."
-            )
-
-        if gestational_age > 28:
-            if measurement_type in ["weight_stature"]:
-                raise ValueError(
-                    f"No reference for {measurement_type} at birth or fetal age."
-                )
-            name = "newborn"
-        else:
-            name = "very_preterm_newborn"
-
-    return name, measurement_type, sex, x_var_type
+    return name, age_group, measurement_type, sex, x_var_type  # type: ignore[reportReturnType]
 
 
 def get_table(data: pd.DataFrame, keys: tuple) -> GrowthTable:
     # data = load_reference()
-    name, measurement, sex, x_var_type = keys
-    return GrowthTable.from_data(data, name, None, measurement, sex, x_var_type)
+    return GrowthTable.from_data(data, *keys)
 
 
 def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:

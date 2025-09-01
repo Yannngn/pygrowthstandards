@@ -1,3 +1,5 @@
+from pygrowthstandards.utils.errors import NoReferenceDataException
+
 from ..utils.config import DataSexType, MeasurementTypeType
 from ..utils.stats import calculate_z_score, normal_cdf
 from .data import DATA, get_keys, get_lms, get_table
@@ -13,12 +15,13 @@ def zscore(
     keys = get_keys(measurement, sex, age_days, gestational_age=gestational_age)
 
     x = age_days if keys[-1] == "age" else gestational_age
-
     assert x is not None, "Either age_days or gestational_age must be provided."
 
     data = get_table(DATA, keys)
-    lms = get_lms(data, x)
-
+    try:
+        lms = get_lms(data, x)
+    except NoReferenceDataException as err:
+        raise NoReferenceDataException(keys[2], keys[1], x, sex) from err
     return calculate_z_score(value, *lms)
 
 

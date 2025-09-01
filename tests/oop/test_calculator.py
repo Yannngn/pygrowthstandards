@@ -22,21 +22,18 @@ def setup_patient():
     )
     measurements = [
         MeasurementGroup(
-            table_name="child_growth",
             date=datetime.date(2022, 7, 1),
             weight=8.6,
             stature=68.4,
             head_circumference=44.5,
         ),
         MeasurementGroup(
-            table_name="child_growth",
             date=datetime.date(2023, 1, 1),
             weight=10.2,
             stature=75.7,
             head_circumference=46.5,
         ),
         MeasurementGroup(
-            table_name="child_growth",
             date=datetime.date(2024, 1, 1),
             weight=12.6,
             stature=87.8,
@@ -64,7 +61,6 @@ def test_add_measurement(setup_patient: Patient):
     # Add a measurement to an existing date
     patient.add_measurement(
         Measurement(
-            table_name="child_growth",
             measurement_type="weight",
             value=12.7,
             date=datetime.date(2024, 1, 1),
@@ -75,7 +71,6 @@ def test_add_measurement(setup_patient: Patient):
     # Add a measurement to a new date
     patient.add_measurement(
         Measurement(
-            table_name="child_growth",
             measurement_type="stature",
             value=90.0,
             date=datetime.date(2024, 6, 1),

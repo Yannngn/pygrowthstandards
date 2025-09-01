@@ -123,9 +123,9 @@ class GrowthData:
         if table_name in AGE_GROUP_CHOICES:
             return table_name  # type: ignore
 
-        if measurement_type.endswith("velocity"):
-            if age < 1 * YEAR:
-                return "0-1"
+        # if measurement_type.endswith("velocity"):
+        #     if age < 1 * YEAR:
+        #         return "0-1"
 
         if age < 2 * YEAR:
             return "0-2"

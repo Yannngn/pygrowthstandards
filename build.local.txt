@@ -1,0 +1,3 @@
+cd /home/yannn/projects/Yannngn/pygrowthstandards && rm -rf dist/ build/ *.egg-info
+cd /home/yannn/projects/Yannngn/pygrowthstandards && python -m build
+cd /home/yannn/projects/Yannngn/pygrowthstandards && twine check dist/*

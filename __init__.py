@@ -2,7 +2,7 @@
 PyGrowthStandards - A Python library for pediatric growth standard calculations.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 # Import main classes and functions, handling missing dependencies gracefully
 try:

@@ -3,9 +3,9 @@ class NoReferenceDataException(Exception):
 
     def __init__(
         self,
-        measurement_type: str,
-        age_type: str,
-        age_value: int,
+        measurement_type: str | None = None,
+        age_type: str | None = None,
+        age_value: int | None = None,
         sex: str | None = None,
     ):
         self.measurement_type = measurement_type

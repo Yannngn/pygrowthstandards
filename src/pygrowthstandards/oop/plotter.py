@@ -32,11 +32,11 @@ class Plotter:
         filtered_measurements = []
         for entry in self.patient.measurements:
             if age_group in {"newborn", "very_preterm_newborn"}:
-                if self.patient.get_age("age", entry.date) != 0:
+                if self.patient.get_age_with_type("age", entry.date) != 0:
                     continue
 
             if x_var_type in {"gestational_age", "age"}:
-                x_value = self.patient.get_age(x_var_type, entry.date)
+                x_value = self.patient.get_age_with_type(x_var_type, entry.date)
             else:
                 x_value: float = getattr(entry, x_var_type)
 

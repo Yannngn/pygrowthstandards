@@ -41,7 +41,7 @@ class MeasurementType(StrEnum):
 
 
 class AgeGroup(StrEnum):
-    ZERO_ONE = "0-1"
+    # ZERO_ONE = "0-1"
     ZERO_TWO = "0-2"
     TWO_FIVE = "2-5"
     FIVE_TEN = "5-10"
@@ -66,7 +66,7 @@ MeasurementTypeType = Literal[
     "head_circumference_velocity",
 ]
 AgeGroupType = Literal[
-    "0-1",
+    # "0-1",
     "0-2",
     "2-5",
     "5-10",
@@ -106,13 +106,15 @@ class MeasurementConfig:
 # Configuration mappings
 AGE_GROUP_CONFIG: dict[AgeGroupType, AgeGroupConfig] = {
     AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(
-        (168, 230), "gestational_age", "very_preterm_newborn"
+        (24 * WEEK, 33 * WEEK - 1), "gestational_age", "very_preterm_newborn"
     ),
-    AgeGroup.NEWBORN: AgeGroupConfig((230, 300), "gestational_age", "newborn"),
+    AgeGroup.NEWBORN: AgeGroupConfig(
+        (33 * WEEK, 43 * WEEK - 1), "gestational_age", "newborn"
+    ),
     AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig(
         (27 * WEEK, 64 * WEEK), "gestational_age", "very_preterm_growth"
     ),
-    AgeGroup.ZERO_ONE: AgeGroupConfig((0, int(round(1 * YEAR))), "age", "child_growth"),
+    # AgeGroup.ZERO_ONE: AgeGroupConfig((0, int(round(1 * YEAR))), "age", "child_growth"),
     AgeGroup.ZERO_TWO: AgeGroupConfig((0, int(round(2 * YEAR))), "age", "child_growth"),
     AgeGroup.TWO_FIVE: AgeGroupConfig(
         (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"
@@ -187,6 +189,57 @@ class ChoiceValidator:
     def get_measurement_unit(measurement: MeasurementTypeType) -> str:
         """Get unit for measurement type."""
         return MEASUREMENT_CONFIG[measurement].unit
+
+    @staticmethod
+    def get_age_type_from_table(table_name: TableNameType) -> DataXTypeType | None:
+        """Get age type for table name."""
+        for _, config in AGE_GROUP_CONFIG.items():
+            if config.table_name == table_name:
+                return config.x_type
+        return None
+
+    @staticmethod
+    def get_age_type_from_age_group(age_group: AgeGroupType) -> DataXTypeType | None:
+        """Get age type for age group."""
+        for key, config in AGE_GROUP_CONFIG.items():
+            if key == age_group:
+                return config.x_type
+        return None
+
+    @staticmethod
+    def get_age_group_from_ages(
+        age: int | None = None, gestational_age: int | None = None
+    ) -> AgeGroupType | None:
+        if gestational_age is None and age is None:
+            raise ValueError("Either age or gestational_age must be provided.")
+
+        if age is not None and gestational_age is None:
+            return ChoiceValidator.get_age_group_for_age(age, "age")
+
+        assert gestational_age is not None, (
+            "Either age or gestational_age must be provided. Only for typing"
+        )
+
+        if AGE_GROUP_CONFIG["very_preterm_newborn"].contains_age(gestational_age):
+            if not age:
+                return "very_preterm_newborn"
+
+            if AGE_GROUP_CONFIG["very_preterm_growth"].contains_age(
+                age + gestational_age
+            ):
+                return "very_preterm_growth"
+
+            return ChoiceValidator.get_age_group_for_age(age, "age")
+
+        if not age:
+            return "newborn"
+
+        return ChoiceValidator.get_age_group_for_age(age, "age")
+
+    @staticmethod
+    def get_table_name_from_age_group(age_group: AgeGroupType) -> TableNameType | None:
+        """Get table name for age group."""
+        return AGE_GROUP_TABLE_NAME.get(age_group)  # type: ignore
 
 
 # Convenience functions

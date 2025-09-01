@@ -31,3 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data Visualization**: Matplotlib-based growth chart generation
 - **Performance Optimized**: Parquet-based data storage and NumPy operations
 
+## [0.1.3] - 2025-08-31
+
+### Added
+- Object-oriented API was reoriented to use age_group in place of table_name. The field is filled automatically based on provided age and gestational age.
+- From csv classmethod for patient. Load from csv method for populating MeasurementGroups and MeasurementGroup from dict classmethod
