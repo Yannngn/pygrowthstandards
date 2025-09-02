@@ -1,13 +1,18 @@
 import csv
 import datetime
 from dataclasses import dataclass, field
+from datetime import date as dt_date
+from datetime import datetime as dt_datetime
 
+from pygrowthstandards.oop.development import DevelopmentGoal, DevelopmentGoalGroup
 from pygrowthstandards.utils.config import (
     AgeGroup,
     AgeGroupType,
     ChoiceValidator,
     DataSexType,
 )
+from pygrowthstandards.utils.constants import WEEK
+from pygrowthstandards.utils.date_utils import handle_date
 
 from ..utils.results import str_dataframe
 from .calculator import Calculator
@@ -17,13 +22,14 @@ from .measurement import Measurement, MeasurementGroup
 @dataclass
 class Patient:
     sex: DataSexType
-    birthday_date: datetime.date | None
+    birthday_date: dt_date | dt_datetime | None
     gestational_age_weeks: int = 40
     gestational_age_days: int = 0
 
     measurements: list[MeasurementGroup] = field(default_factory=list)
-
     z_scores: list[MeasurementGroup] = field(default_factory=list, init=False)
+
+    developments: list[DevelopmentGoalGroup] = field(default_factory=list)
 
     gestational_age: datetime.timedelta = field(init=False)
     is_born: bool = field(init=False)
@@ -33,23 +39,43 @@ class Patient:
         self._setup()
         self.calculator = Calculator()
 
-    def age(self, date: datetime.date | None = None) -> datetime.timedelta:
+    def age(self, date: dt_date | dt_datetime | None = None) -> datetime.timedelta:
+        """Age from birth"""
+        date = handle_date(date)
+
         assert self.birthday_date is not None, "Patient must be born to calculate age."
 
-        date = date or datetime.date.today()
+        date = date or dt_date.today()
 
         assert date >= self.birthday_date, "Date must be after the birthday date."
 
-        return date - self.birthday_date
+        return date - self.birthday_date  # type: ignore
 
-    def chronological_age(
-        self, date: datetime.date | None = None
+    def corrected_age(
+        self, date: dt_date | dt_datetime | None = None
     ) -> datetime.timedelta:
-        date = date or datetime.date.today()
+        """
+        Calculates the corrected age for very preterm children.
+
+        - If the child is not born, returns the gestational age.
+        - If the child is born and corrected age < 64 weeks, returns the corrected age.
+        - If the child is born and corrected age >= 64 weeks, returns the post-birth age.
+
+        Parameters
+        ----------
+        date : dt_date | None
+            The reference date for age calculation. Defaults to today.
+
+        Returns
+        -------
+        datetime.timedelta
+            The corrected age or post-birth age, depending on the child's age.
+        """
+        date = handle_date(date)
 
         if self.birthday_date is not None:
-            age = date - (self.birthday_date - self.gestational_age)
-            if age.days > 64:
+            age = self.age(date) + self.gestational_age
+            if age.days > 64 * WEEK:
                 return self.age(date)
 
             return age
@@ -57,24 +83,23 @@ class Patient:
         return date - self.gestational_age  # type: ignore
 
     def get_age_with_type(
-        self, age_type: str = "age", date: datetime.date | None = None
+        self, age_type: str = "age", date: dt_date | dt_datetime | None = None
     ) -> int:
         if age_type == "age":
             return self.age(date).days
 
+        if age_type == "corrected_age":
+            return self.corrected_age(date).days
+
         if age_type == "gestational_age":
             return self.gestational_age.days
 
-        # remove chronological
-        if age_type == "chronological_age":
-            return self.chronological_age(date).days
-
         raise ValueError(
-            f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'chronological_age'."
+            f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'corrected_age'."
         )
 
     def get_age_for_age_group(
-        self, date: datetime.date, age_group: AgeGroupType
+        self, age_group: AgeGroupType, date: dt_date | dt_datetime | None = None
     ) -> int:
         age_type = self._get_age_type(age_group)
         return self.get_age_with_type(age_type, date=date)
@@ -101,6 +126,76 @@ class Patient:
             measurements.age_group = self._get_age_group(date=measurements.date)
 
         self.measurements.append(measurements)
+
+    def add_development_achievement(self, development_goal: DevelopmentGoal) -> None:
+        """
+        Add a single development achievement to the patient's development goals.
+
+        If a DevelopmentGoalGroup with the same date already exists, update it.
+        Otherwise, create a new DevelopmentGoalGroup for the given date.
+
+        Parameters
+        ----------
+        development_goal : DevelopmentGoal
+            The development goal to add.
+
+        Returns
+        -------
+        None
+        """
+        for group in self.developments:
+            if group.date == development_goal.date:
+                # Update the existing group
+                for existing_goal in group.developments:
+                    if (
+                        existing_goal.development_goal
+                        == development_goal.development_goal
+                    ):
+                        existing_goal.date = development_goal.date
+                        return
+                # If the goal doesn't exist in the group, add it
+                group.developments.append(development_goal)
+                return
+
+        # If no group with the same date exists, create a new group
+        new_group = DevelopmentGoalGroup(
+            developments=[development_goal], date=development_goal.date
+        )
+        self.developments.append(new_group)
+
+    def add_development_achievements(
+        self, development_goal_group: DevelopmentGoalGroup
+    ) -> None:
+        """
+        Add multiple development achievements to the patient's development goals.
+
+        If a DevelopmentGoalGroup with the same date already exists, update it.
+        Otherwise, append the new DevelopmentGoalGroup.
+
+        Parameters
+        ----------
+        development_goal_group : DevelopmentGoalGroup
+            A group of development goals to add.
+
+        Returns
+        -------
+        None
+        """
+        for group in self.developments:
+            if group.date == development_goal_group.date:
+                # Update the existing group
+                for new_goal in development_goal_group.developments:
+                    for existing_goal in group.developments:
+                        if existing_goal.development_goal == new_goal.development_goal:
+                            existing_goal.date = new_goal.date
+                            break
+                    else:
+                        # If the goal doesn't exist in the group, add it
+                        group.developments.append(new_goal)
+                return
+
+        # If no group with the same date exists, append the new group
+        self.developments.append(development_goal_group)
 
     def load_measurements_from_csv(self, csv_path: str) -> None:
         """
@@ -218,9 +313,10 @@ class Patient:
         )
 
         if self.is_born:
+            self.birthday_date = handle_date(self.birthday_date)
             self.is_very_preterm = self.gestational_age_weeks < 32
 
-    def _get_age_group(self, date: datetime.date):
+    def _get_age_group(self, date: dt_date | dt_datetime | None):
         age_group = ChoiceValidator.get_age_group_from_ages(
             age=self.get_age_with_type("age", date=date),
             gestational_age=self.get_age_with_type("gestational_age", date=date),
@@ -235,7 +331,7 @@ class Patient:
     def from_csv(
         cls,
         sex: DataSexType,
-        birthday: datetime.date,
+        birthday: dt_date | dt_datetime | None,
         csv_path: str,
         gestational_age_weeks: int = 40,
         gestational_age_days: int = 0,
@@ -257,7 +353,7 @@ class Patient:
         if age_group in [AgeGroup.VERY_PRETERM_NEWBORN, AgeGroup.NEWBORN]:
             return "gestational_age"
         if age_group in [AgeGroup.VERY_PRETERM_GROWTH]:
-            return "chronological_age"
+            return "corrected_age"
 
         return "age"
 
@@ -266,6 +362,6 @@ class Patient:
     #     if table_name in ["very_preterm_newborn", "newborn"]:
     #         return "gestational_age"
     #     if table_name in ["very_preterm_growth"]:
-    #         return "chronological_age"
+    #         return "corrected_age"
 
     #     return "age"

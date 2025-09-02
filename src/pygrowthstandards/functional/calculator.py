@@ -10,12 +10,25 @@ def zscore(
     value: float,
     sex: DataSexType = "U",
     age_days: int | None = None,
-    gestational_age: int | None = None,
+    gestational_age_days: int | None = None,
 ) -> float:
-    keys = get_keys(measurement, sex, age_days, gestational_age=gestational_age)
+    keys = get_keys(
+        measurement=measurement,
+        sex=sex,
+        age_days=age_days,
+        gestational_age_days=gestational_age_days,
+    )
 
-    x = age_days if keys[-1] == "age" else gestational_age
-    assert x is not None, "Either age_days or gestational_age must be provided."
+    if keys[1] in {"very_preterm_growth"}:
+        x = (age_days or 0) + (gestational_age_days or 0)
+    elif keys[1] in {"very_preterm_newborn", "newborn"}:
+        x = gestational_age_days
+    else:
+        x = age_days
+
+    assert x is not None and x > 0, (
+        "Either age_days or gestational_age must be provided."
+    )
 
     data = get_table(DATA, keys)
     try:
@@ -30,8 +43,8 @@ def percentile(
     value: float,
     sex: DataSexType = "U",
     age_days: int | None = None,
-    gestational_age: int | None = None,
+    gestational_age_days: int | None = None,
 ) -> float:
-    z = zscore(measurement, value, sex, age_days, gestational_age)
+    z = zscore(measurement, value, sex, age_days, gestational_age_days)
 
     return normal_cdf(z)

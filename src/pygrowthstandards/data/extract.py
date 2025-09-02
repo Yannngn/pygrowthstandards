@@ -262,6 +262,9 @@ class RawTable:
         if not x_var_type:
             x_var_type = "gestational_age" if "birth" in filename else "age"
 
+        if table in {"very_preterm_growth"}:
+            x_var_type = "corrected_age"
+
         raw_kwargs["x_var_type"] = x_var_type
 
         return raw_kwargs

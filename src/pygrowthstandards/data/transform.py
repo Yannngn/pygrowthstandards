@@ -11,7 +11,7 @@ from .extract import RawTable
 
 @dataclass
 class GrowthData:
-    version: str = "1.1"
+    version: str = "1.2"
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:

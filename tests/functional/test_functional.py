@@ -16,7 +16,7 @@ class TestFunctionalCalculator:
 
     def test_zscore_gestational_age(self):
         # Example: weight, female, gestational_age=280
-        result = calculator.zscore("weight", 3.5, sex="F", gestational_age=280)
+        result = calculator.zscore("weight", 3.5, sex="F", gestational_age_days=280)
         assert isinstance(result, float)
 
     def test_percentile(self):
@@ -32,7 +32,7 @@ class TestFunctionalData:
         assert keys[-1] == "age"
 
     def test_get_keys_gestational_age(self):
-        keys = data.get_keys("weight", sex="F", gestational_age=280)
+        keys = data.get_keys("weight", sex="F", gestational_age_days=280)
         assert keys[-1] == "gestational_age"
 
     def test_normalized_measurement_alias(self):

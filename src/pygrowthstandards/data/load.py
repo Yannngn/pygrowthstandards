@@ -82,6 +82,7 @@ class GrowthTable:
         unique_x_var_types = filtered["x_var_type"].unique()
 
         if filtered.empty:
+            print(name, measurement_type, age_group, x_var_type, sex)
             raise InvalidChoicesError(measurement_type, age_group)
 
         if len(unique_age_groups) > 1:
@@ -89,10 +90,16 @@ class GrowthTable:
 
         # as default use 'age'/'gestational_age' for x_var_type if multiple types are found
         if len(unique_x_var_types) > 1:
-            gestational = {"very_preterm_newborn", "newborn", "very_preterm_growth"}
+            gestational = {"very_preterm_newborn", "newborn"}
 
             if age_group in gestational or name in gestational:
                 filtered = filtered[(filtered["x_var_type"] == "gestational_age")]
+            elif age_group in {"very_preterm_growth"} or name in {
+                "very_preterm_growth"
+            }:
+                filtered = filtered[
+                    (filtered["x_var_type"] == "corrected_age")
+                ]  # TODO: chronological
             else:
                 filtered = filtered[(filtered["x_var_type"] == "age")]
 

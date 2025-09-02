@@ -19,7 +19,7 @@ Example usage:
     >>> patient.calculate_all()
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.0"
 __author__ = "Yannngn"
 __email__ = "contato.yannnob@gmail.com"
 __license__ = "MIT"

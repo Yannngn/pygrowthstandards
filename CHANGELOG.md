@@ -36,3 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Object-oriented API was reoriented to use age_group in place of table_name. The field is filled automatically based on provided age and gestational age.
 - From csv classmethod for patient. Load from csv method for populating MeasurementGroups and MeasurementGroup from dict classmethod
+- renamed chronological date to corrected age
+- added corrected age for very preterm growth
+- added development goals and achievements

@@ -31,15 +31,15 @@ def get_keys(
     measurement: str,
     sex: DataSexType = "U",
     age_days: int | None = None,
-    gestational_age: int | None = None,
+    gestational_age_days: int | None = None,
 ) -> tuple[
     TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType
 ]:
-    if age_days is None and gestational_age is None:
+    if age_days is None and gestational_age_days is None:
         raise ValueError("Either age_days or gestational_age must be provided.")
 
     measurement_type = ChoiceValidator.resolve_measurement_alias(measurement)
-    age_group = ChoiceValidator.get_age_group_from_ages(age_days, gestational_age)
+    age_group = ChoiceValidator.get_age_group_from_ages(age_days, gestational_age_days)
     assert age_group is not None, "Could not determine age group from provided ages."
     name = ChoiceValidator.get_table_name_from_age_group(age_group)
 
