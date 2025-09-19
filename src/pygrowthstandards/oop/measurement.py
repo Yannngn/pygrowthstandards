@@ -52,7 +52,9 @@ class MeasurementGroup:
         for key, value in data.items():
             if value is None or key == "date":
                 continue
-            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
+            measurements.append(
+                Measurement(value=value, measurement_type=key, date=data["date"])
+            )
 
         return measurements
 

@@ -120,56 +120,144 @@ class DevelopmentGoalConfig:
 
 DEVELOPMENT_GOALS = {
     # min/max months synced with data/raw/development_goals_pt.csv
-    "moro-reflex": DevelopmentGoalConfig("moro-reflex", "Reflexo de Moro (abre os braços ao susto/queda)", 0, 0),
-    "flexed-posture": DevelopmentGoalConfig("flexed-posture", "Postura fletida de recém-nascido (pernas e braços juntos)", 0, 0),
-    "watches-face": DevelopmentGoalConfig("watches-face", "Observa o rosto de quem fala com ele/ela", 1, 3),
+    "moro-reflex": DevelopmentGoalConfig(
+        "moro-reflex", "Reflexo de Moro (abre os braços ao susto/queda)", 0, 0
+    ),
+    "flexed-posture": DevelopmentGoalConfig(
+        "flexed-posture",
+        "Postura fletida de recém-nascido (pernas e braços juntos)",
+        0,
+        0,
+    ),
+    "watches-face": DevelopmentGoalConfig(
+        "watches-face", "Observa o rosto de quem fala com ele/ela", 1, 3
+    ),
     "comfort-discomfort-signs": DevelopmentGoalConfig(
-        "comfort-discomfort-signs", "Demonstra conforto (relaxa/sorri) e desconforto (chora)", 1, 3
+        "comfort-discomfort-signs",
+        "Demonstra conforto (relaxa/sorri) e desconforto (chora)",
+        1,
+        3,
     ),
-    "fixates-gaze": DevelopmentGoalConfig("fixates-gaze", "Fixa o olhar em pessoas ou objetos", 1, 4),
-    "lifts-head-prone": DevelopmentGoalConfig("lifts-head-prone", "De bruços, eleva a cabeça", 1, 3),
-    "smiles-spontaneously": DevelopmentGoalConfig("smiles-spontaneously", "Sorri espontaneamente", 2, 4),
-    "differentiates-day-night": DevelopmentGoalConfig("differentiates-day-night", "Começa a diferenciar dia e noite", 2, 4),
-    "brings-to-midline": DevelopmentGoalConfig("brings-to-midline", "Leva mãos/posição à linha média", 2, 5),
-    "holds-head-prone": DevelopmentGoalConfig("holds-head-prone", "De bruços, sustenta a cabeça em apoio no antebraço", 2, 5),
+    "fixates-gaze": DevelopmentGoalConfig(
+        "fixates-gaze", "Fixa o olhar em pessoas ou objetos", 1, 4
+    ),
+    "lifts-head-prone": DevelopmentGoalConfig(
+        "lifts-head-prone", "De bruços, eleva a cabeça", 1, 3
+    ),
+    "smiles-spontaneously": DevelopmentGoalConfig(
+        "smiles-spontaneously", "Sorri espontaneamente", 2, 4
+    ),
+    "differentiates-day-night": DevelopmentGoalConfig(
+        "differentiates-day-night", "Começa a diferenciar dia e noite", 2, 4
+    ),
+    "brings-to-midline": DevelopmentGoalConfig(
+        "brings-to-midline", "Leva mãos/posição à linha média", 2, 5
+    ),
+    "holds-head-prone": DevelopmentGoalConfig(
+        "holds-head-prone", "De bruços, sustenta a cabeça em apoio no antebraço", 2, 5
+    ),
     "babbles": DevelopmentGoalConfig("babbles", "Emite sons / balbucia", 2, 5),
-    "actively-assists": DevelopmentGoalConfig("actively-assists", "Ajuda ativamente quando apoiado (não fica passivo)", 3, 6),
-    "rolls-supine-to-prone": DevelopmentGoalConfig("rolls-supine-to-prone", "Rola da posição supina para prona", 4, 7),
-    "assists-pull-to-sit": DevelopmentGoalConfig("assists-pull-to-sit", "Ajuda a levantar-se quando segurado pelas mãos", 4, 7),
-    "reacts-to-sound": DevelopmentGoalConfig("reacts-to-sound", "Vira a cabeça em direção a sons/barulhos", 5, 9),
-    "responds-to-call": DevelopmentGoalConfig("responds-to-call", "Reconhece quando é chamado(a)", 6, 9),
-    "sits-without-support": DevelopmentGoalConfig("sits-without-support", "Senta sem apoio", 6, 10),
-    "transfers-objects": DevelopmentGoalConfig("transfers-objects", "Transfere objetos de uma mão para outra", 6, 10),
+    "actively-assists": DevelopmentGoalConfig(
+        "actively-assists", "Ajuda ativamente quando apoiado (não fica passivo)", 3, 6
+    ),
+    "rolls-supine-to-prone": DevelopmentGoalConfig(
+        "rolls-supine-to-prone", "Rola da posição supina para prona", 4, 7
+    ),
+    "assists-pull-to-sit": DevelopmentGoalConfig(
+        "assists-pull-to-sit", "Ajuda a levantar-se quando segurado pelas mãos", 4, 7
+    ),
+    "reacts-to-sound": DevelopmentGoalConfig(
+        "reacts-to-sound", "Vira a cabeça em direção a sons/barulhos", 5, 9
+    ),
+    "responds-to-call": DevelopmentGoalConfig(
+        "responds-to-call", "Reconhece quando é chamado(a)", 6, 9
+    ),
+    "sits-without-support": DevelopmentGoalConfig(
+        "sits-without-support", "Senta sem apoio", 6, 10
+    ),
+    "transfers-objects": DevelopmentGoalConfig(
+        "transfers-objects", "Transfere objetos de uma mão para outra", 6, 10
+    ),
     "differentiates-familiar-strangers": DevelopmentGoalConfig(
-        "differentiates-familiar-strangers", "Responde diferente a familiares e estranhos", 7, 11
+        "differentiates-familiar-strangers",
+        "Responde diferente a familiares e estranhos",
+        7,
+        11,
     ),
-    "imitates-sounds-gestures": DevelopmentGoalConfig("imitates-sounds-gestures", "Imita sons e gestos simples", 7, 12),
+    "imitates-sounds-gestures": DevelopmentGoalConfig(
+        "imitates-sounds-gestures", "Imita sons e gestos simples", 7, 12
+    ),
     "crawls": DevelopmentGoalConfig("crawls", "Engatinha", 7, 13),
-    "thumb-grasp": DevelopmentGoalConfig("thumb-grasp", "Pega objetos com o polegar", 10, 15),
-    "says-one-word": DevelopmentGoalConfig("says-one-word", "Fala uma palavra com sentido (ex.: mamãe)", 10, 15),
-    "uses-gestures": DevelopmentGoalConfig("uses-gestures", "Faz gestos (acena, dá tchau)", 10, 15),
-    "walks-alone": DevelopmentGoalConfig("walks-alone", "Anda sozinho(a), raramente cai", 10, 15),
-    "removes-clothing-item": DevelopmentGoalConfig("removes-clothing-item", "Tira uma peça de roupa", 13, 21),
-    "two-to-three-word-phrases": DevelopmentGoalConfig("two-to-three-word-phrases", "Combina 2-3 palavras", 13, 24),
-    "walks-away-independently": DevelopmentGoalConfig("walks-away-independently", "Afasta-se andando com autonomia", 13, 24),
-    "feeds-self-hands": DevelopmentGoalConfig("feeds-self-hands", "Alimenta-se com as mãos", 13, 24),
-    "runs-and-climbs-steps": DevelopmentGoalConfig("runs-and-climbs-steps", "Corre; sobe degraus", 14, 24),
-    "plays-alongside-peers": DevelopmentGoalConfig("plays-alongside-peers", "Aceita/acompanha outras crianças", 21, 36),
-    "says-own-name": DevelopmentGoalConfig("says-own-name", "Diz o próprio nome", 21, 36),
-    "dresses-with-help": DevelopmentGoalConfig("dresses-with-help", "Veste-se com ajuda", 21, 48),
-    "stands-on-one-foot": DevelopmentGoalConfig("stands-on-one-foot", "Fica em um pé só", 21, 48),
-    "uses-sentences": DevelopmentGoalConfig("uses-sentences", "Usa frases", 21, 48),
-    "begins-toilet-training": DevelopmentGoalConfig("begins-toilet-training", "Inicia controle esfincteriano", 21, 48),
-    "names-two-colors": DevelopmentGoalConfig("names-two-colors", "Reconhece/nomina duas cores", 24, 48),
-    "hops-on-one-foot": DevelopmentGoalConfig("hops-on-one-foot", "Pula com um pé", 24, 60),
-    "plays-with-peers": DevelopmentGoalConfig("plays-with-peers", "Brinca com outras crianças", 24, 48),
-    "imitates-daily-activities": DevelopmentGoalConfig("imitates-daily-activities", "Imita atividades do dia a dia", 24, 60),
-    "dresses-alone": DevelopmentGoalConfig("dresses-alone", "Veste-se sozinho(a)", 36, 60),
-    "jumps-alternating-feet": DevelopmentGoalConfig("jumps-alternating-feet", "Pula alternando os pés", 36, 72),
-    "alternates-cooperation-aggression": DevelopmentGoalConfig(
-        "alternates-cooperation-aggression", "Alterna cooperação e agressividade", 36, 72
+    "thumb-grasp": DevelopmentGoalConfig(
+        "thumb-grasp", "Pega objetos com o polegar", 10, 15
     ),
-    "expresses-preferences": DevelopmentGoalConfig("expresses-preferences", "Expressa preferências e ideias próprias", 36, 72),
+    "says-one-word": DevelopmentGoalConfig(
+        "says-one-word", "Fala uma palavra com sentido (ex.: mamãe)", 10, 15
+    ),
+    "uses-gestures": DevelopmentGoalConfig(
+        "uses-gestures", "Faz gestos (acena, dá tchau)", 10, 15
+    ),
+    "walks-alone": DevelopmentGoalConfig(
+        "walks-alone", "Anda sozinho(a), raramente cai", 10, 15
+    ),
+    "removes-clothing-item": DevelopmentGoalConfig(
+        "removes-clothing-item", "Tira uma peça de roupa", 13, 21
+    ),
+    "two-to-three-word-phrases": DevelopmentGoalConfig(
+        "two-to-three-word-phrases", "Combina 2-3 palavras", 13, 24
+    ),
+    "walks-away-independently": DevelopmentGoalConfig(
+        "walks-away-independently", "Afasta-se andando com autonomia", 13, 24
+    ),
+    "feeds-self-hands": DevelopmentGoalConfig(
+        "feeds-self-hands", "Alimenta-se com as mãos", 13, 24
+    ),
+    "runs-and-climbs-steps": DevelopmentGoalConfig(
+        "runs-and-climbs-steps", "Corre; sobe degraus", 14, 24
+    ),
+    "plays-alongside-peers": DevelopmentGoalConfig(
+        "plays-alongside-peers", "Aceita/acompanha outras crianças", 21, 36
+    ),
+    "says-own-name": DevelopmentGoalConfig(
+        "says-own-name", "Diz o próprio nome", 21, 36
+    ),
+    "dresses-with-help": DevelopmentGoalConfig(
+        "dresses-with-help", "Veste-se com ajuda", 21, 48
+    ),
+    "stands-on-one-foot": DevelopmentGoalConfig(
+        "stands-on-one-foot", "Fica em um pé só", 21, 48
+    ),
+    "uses-sentences": DevelopmentGoalConfig("uses-sentences", "Usa frases", 21, 48),
+    "begins-toilet-training": DevelopmentGoalConfig(
+        "begins-toilet-training", "Inicia controle esfincteriano", 21, 48
+    ),
+    "names-two-colors": DevelopmentGoalConfig(
+        "names-two-colors", "Reconhece/nomina duas cores", 24, 48
+    ),
+    "hops-on-one-foot": DevelopmentGoalConfig(
+        "hops-on-one-foot", "Pula com um pé", 24, 60
+    ),
+    "plays-with-peers": DevelopmentGoalConfig(
+        "plays-with-peers", "Brinca com outras crianças", 24, 48
+    ),
+    "imitates-daily-activities": DevelopmentGoalConfig(
+        "imitates-daily-activities", "Imita atividades do dia a dia", 24, 60
+    ),
+    "dresses-alone": DevelopmentGoalConfig(
+        "dresses-alone", "Veste-se sozinho(a)", 36, 60
+    ),
+    "jumps-alternating-feet": DevelopmentGoalConfig(
+        "jumps-alternating-feet", "Pula alternando os pés", 36, 72
+    ),
+    "alternates-cooperation-aggression": DevelopmentGoalConfig(
+        "alternates-cooperation-aggression",
+        "Alterna cooperação e agressividade",
+        36,
+        72,
+    ),
+    "expresses-preferences": DevelopmentGoalConfig(
+        "expresses-preferences", "Expressa preferências e ideias próprias", 36, 72
+    ),
 }
 # Canonical ordering of development goals (Brazil MoH / npmd_1.1.csv)
 DEVELOPMENT_GOALS_ORDER: list[str] = [

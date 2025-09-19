@@ -108,21 +108,39 @@ def main():
         55.0,
     ]
 
-    for date, stature, weight, hc in zip(measurement_dates, statures, weights, head_circumferences, strict=True):
-        mg = MeasurementGroup(date=date, stature=stature, weight=weight, head_circumference=hc)
+    for date, stature, weight, hc in zip(
+        measurement_dates, statures, weights, head_circumferences, strict=True
+    ):
+        mg = MeasurementGroup(
+            date=date, stature=stature, weight=weight, head_circumference=hc
+        )
         patient.add_measurements(mg)
 
     # Add development achievements (keys synced with config)
     # Chosen dates aim to fall within expected windows for demo purposes
     development_achievements = [
-        DevelopmentGoal(development_goal="watches-face", date=datetime.date(2012, 7, 5)),  # 1–3 m
-        DevelopmentGoal(development_goal="lifts-head-prone", date=datetime.date(2012, 7, 20)),  # 1–3 m
-        DevelopmentGoal(development_goal="smiles-spontaneously", date=datetime.date(2012, 8, 1)),  # 2–4 m
-        DevelopmentGoal(development_goal="babbles", date=datetime.date(2012, 9, 1)),  # 2–5 m
-        DevelopmentGoal(development_goal="reacts-to-sound", date=datetime.date(2012, 11, 1)),  # 5–9 m
-        DevelopmentGoal(development_goal="sits-without-support", date=datetime.date(2012, 12, 15)),  # 6–10 m
+        DevelopmentGoal(
+            development_goal="watches-face", date=datetime.date(2012, 7, 5)
+        ),  # 1–3 m
+        DevelopmentGoal(
+            development_goal="lifts-head-prone", date=datetime.date(2012, 7, 20)
+        ),  # 1–3 m
+        DevelopmentGoal(
+            development_goal="smiles-spontaneously", date=datetime.date(2012, 8, 1)
+        ),  # 2–4 m
+        DevelopmentGoal(
+            development_goal="babbles", date=datetime.date(2012, 9, 1)
+        ),  # 2–5 m
+        DevelopmentGoal(
+            development_goal="reacts-to-sound", date=datetime.date(2012, 11, 1)
+        ),  # 5–9 m
+        DevelopmentGoal(
+            development_goal="sits-without-support", date=datetime.date(2012, 12, 15)
+        ),  # 6–10 m
     ]
-    development_group = DevelopmentGoalGroup(developments=development_achievements, date=datetime.date(2012, 12, 15))
+    development_group = DevelopmentGoalGroup(
+        developments=development_achievements, date=datetime.date(2012, 12, 15)
+    )
     patient.add_development_achievements(development_group)
 
     # Calculate z-scores for all measurements

@@ -3,8 +3,8 @@ import os
 
 import pandas as pd
 
-from pygrowthstandards.data.transform import GrowthData
 from pygrowthstandards.config import ChoiceValidator, MeasurementTypeType
+from pygrowthstandards.data.transform import GrowthData
 
 from ..utils import stats
 from ..utils.errors import NoReferenceDataException
@@ -19,7 +19,9 @@ class Calculator:
     path = "data"
 
     def __init__(self):
-        self.data = pd.read_parquet(os.path.join(self.path, f"pygrowthstandards_{GrowthData.version}.parquet"))
+        self.data = pd.read_parquet(
+            os.path.join(self.path, f"pygrowthstandards_{GrowthData.version}.parquet")
+        )
 
     def calculate_z_score(
         self,
@@ -29,13 +31,23 @@ class Calculator:
     ) -> float:
         value = getattr(measurement_group, measurement_type, None)
         if value is None:
-            raise ValueError(f"MeasurementGroup with age {age_value} does not have data for '{measurement_type}'.")
+            raise ValueError(
+                f"MeasurementGroup with age {age_value} does not have data for '{measurement_type}'."
+            )
 
-        assert measurement_group.age_group is not None, "MeasurementGroup must have an age_group to calculate z-score."
-        age_type = ChoiceValidator.get_age_type_from_age_group(measurement_group.age_group)
-        assert age_type is not None, f"No valid age type found for age group '{measurement_group.age_group}'."
+        assert measurement_group.age_group is not None, (
+            "MeasurementGroup must have an age_group to calculate z-score."
+        )
+        age_type = ChoiceValidator.get_age_type_from_age_group(
+            measurement_group.age_group
+        )
+        assert age_type is not None, (
+            f"No valid age type found for age group '{measurement_group.age_group}'."
+        )
 
-        filtered_data = self._filter_measurement_data(self.data, measurement_type, age_type, age_value)
+        filtered_data = self._filter_measurement_data(
+            self.data, measurement_type, age_type, age_value
+        )
 
         L, M, S = self._get_lms_params(filtered_data, age_value)
 
@@ -64,8 +76,13 @@ class Calculator:
         return z_score_group
 
     @staticmethod
-    def _filter_measurement_data(data: pd.DataFrame, measurement_type: str, age_type: str, age_value: int) -> pd.DataFrame:
-        filtered_data = data[(data["measurement_type"] == measurement_type) & (data["x_var_type"] == age_type)].copy()
+    def _filter_measurement_data(
+        data: pd.DataFrame, measurement_type: str, age_type: str, age_value: int
+    ) -> pd.DataFrame:
+        filtered_data = data[
+            (data["measurement_type"] == measurement_type)
+            & (data["x_var_type"] == age_type)
+        ].copy()
 
         if filtered_data.empty:
             raise NoReferenceDataException(measurement_type, age_type, age_value)
@@ -73,7 +90,9 @@ class Calculator:
         return filtered_data
 
     @staticmethod
-    def _get_lms_params(fdata: pd.DataFrame, age_value: int) -> tuple[float, float, float]:
+    def _get_lms_params(
+        fdata: pd.DataFrame, age_value: int
+    ) -> tuple[float, float, float]:
         if age_value not in fdata["x"].values:
             return stats.interpolate_lms(
                 age_value,

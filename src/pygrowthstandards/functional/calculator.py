@@ -26,7 +26,9 @@ def zscore(
     else:
         x = age_days
 
-    assert x is not None and x > 0, "Either age_days or gestational_age must be provided."
+    assert x is not None and x > 0, (
+        "Either age_days or gestational_age must be provided."
+    )
 
     data = get_table(DATA, keys)
     try:

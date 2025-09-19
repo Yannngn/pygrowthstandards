@@ -139,20 +139,26 @@ class ChoiceValidator:
         return None
 
     @staticmethod
-    def get_age_group_from_ages(age: int | None = None, gestational_age: int | None = None) -> AgeGroupType | None:
+    def get_age_group_from_ages(
+        age: int | None = None, gestational_age: int | None = None
+    ) -> AgeGroupType | None:
         if gestational_age is None and age is None:
             raise ValueError("Either age or gestational_age must be provided.")
 
         if age is not None and gestational_age is None:
             return ChoiceValidator.get_age_group_for_age(age, "age")
 
-        assert gestational_age is not None, "Either age or gestational_age must be provided. Only for typing"
+        assert gestational_age is not None, (
+            "Either age or gestational_age must be provided. Only for typing"
+        )
 
         if AGE_GROUP_CONFIG["very_preterm_newborn"].contains_age(gestational_age):
             if not age:
                 return "very_preterm_newborn"
 
-            if AGE_GROUP_CONFIG["very_preterm_growth"].contains_age(age + gestational_age):
+            if AGE_GROUP_CONFIG["very_preterm_growth"].contains_age(
+                age + gestational_age
+            ):
                 return "very_preterm_growth"
 
             return ChoiceValidator.get_age_group_for_age(age, "age")
@@ -168,7 +174,9 @@ class ChoiceValidator:
         return AGE_GROUP_TABLE_NAME.get(age_group)  # type: ignore
 
     @staticmethod
-    def validate_development_goal(key: DevelopmentGoals, child_age_months: int, achieved: bool) -> str | None:
+    def validate_development_goal(
+        key: DevelopmentGoals, child_age_months: int, achieved: bool
+    ) -> str | None:
         """
         Validate if a child has achieved a development goal within the expected age range.
 
