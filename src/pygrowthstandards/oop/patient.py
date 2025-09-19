@@ -5,7 +5,7 @@ from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 
 from pygrowthstandards.oop.development import DevelopmentGoal, DevelopmentGoalGroup
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config import (
     DEVELOPMENT_GOALS,
     AgeGroup,
     AgeGroupType,

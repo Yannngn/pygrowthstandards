@@ -5,7 +5,7 @@ import pandas as pd
 
 from ..data.load import GrowthTable, load_reference
 from ..utils import stats
-from ..utils.config import (
+from ..config import (
     AgeGroupType,
     ChoiceValidator,
     DataSexType,
@@ -21,9 +21,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
 try:
     DATA = load_reference()
 except FileNotFoundError:
-    logging.warning(
-        "Growth reference data file not found. Please ensure the data file is available."
-    )
+    logging.warning("Growth reference data file not found. Please ensure the data file is available.")
     DATA = None
 
 
@@ -32,9 +30,7 @@ def get_keys(
     sex: DataSexType = "U",
     age_days: int | None = None,
     gestational_age_days: int | None = None,
-) -> tuple[
-    TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType
-]:
+) -> tuple[TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType]:
     if age_days is None and gestational_age_days is None:
         raise ValueError("Either age_days or gestational_age must be provided.")
 

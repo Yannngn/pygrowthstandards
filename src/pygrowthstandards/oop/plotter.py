@@ -6,7 +6,7 @@ from matplotlib.patches import Rectangle
 from pygrowthstandards.utils.constants import MONTH
 
 from ..data.load import GrowthTable
-from ..utils.config import (
+from ..config import (
     AGE_GROUP_CONFIG,
     DEVELOPMENT_GOALS,
     DEVELOPMENT_GOALS_ORDER,

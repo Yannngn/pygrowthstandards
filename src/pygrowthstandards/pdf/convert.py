@@ -6,9 +6,7 @@ import pandas as pd
 try:
     from docling.document_converter import DocumentConverter  # type: ignore
 except ImportError as exc:
-    raise ImportError(
-        "Please install the 'docling' package or `pdf` extra to use this script."
-    ) from exc
+    raise ImportError("Please install the 'docling' package or `pdf` extra to use this script.") from exc
 
 # some manual changes are needed to the csv files after this script runs
 
@@ -35,7 +33,7 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
     for table in conv_res.document.tables:
         table_df: pd.DataFrame = table.export_to_dataframe()
 
-        index = "days" if "+" in table_df.iat[1, 0] else "weeks"
+        index = "days" if "+" in str(table_df.iat[1, 0]) else "weeks"
         header = [index, "sd3neg", "sd2neg", "sd1neg", "sd0", "sd1", "sd2", "sd3"]
         if any(str(col).startswith("Centiles") for col in table_df.columns):
             header = [index, "5", "10", "25", "50", "75", "90", "95"]
@@ -50,9 +48,7 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
         combined_df = pd.concat(tables, ignore_index=True)
 
         if "days" in combined_df.columns:
-            combined_df["days"] = combined_df["days"].apply(
-                intergrowth_convert_weeks_days
-            )
+            combined_df["days"] = combined_df["days"].apply(intergrowth_convert_weeks_days)
 
         combined_df.to_csv(element_csv_filename, index=False, header=header)
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 
-from ..utils.config import AgeGroupType, MeasurementTypeType
+from ..config import AgeGroupType, MeasurementTypeType
 
 
 @dataclass
@@ -52,9 +52,7 @@ class MeasurementGroup:
         for key, value in data.items():
             if value is None or key == "date":
                 continue
-            measurements.append(
-                Measurement(value=value, measurement_type=key, date=data["date"])
-            )
+            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
 
         return measurements
 

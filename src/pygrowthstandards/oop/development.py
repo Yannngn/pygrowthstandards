@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config import (
     DEVELOPMENT_GOALS,
     DevelopmentGoalType,
     DevelopmentStatusType,
@@ -60,10 +60,7 @@ class DevelopmentGoalGroup:
         if date is None:
             date = dt_datetime.now()
 
-        developments = [
-            DevelopmentGoal(development_goal=goal, date=date)
-            for goal in development_list
-        ]
+        developments = [DevelopmentGoal(development_goal=goal, date=date) for goal in development_list]
         return cls(developments=developments, date=date)
 
     @classmethod
@@ -75,8 +72,5 @@ class DevelopmentGoalGroup:
         if date is None:
             date = dt_datetime.now()
 
-        developments = [
-            DevelopmentGoal(development_goal=goal, date=date)
-            for goal in development_goal
-        ]
+        developments = [DevelopmentGoal(development_goal=goal, date=date) for goal in development_goal]
         return cls(developments=developments, date=date)
