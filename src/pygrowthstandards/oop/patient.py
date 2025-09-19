@@ -6,6 +6,7 @@ from datetime import datetime as dt_datetime
 
 from pygrowthstandards.oop.development import DevelopmentGoal, DevelopmentGoalGroup
 from pygrowthstandards.utils.config import (
+    DEVELOPMENT_GOALS,
     AgeGroup,
     AgeGroupType,
     ChoiceValidator,
@@ -51,9 +52,7 @@ class Patient:
 
         return date - self.birthday_date  # type: ignore
 
-    def corrected_age(
-        self, date: dt_date | dt_datetime | None = None
-    ) -> datetime.timedelta:
+    def corrected_age(self, date: dt_date | dt_datetime | None = None) -> datetime.timedelta:
         """
         Calculates the corrected age for very preterm children.
 
@@ -82,9 +81,7 @@ class Patient:
 
         return date - self.gestational_age  # type: ignore
 
-    def get_age_with_type(
-        self, age_type: str = "age", date: dt_date | dt_datetime | None = None
-    ) -> int:
+    def get_age_with_type(self, age_type: str = "age", date: dt_date | dt_datetime | None = None) -> int:
         if age_type == "age":
             return self.age(date).days
 
@@ -94,13 +91,9 @@ class Patient:
         if age_type == "gestational_age":
             return self.gestational_age.days
 
-        raise ValueError(
-            f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'corrected_age'."
-        )
+        raise ValueError(f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'corrected_age'.")
 
-    def get_age_for_age_group(
-        self, age_group: AgeGroupType, date: dt_date | dt_datetime | None = None
-    ) -> int:
+    def get_age_for_age_group(self, age_group: AgeGroupType, date: dt_date | dt_datetime | None = None) -> int:
         age_type = self._get_age_type(age_group)
         return self.get_age_with_type(age_type, date=date)
 
@@ -147,10 +140,7 @@ class Patient:
             if group.date == development_goal.date:
                 # Update the existing group
                 for existing_goal in group.developments:
-                    if (
-                        existing_goal.development_goal
-                        == development_goal.development_goal
-                    ):
+                    if existing_goal.development_goal == development_goal.development_goal:
                         existing_goal.date = development_goal.date
                         return
                 # If the goal doesn't exist in the group, add it
@@ -158,14 +148,10 @@ class Patient:
                 return
 
         # If no group with the same date exists, create a new group
-        new_group = DevelopmentGoalGroup(
-            developments=[development_goal], date=development_goal.date
-        )
+        new_group = DevelopmentGoalGroup(developments=[development_goal], date=development_goal.date)
         self.developments.append(new_group)
 
-    def add_development_achievements(
-        self, development_goal_group: DevelopmentGoalGroup
-    ) -> None:
+    def add_development_achievements(self, development_goal_group: DevelopmentGoalGroup) -> None:
         """
         Add multiple development achievements to the patient's development goals.
 
@@ -255,10 +241,7 @@ class Patient:
         Calculates z-scores for all measurement groups in the patient.
         """
         self.z_scores = [
-            self.calculator.calculate_measurement_group(
-                group, self.get_age_with_type(date=group.date)
-            )
-            for group in self.measurements
+            self.calculator.calculate_measurement_group(group, self.get_age_with_type(date=group.date)) for group in self.measurements
         ]
 
     def display_measurements(self) -> str:
@@ -278,9 +261,7 @@ class Patient:
 
         for m_group in sorted_measurements:
             date = m_group.date
-            assert m_group.age_group is not None, (
-                "No valid age group found for the given ages."
-            )
+            assert m_group.age_group is not None, "No valid age group found for the given ages."
             age_type = self._get_age_type(m_group.age_group)
             age = self.get_age_with_type(age_type=age_type, date=date)
 
@@ -302,15 +283,40 @@ class Patient:
 
             results_list.append(result_dict)
 
-        return str_dataframe(
-            results=results_list, date_list=date_list, age_list=age_list
-        )
+        return str_dataframe(results=results_list, date_list=date_list, age_list=age_list)
+
+    def display_development_achievements(self) -> str:
+        """
+        Display the development achievements of the patient.
+
+        Returns
+        -------
+        str
+            A formatted string showing the development achievements.
+        """
+        if not self.developments:
+            return "No development achievements available."
+
+        # Sort development groups by date
+        sorted_developments = sorted(self.developments, key=lambda group: group.date)
+
+        results = []
+        for group in sorted_developments:
+            group_date = group.date.strftime("%Y-%m-%d")
+            results.append(f"Date: {group_date}")
+
+            for goal in group.developments:
+                goal_config = DEVELOPMENT_GOALS.get(goal.development_goal)
+                description = goal_config.description if goal_config else "Unknown goal"
+                results.append(f"  - Goal: {goal.development_goal}")
+                results.append(f"    Description: {description}")
+                results.append(f"    Achieved on: {goal.date.strftime('%Y-%m-%d')}")
+
+        return "\n".join(results)
 
     def _setup(self):
         self.is_born = self.birthday_date is not None
-        self.gestational_age = datetime.timedelta(
-            weeks=self.gestational_age_weeks, days=self.gestational_age_days
-        )
+        self.gestational_age = datetime.timedelta(weeks=self.gestational_age_weeks, days=self.gestational_age_days)
 
         if self.is_born:
             self.birthday_date = handle_date(self.birthday_date)
@@ -321,9 +327,7 @@ class Patient:
             age=self.get_age_with_type("age", date=date),
             gestational_age=self.get_age_with_type("gestational_age", date=date),
         )
-        print(
-            f"age={self.get_age_with_type('age', date=date)}, gestational_age={self.get_age_with_type('gestational_age', date=date)}"
-        )
+        print(f"age={self.get_age_with_type('age', date=date)}, gestational_age={self.get_age_with_type('gestational_age', date=date)}")
         assert age_group is not None, "No valid age group found for the given ages."
         return age_group
 

@@ -43,7 +43,7 @@ class MeasurementType(StrEnum):
 class AgeGroup(StrEnum):
     NEWBORN = "newborn"
     VERY_PRETERM_NEWBORN = "very_preterm_newborn"
-    VERY_PRETERM_GROWTH = "very_preterm_growth"
+    VERY_PRETERM_GROWTH = "very_pre_term_growth"
     # ZERO_ONE = "0-1"
     ZERO_TWO = "0-2"
     TWO_FIVE = "2-5"
@@ -51,48 +51,52 @@ class AgeGroup(StrEnum):
     TEN_NINETEEN = "10-19"
 
 
-class DevelopmentGoalSlug(StrEnum):
-    LIFTS_HEAD_PRONE = "lifts-head-prone"
-    REACTS_TO_SOUND = "reacts-to-sound"
+class DevelopmentGoals(StrEnum):
+    # Canonical keys aligned to data/raw/development_goals_pt.csv
+    MORO_REFLEX = "moro-reflex"
+    FLEXED_POSTURE = "flexed-posture"
     WATCHES_FACE = "watches-face"
-    SOCIAL_SMILE = "social-smile"
-    MAKES_SOUNDS = "makes-sounds"
-    HOLDS_HEAD_STEADY = "holds-head-steady"
-    BRINGS_HANDS_TOGETHER = "brings-hands-together"
-    GRASPS_OBJECTS = "grasps-objects"
-    MAKES_VOWEL_SOUNDS = "makes-vowel-sounds"
-    TURNS_HEAD_TO_SOUND = "turns-head-to-sound"
-    SITS_WITH_SUPPORT = "sits-with-support"
-    ROLLS_OVER = "rolls-over"
-    TRANSFERS_OBJECTS = "transfers-objects"
+    COMFORT_DISCOMFORT_SIGNS = "comfort-discomfort-signs"
+    FIXATES_GAZE = "fixates-gaze"
+    LIFTS_HEAD_PRONE = "lifts-head-prone"
+    SMILES_SPONTANEOUSLY = "smiles-spontaneously"
+    DIFFERENTIATES_DAY_NIGHT = "differentiates-day-night"
+    BRINGS_TO_MIDLINE = "brings-to-midline"
+    HOLDS_HEAD_PRONE = "holds-head-prone"
     BABBLES = "babbles"
+    ACTIVELY_ASSISTS = "actively-assists"
+    ROLLS_SUPINE_TO_PRONE = "rolls-supine-to-prone"
+    ASSISTS_PULL_TO_SIT = "assists-pull-to-sit"
+    REACTS_TO_SOUND = "reacts-to-sound"
+    RESPONDS_TO_CALL = "responds-to-call"
     SITS_WITHOUT_SUPPORT = "sits-without-support"
-    STARTS_CRAWLING = "starts-crawling"
-    PINCER_GRASP = "pincer-grasp"
-    PRODUCES_JARGON = "produces-jargon"
-    STANDS_WITH_SUPPORT = "stands-with-support"
-    FIRST_WORDS = "first-words"
-    WALKS_WITH_SUPPORT = "walks-with-support"
+    TRANSFERS_OBJECTS = "transfers-objects"
+    DIFFERENTIATES_FAMILIAR_STRANGERS = "differentiates-familiar-strangers"
+    IMITATES_SOUNDS_GESTURES = "imitates-sounds-gestures"
+    CRAWLS = "crawls"
+    THUMB_GRASP = "thumb-grasp"
+    SAYS_ONE_WORD = "says-one-word"
+    USES_GESTURES = "uses-gestures"
     WALKS_ALONE = "walks-alone"
-    POINTS_TO_WANTS = "points-to-wants"
-    BUILDS_TOWER_TWO_BLOCKS = "builds-tower-two-blocks"
-    SAYS_TEN_WORDS = "says-ten-words"
-    KICKS_BALL = "kicks-ball"
-    REMOVES_CLOTHING = "removes-clothing"
-    RUNS = "runs"
-    CLIMBS_STAIRS = "climbs-stairs"
-    FORMS_SIMPLE_SENTENCES = "forms-simple-sentences"
-    JUMPS_WITH_BOTH_FEET = "jumps-with-both-feet"
-    IDENTIFIES_BODY_PARTS = "identifies-body-parts"
-    DRESSES_SELF = "dresses-self"
-    CONVERSES_IN_SENTENCES = "converses-in-sentences"
+    REMOVES_CLOTHING_ITEM = "removes-clothing-item"
+    TWO_TO_THREE_WORD_PHRASES = "two-to-three-word-phrases"
+    WALKS_AWAY_INDEPENDENTLY = "walks-away-independently"
+    FEEDS_SELF_HANDS = "feeds-self-hands"
+    RUNS_AND_CLIMBS_STEPS = "runs-and-climbs-steps"
+    PLAYS_ALONGSIDE_PEERS = "plays-alongside-peers"
+    SAYS_OWN_NAME = "says-own-name"
+    DRESSES_WITH_HELP = "dresses-with-help"
     STANDS_ON_ONE_FOOT = "stands-on-one-foot"
-    RECOGNIZES_COLORS = "recognizes-colors"
-    ASKS_TO_GO_TO_TOILET = "asks-to-go-to-toilet"
+    USES_SENTENCES = "uses-sentences"
+    BEGINS_TOILET_TRAINING = "begins-toilet-training"
+    NAMES_TWO_COLORS = "names-two-colors"
     HOPS_ON_ONE_FOOT = "hops-on-one-foot"
-    TELLS_SIMPLE_STORIES = "tells-simple-stories"
-    DRAWS_PERSON = "draws-person"
-    DEFINES_WORDS = "defines-words"
+    PLAYS_WITH_PEERS = "plays-with-peers"
+    IMITATES_DAILY_ACTIVITIES = "imitates-daily-activities"
+    DRESSES_ALONE = "dresses-alone"
+    JUMPS_ALTERNATING_FEET = "jumps-alternating-feet"
+    ALTERNATES_COOPERATION_AGGRESSION = "alternates-cooperation-aggression"
+    EXPRESSES_PREFERENCES = "expresses-preferences"
 
 
 # Type aliases using the enums
@@ -119,52 +123,53 @@ AgeGroupType = Literal[
     "very_preterm_newborn",
     "very_preterm_growth",
 ]
-TableNameType = Literal[
-    "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"
-]
+TableNameType = Literal["growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"]
 
 DevelopmentGoalType = Literal[
-    "lifts-head-prone",
-    "reacts-to-sound",
+    "moro-reflex",
+    "flexed-posture",
     "watches-face",
-    "social-smile",
-    "makes-sounds",
-    "holds-head-steady",
-    "brings-hands-together",
-    "grasps-objects",
-    "makes-vowel-sounds",
-    "turns-head-to-sound",
-    "sits-with-support",
-    "rolls-over",
-    "transfers-objects",
+    "comfort-discomfort-signs",
+    "fixates-gaze",
+    "lifts-head-prone",
+    "smiles-spontaneously",
+    "differentiates-day-night",
+    "brings-to-midline",
+    "holds-head-prone",
     "babbles",
+    "actively-assists",
+    "rolls-supine-to-prone",
+    "assists-pull-to-sit",
+    "reacts-to-sound",
+    "responds-to-call",
     "sits-without-support",
-    "starts-crawling",
-    "pincer-grasp",
-    "produces-jargon",
-    "stands-with-support",
-    "first-words",
-    "walks-with-support",
+    "transfers-objects",
+    "differentiates-familiar-strangers",
+    "imitates-sounds-gestures",
+    "crawls",
+    "thumb-grasp",
+    "says-one-word",
+    "uses-gestures",
     "walks-alone",
-    "points-to-wants",
-    "builds-tower-two-blocks",
-    "says-ten-words",
-    "kicks-ball",
-    "removes-clothing",
-    "runs",
-    "climbs-stairs",
-    "forms-simple-sentences",
-    "jumps-with-both-feet",
-    "identifies-body-parts",
-    "dresses-self",
-    "converses-in-sentences",
+    "removes-clothing-item",
+    "two-to-three-word-phrases",
+    "walks-away-independently",
+    "feeds-self-hands",
+    "runs-and-climbs-steps",
+    "plays-alongside-peers",
+    "says-own-name",
+    "dresses-with-help",
     "stands-on-one-foot",
-    "recognizes-colors",
-    "asks-to-go-to-toilet",
+    "uses-sentences",
+    "begins-toilet-training",
+    "names-two-colors",
     "hops-on-one-foot",
-    "tells-simple-stories",
-    "draws-person",
-    "defines-words",
+    "plays-with-peers",
+    "imitates-daily-activities",
+    "dresses-alone",
+    "jumps-alternating-feet",
+    "alternates-cooperation-aggression",
+    "expresses-preferences",
 ]
 DevelopmentStatusType = Literal["achieved", "slightly_delayed", "delayed"]
 
@@ -198,13 +203,13 @@ class DevelopmentGoalConfig:
     Configuration for a development goal.
 
     Attributes:
-    - slug: Unique identifier for the goal.
+    - key: Unique identifier for the goal.
     - description: Description of the goal.
     - min_age_months: Minimum age (in months) for achieving the goal.
     - max_age_months: Maximum age (in months) for achieving the goal.
     """
 
-    slug: str
+    key: str
     description: str
     min_age_months: int
     max_age_months: int
@@ -212,39 +217,21 @@ class DevelopmentGoalConfig:
 
 # Configuration mappings
 AGE_GROUP_CONFIG: dict[AgeGroupType, AgeGroupConfig] = {
-    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(
-        (24 * WEEK, 33 * WEEK - 1), "gestational_age", "very_preterm_newborn"
-    ),
-    AgeGroup.NEWBORN: AgeGroupConfig(
-        (33 * WEEK, 43 * WEEK - 1), "gestational_age", "newborn"
-    ),
-    AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig(
-        (27 * WEEK, 64 * WEEK), "corrected_age", "very_preterm_growth"
-    ),  # TODO: chronological_age
+    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig((24 * WEEK, 33 * WEEK - 1), "gestational_age", "very_preterm_newborn"),
+    AgeGroup.NEWBORN: AgeGroupConfig((33 * WEEK, 43 * WEEK - 1), "gestational_age", "newborn"),
+    AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig((27 * WEEK, 64 * WEEK), "corrected_age", "very_preterm_growth"),  # TODO: chronological_age
     # AgeGroup.ZERO_ONE: AgeGroupConfig((0, int(round(1 * YEAR))), "age", "child_growth"),
     AgeGroup.ZERO_TWO: AgeGroupConfig((0, int(round(2 * YEAR))), "age", "child_growth"),
-    AgeGroup.TWO_FIVE: AgeGroupConfig(
-        (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"
-    ),
-    AgeGroup.FIVE_TEN: AgeGroupConfig(
-        (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"
-    ),
-    AgeGroup.TEN_NINETEEN: AgeGroupConfig(
-        (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"
-    ),
+    AgeGroup.TWO_FIVE: AgeGroupConfig((int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"),
+    AgeGroup.FIVE_TEN: AgeGroupConfig((int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"),
+    AgeGroup.TEN_NINETEEN: AgeGroupConfig((int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"),
 }  # type: ignore
 
 MEASUREMENT_CONFIG: dict[MeasurementTypeType, MeasurementConfig] = {
-    MeasurementType.STATURE: MeasurementConfig(
-        "cm", frozenset({"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"})
-    ),
+    MeasurementType.STATURE: MeasurementConfig("cm", frozenset({"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"})),
     MeasurementType.WEIGHT: MeasurementConfig("kg", frozenset({"wfa", "w"})),
-    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig(
-        "cm", frozenset({"hcfa", "hc"})
-    ),
-    MeasurementType.BODY_MASS_INDEX: MeasurementConfig(
-        "kg/m²", frozenset({"bmi", "bfa"})
-    ),
+    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig("cm", frozenset({"hcfa", "hc"})),
+    MeasurementType.BODY_MASS_INDEX: MeasurementConfig("kg/m²", frozenset({"bmi", "bfa"})),
     MeasurementType.WEIGHT_STATURE: MeasurementConfig(
         "kg/cm",
         frozenset(
@@ -266,146 +253,105 @@ MEASUREMENT_CONFIG: dict[MeasurementTypeType, MeasurementConfig] = {
 }  # type: ignore
 
 DEVELOPMENT_GOALS = {
-    "lifts-head-prone": DevelopmentGoalConfig(
-        "lifts-head-prone", "Fica de bruços, levanta a cabeça", 0, 2
+    # min/max months synced with data/raw/development_goals_pt.csv
+    "moro-reflex": DevelopmentGoalConfig("moro-reflex", "Reflexo de Moro (abre os braços ao susto/queda)", 0, 0),
+    "flexed-posture": DevelopmentGoalConfig("flexed-posture", "Postura fletida de recém-nascido (pernas e braços juntos)", 0, 0),
+    "watches-face": DevelopmentGoalConfig("watches-face", "Observa o rosto de quem fala com ele/ela", 1, 3),
+    "comfort-discomfort-signs": DevelopmentGoalConfig(
+        "comfort-discomfort-signs", "Demonstra conforto (relaxa/sorri) e desconforto (chora)", 1, 3
     ),
-    "reacts-to-sound": DevelopmentGoalConfig(
-        "reacts-to-sound", "Reage ao som (vira a cabeça na direção do barulho)", 0, 2
+    "fixates-gaze": DevelopmentGoalConfig("fixates-gaze", "Fixa o olhar em pessoas ou objetos", 1, 4),
+    "lifts-head-prone": DevelopmentGoalConfig("lifts-head-prone", "De bruços, eleva a cabeça", 1, 3),
+    "smiles-spontaneously": DevelopmentGoalConfig("smiles-spontaneously", "Sorri espontaneamente", 2, 4),
+    "differentiates-day-night": DevelopmentGoalConfig("differentiates-day-night", "Começa a diferenciar dia e noite", 2, 4),
+    "brings-to-midline": DevelopmentGoalConfig("brings-to-midline", "Leva mãos/posição à linha média", 2, 5),
+    "holds-head-prone": DevelopmentGoalConfig("holds-head-prone", "De bruços, sustenta a cabeça em apoio no antebraço", 2, 5),
+    "babbles": DevelopmentGoalConfig("babbles", "Emite sons / balbucia", 2, 5),
+    "actively-assists": DevelopmentGoalConfig("actively-assists", "Ajuda ativamente quando apoiado (não fica passivo)", 3, 6),
+    "rolls-supine-to-prone": DevelopmentGoalConfig("rolls-supine-to-prone", "Rola da posição supina para prona", 4, 7),
+    "assists-pull-to-sit": DevelopmentGoalConfig("assists-pull-to-sit", "Ajuda a levantar-se quando segurado pelas mãos", 4, 7),
+    "reacts-to-sound": DevelopmentGoalConfig("reacts-to-sound", "Vira a cabeça em direção a sons/barulhos", 5, 9),
+    "responds-to-call": DevelopmentGoalConfig("responds-to-call", "Reconhece quando é chamado(a)", 6, 9),
+    "sits-without-support": DevelopmentGoalConfig("sits-without-support", "Senta sem apoio", 6, 10),
+    "transfers-objects": DevelopmentGoalConfig("transfers-objects", "Transfere objetos de uma mão para outra", 6, 10),
+    "differentiates-familiar-strangers": DevelopmentGoalConfig(
+        "differentiates-familiar-strangers", "Responde diferente a familiares e estranhos", 7, 11
     ),
-    "watches-face": DevelopmentGoalConfig(
-        "watches-face", "Observa o rosto de quem fala com ele/ela", 1, 2
+    "imitates-sounds-gestures": DevelopmentGoalConfig("imitates-sounds-gestures", "Imita sons e gestos simples", 7, 12),
+    "crawls": DevelopmentGoalConfig("crawls", "Engatinha", 7, 13),
+    "thumb-grasp": DevelopmentGoalConfig("thumb-grasp", "Pega objetos com o polegar", 10, 15),
+    "says-one-word": DevelopmentGoalConfig("says-one-word", "Fala uma palavra com sentido (ex.: mamãe)", 10, 15),
+    "uses-gestures": DevelopmentGoalConfig("uses-gestures", "Faz gestos (acena, dá tchau)", 10, 15),
+    "walks-alone": DevelopmentGoalConfig("walks-alone", "Anda sozinho(a), raramente cai", 10, 15),
+    "removes-clothing-item": DevelopmentGoalConfig("removes-clothing-item", "Tira uma peça de roupa", 13, 21),
+    "two-to-three-word-phrases": DevelopmentGoalConfig("two-to-three-word-phrases", "Combina 2-3 palavras", 13, 24),
+    "walks-away-independently": DevelopmentGoalConfig("walks-away-independently", "Afasta-se andando com autonomia", 13, 24),
+    "feeds-self-hands": DevelopmentGoalConfig("feeds-self-hands", "Alimenta-se com as mãos", 13, 24),
+    "runs-and-climbs-steps": DevelopmentGoalConfig("runs-and-climbs-steps", "Corre; sobe degraus", 14, 24),
+    "plays-alongside-peers": DevelopmentGoalConfig("plays-alongside-peers", "Aceita/acompanha outras crianças", 21, 36),
+    "says-own-name": DevelopmentGoalConfig("says-own-name", "Diz o próprio nome", 21, 36),
+    "dresses-with-help": DevelopmentGoalConfig("dresses-with-help", "Veste-se com ajuda", 21, 48),
+    "stands-on-one-foot": DevelopmentGoalConfig("stands-on-one-foot", "Fica em um pé só", 21, 48),
+    "uses-sentences": DevelopmentGoalConfig("uses-sentences", "Usa frases", 21, 48),
+    "begins-toilet-training": DevelopmentGoalConfig("begins-toilet-training", "Inicia controle esfincteriano", 21, 48),
+    "names-two-colors": DevelopmentGoalConfig("names-two-colors", "Reconhece/nomina duas cores", 24, 48),
+    "hops-on-one-foot": DevelopmentGoalConfig("hops-on-one-foot", "Pula com um pé", 24, 60),
+    "plays-with-peers": DevelopmentGoalConfig("plays-with-peers", "Brinca com outras crianças", 24, 48),
+    "imitates-daily-activities": DevelopmentGoalConfig("imitates-daily-activities", "Imita atividades do dia a dia", 24, 60),
+    "dresses-alone": DevelopmentGoalConfig("dresses-alone", "Veste-se sozinho(a)", 36, 60),
+    "jumps-alternating-feet": DevelopmentGoalConfig("jumps-alternating-feet", "Pula alternando os pés", 36, 72),
+    "alternates-cooperation-aggression": DevelopmentGoalConfig(
+        "alternates-cooperation-aggression", "Alterna cooperação e agressividade", 36, 72
     ),
-    "social-smile": DevelopmentGoalConfig(
-        "social-smile",
-        "Sorri quando alguém conversa com ele/ela (sorriso social)",
-        1,
-        3,
-    ),
-    "makes-sounds": DevelopmentGoalConfig("makes-sounds", "Emite sons/gritos", 1, 3),
-    "holds-head-steady": DevelopmentGoalConfig(
-        "holds-head-steady", "Sustenta a cabeça", 2, 4
-    ),
-    "brings-hands-together": DevelopmentGoalConfig(
-        "brings-hands-together", "Junta as mãos na linha média do corpo", 2, 4
-    ),
-    "grasps-objects": DevelopmentGoalConfig(
-        "grasps-objects", "Leva objetos à boca e agarra o que está em suas mãos", 3, 6
-    ),
-    "makes-vowel-sounds": DevelopmentGoalConfig(
-        "makes-vowel-sounds", "Emite sons vocálicos (gugu, agu)", 3, 6
-    ),
-    "turns-head-to-sound": DevelopmentGoalConfig(
-        "turns-head-to-sound",
-        "Vira a cabeça na direção de um som que lhe chama a atenção",
-        4,
-        6,
-    ),
-    "sits-with-support": DevelopmentGoalConfig(
-        "sits-with-support", "Senta com apoio", 4, 7
-    ),
-    "rolls-over": DevelopmentGoalConfig(
-        "rolls-over", "Rola (vira de costas para a barriga e vice-versa)", 4, 7
-    ),
-    "transfers-objects": DevelopmentGoalConfig(
-        "transfers-objects", "Transfere objetos de uma mão para outra", 5, 8
-    ),
-    "babbles": DevelopmentGoalConfig(
-        "babbles", "Duplica sílabas (baba, gugu, dada)", 6, 9
-    ),
-    "sits-without-support": DevelopmentGoalConfig(
-        "sits-without-support", "Senta sem apoio", 6, 9
-    ),
-    "starts-crawling": DevelopmentGoalConfig(
-        "starts-crawling", "Começa a engatinhar ou arrastar-se", 7, 10
-    ),
-    "pincer-grasp": DevelopmentGoalConfig(
-        "pincer-grasp",
-        "Pega pequenos objetos com o movimento de pinça (polegar e indicador)",
-        8,
-        12,
-    ),
-    "produces-jargon": DevelopmentGoalConfig(
-        "produces-jargon",
-        "Produz jargões (fala com entonação, mas sem palavras claras)",
-        9,
-        12,
-    ),
-    "stands-with-support": DevelopmentGoalConfig(
-        "stands-with-support", "Fica de pé com apoio", 9, 12
-    ),
-    "first-words": DevelopmentGoalConfig(
-        "first-words",
-        "Diz uma ou duas palavras com sentido (ex: 'água', 'mamã')",
-        9,
-        14,
-    ),
-    "walks-with-support": DevelopmentGoalConfig(
-        "walks-with-support", "Anda com apoio ou segurando nos móveis", 10, 14
-    ),
-    "walks-alone": DevelopmentGoalConfig("walks-alone", "Anda sozinho", 11, 16),
-    "points-to-wants": DevelopmentGoalConfig(
-        "points-to-wants", "Aponta para o que quer", 12, 16
-    ),
-    "builds-tower-two-blocks": DevelopmentGoalConfig(
-        "builds-tower-two-blocks", "Constrói torre com dois cubos", 12, 18
-    ),
-    "says-ten-words": DevelopmentGoalConfig(
-        "says-ten-words", "Fala cerca de 10 palavras", 15, 21
-    ),
-    "kicks-ball": DevelopmentGoalConfig("kicks-ball", "Chuta uma bola", 15, 24),
-    "removes-clothing": DevelopmentGoalConfig(
-        "removes-clothing", "Tira algumas peças de roupa", 16, 24
-    ),
-    "runs": DevelopmentGoalConfig("runs", "Corre", 18, 24),
-    "climbs-stairs": DevelopmentGoalConfig(
-        "climbs-stairs", "Sobe escadas com ajuda", 18, 24
-    ),
-    "forms-simple-sentences": DevelopmentGoalConfig(
-        "forms-simple-sentences",
-        "Forma frases simples com duas palavras (ex: 'quer água')",
-        18,
-        26,
-    ),
-    "jumps-with-both-feet": DevelopmentGoalConfig(
-        "jumps-with-both-feet", "Pula com ambos os pés", 24, 36
-    ),
-    "identifies-body-parts": DevelopmentGoalConfig(
-        "identifies-body-parts", "Identifica e nomeia várias partes do corpo", 24, 36
-    ),
-    "dresses-self": DevelopmentGoalConfig(
-        "dresses-self", "Veste-se sozinho (com alguma ajuda)", 30, 42
-    ),
-    "converses-in-sentences": DevelopmentGoalConfig(
-        "converses-in-sentences", "Conversa usando frases completas", 36, 48
-    ),
-    "stands-on-one-foot": DevelopmentGoalConfig(
-        "stands-on-one-foot", "Fica em um pé só por alguns segundos", 36, 48
-    ),
-    "recognizes-colors": DevelopmentGoalConfig(
-        "recognizes-colors", "Reconhece e nomeia algumas cores", 36, 48
-    ),
-    "asks-to-go-to-toilet": DevelopmentGoalConfig(
-        "asks-to-go-to-toilet",
-        "Pede para ir ao banheiro (controle dos esfíncteres)",
-        36,
-        48,
-    ),
-    "hops-on-one-foot": DevelopmentGoalConfig(
-        "hops-on-one-foot", "Salta em um pé só", 48, 60
-    ),
-    "tells-simple-stories": DevelopmentGoalConfig(
-        "tells-simple-stories",
-        "Conta histórias simples e relata acontecimentos",
-        48,
-        60,
-    ),
-    "draws-person": DevelopmentGoalConfig(
-        "draws-person", "Desenha uma figura humana com cabeça, corpo e membros", 48, 60
-    ),
-    "defines-words": DevelopmentGoalConfig(
-        "defines-words", "Define palavras simples (ex: 'O que é uma bola?')", 48, 60
-    ),
+    "expresses-preferences": DevelopmentGoalConfig("expresses-preferences", "Expressa preferências e ideias próprias", 36, 72),
 }
+# Canonical ordering of development goals (Brazil MoH / npmd_1.1.csv)
+DEVELOPMENT_GOALS_ORDER: list[str] = [
+    "moro-reflex",
+    "flexed-posture",
+    "watches-face",
+    "comfort-discomfort-signs",
+    "fixates-gaze",
+    "lifts-head-prone",
+    "smiles-spontaneously",
+    "differentiates-day-night",
+    "brings-to-midline",
+    "holds-head-prone",
+    "babbles",
+    "actively-assists",
+    "rolls-supine-to-prone",
+    "assists-pull-to-sit",
+    "reacts-to-sound",
+    "responds-to-call",
+    "sits-without-support",
+    "transfers-objects",
+    "differentiates-familiar-strangers",
+    "imitates-sounds-gestures",
+    "crawls",
+    "thumb-grasp",
+    "says-one-word",
+    "uses-gestures",
+    "walks-alone",
+    "removes-clothing-item",
+    "two-to-three-word-phrases",
+    "walks-away-independently",
+    "feeds-self-hands",
+    "runs-and-climbs-steps",
+    "plays-alongside-peers",
+    "says-own-name",
+    "dresses-with-help",
+    "stands-on-one-foot",
+    "uses-sentences",
+    "begins-toilet-training",
+    "names-two-colors",
+    "hops-on-one-foot",
+    "plays-with-peers",
+    "imitates-daily-activities",
+    "dresses-alone",
+    "jumps-alternating-feet",
+    "alternates-cooperation-aggression",
+    "expresses-preferences",
+]
 
 
 class ChoiceValidator:
@@ -456,26 +402,20 @@ class ChoiceValidator:
         return None
 
     @staticmethod
-    def get_age_group_from_ages(
-        age: int | None = None, gestational_age: int | None = None
-    ) -> AgeGroupType | None:
+    def get_age_group_from_ages(age: int | None = None, gestational_age: int | None = None) -> AgeGroupType | None:
         if gestational_age is None and age is None:
             raise ValueError("Either age or gestational_age must be provided.")
 
         if age is not None and gestational_age is None:
             return ChoiceValidator.get_age_group_for_age(age, "age")
 
-        assert gestational_age is not None, (
-            "Either age or gestational_age must be provided. Only for typing"
-        )
+        assert gestational_age is not None, "Either age or gestational_age must be provided. Only for typing"
 
         if AGE_GROUP_CONFIG["very_preterm_newborn"].contains_age(gestational_age):
             if not age:
                 return "very_preterm_newborn"
 
-            if AGE_GROUP_CONFIG["very_preterm_growth"].contains_age(
-                age + gestational_age
-            ):
+            if AGE_GROUP_CONFIG["very_preterm_growth"].contains_age(age + gestational_age):
                 return "very_preterm_growth"
 
             return ChoiceValidator.get_age_group_for_age(age, "age")
@@ -491,23 +431,21 @@ class ChoiceValidator:
         return AGE_GROUP_TABLE_NAME.get(age_group)  # type: ignore
 
     @staticmethod
-    def validate_development_goal(
-        slug: DevelopmentGoalSlug, child_age_months: int, achieved: bool
-    ) -> str | None:
+    def validate_development_goal(key: DevelopmentGoals, child_age_months: int, achieved: bool) -> str | None:
         """
         Validate if a child has achieved a development goal within the expected age range.
 
         Parameters:
-        - slug: The slug of the development goal.
+        - key: The key of the development goal.
         - child_age_months: The child's age in months.
         - achieved: Whether the child has achieved the goal.
 
         Returns:
         - A message indicating the validation result, or None if no issues are found.
         """
-        goal = DEVELOPMENT_GOALS.get(slug)
+        goal = DEVELOPMENT_GOALS.get(key)
         if not goal:
-            return f"Unknown development goal: {slug}"
+            return f"Unknown development goal: {key}"
 
         if achieved:
             return None  # No issues if the goal is achieved
@@ -539,7 +477,7 @@ def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
 
 
 # Backward compatibility - keep existing variables
-DEVELOPMENT_GOAL_CHOICES = frozenset([e.value for e in DevelopmentGoalSlug])
+DEVELOPMENT_GOAL_CHOICES = frozenset([e.value for e in DevelopmentGoals])
 DATA_SOURCE_CHOICES = frozenset([e.value for e in DataSource])
 DATA_SEX_CHOICES = frozenset([e.value for e in DataSex])
 DATA_X_CHOICES = frozenset([e.value for e in DataXType])
@@ -548,17 +486,7 @@ AGE_GROUP_CHOICES = frozenset([e.value for e in AgeGroup])
 
 # Legacy dictionaries (derived from configs)
 UNITS = {measurement: config.unit for measurement, config in MEASUREMENT_CONFIG.items()}
-AGE_GROUP_LIMITS = {
-    age_group: config.limits for age_group, config in AGE_GROUP_CONFIG.items()
-}
-AGE_GROUP_X = {
-    age_group: config.x_type for age_group, config in AGE_GROUP_CONFIG.items()
-}
-AGE_GROUP_TABLE_NAME = {
-    age_group: config.table_name for age_group, config in AGE_GROUP_CONFIG.items()
-}
-MEASUREMENT_ALIASES = {
-    measurement: config.aliases
-    for measurement, config in MEASUREMENT_CONFIG.items()
-    if config.aliases
-}
+AGE_GROUP_LIMITS = {age_group: config.limits for age_group, config in AGE_GROUP_CONFIG.items()}
+AGE_GROUP_X = {age_group: config.x_type for age_group, config in AGE_GROUP_CONFIG.items()}
+AGE_GROUP_TABLE_NAME = {age_group: config.table_name for age_group, config in AGE_GROUP_CONFIG.items()}
+MEASUREMENT_ALIASES = {measurement: config.aliases for measurement, config in MEASUREMENT_CONFIG.items() if config.aliases}
