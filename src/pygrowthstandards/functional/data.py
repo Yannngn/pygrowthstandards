@@ -5,12 +5,11 @@ import pandas as pd
 
 from ..config import (
     AgeGroupType,
-    ChoiceValidator,
     DataSexType,
     DataXTypeType,
     MeasurementTypeType,
     TableNameType,
-    resolve_measurement,
+    validator,
 )
 from ..data.load import GrowthTable, load_reference
 from ..utils import stats
@@ -21,9 +20,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
 try:
     DATA = load_reference()
 except FileNotFoundError:
-    logging.warning(
-        "Growth reference data file not found. Please ensure the data file is available."
-    )
+    logging.warning("Growth reference data file not found. Please ensure the data file is available.")
     DATA = None
 
 
@@ -32,22 +29,18 @@ def get_keys(
     sex: DataSexType = "U",
     age_days: int | None = None,
     gestational_age_days: int | None = None,
-) -> tuple[
-    TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType
-]:
+) -> tuple[TableNameType, AgeGroupType, MeasurementTypeType, DataSexType, DataXTypeType]:
     if age_days is None and gestational_age_days is None:
         raise ValueError("Either age_days or gestational_age must be provided.")
 
-    measurement_type = ChoiceValidator.resolve_measurement_alias(measurement)
-    age_group = ChoiceValidator.get_age_group_from_ages(age_days, gestational_age_days)
+    measurement_type = validator.resolve_measurement_alias(measurement)
+    age_group = validator.get_age_group_from_ages(age_days, gestational_age_days)
     assert age_group is not None, "Could not determine age group from provided ages."
-    name = ChoiceValidator.get_table_name_from_age_group(age_group)
-
-    measurement_type = resolve_measurement(measurement)
+    name = validator.get_table_name_from_age_group(age_group)
 
     sex = sex.lower() if sex in ["M", "F"] else "f"  # type: ignore
 
-    x_var_type = ChoiceValidator.get_age_type_from_age_group(age_group) or ""
+    x_var_type = validator.get_age_type_from_age_group(age_group) or ""
 
     if name in ["growth"] and measurement_type in [
         "head_circumference",

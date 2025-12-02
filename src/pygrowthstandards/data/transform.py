@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
+from pygrowthstandards.utils.date_utils import months_to_days, weeks_to_days, years_to_days
+
 from ..config import AGE_GROUP_CHOICES, AgeGroupType
-from ..utils.constants import MONTH, WEEK, YEAR
 from .extract import RawTable
 
 
@@ -47,16 +48,12 @@ class GrowthData:
         df = pd.DataFrame(records)
 
         df["age_group"] = df.apply(
-            lambda r: self._extract_age_group(
-                r["name"], r["measurement_type"], r["x_var_type"], r["x"]
-            ),
+            lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x_var_type"], r["x"]),
             axis=1,
         )
 
         df["x_var_type"] = df.apply(
-            lambda r: "stature"
-            if r["x_var_type"] in {"length", "height"}
-            else r["x_var_type"],
+            lambda r: "stature" if r["x_var_type"] in {"length", "height"} else r["x_var_type"],
             axis=1,
         )
 
@@ -90,12 +87,8 @@ class GrowthData:
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(
-            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
-        )
-        df.to_csv(
-            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
-        )
+        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
+        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
 
     @staticmethod
     def _transform_age_to_days(data: RawTable) -> RawTable:
@@ -105,33 +98,27 @@ class GrowthData:
 
         for point in data.points:
             if data.x_var_unit.lower().startswith("we"):
-                point.x = int(round(point.x * WEEK))
+                point.x = weeks_to_days(point.x)
             elif data.x_var_unit.lower().startswith("mo"):
-                point.x = int(round(point.x * MONTH))
+                point.x = months_to_days(point.x)
 
         data.x_var_unit = "days"
 
         return data
 
     @staticmethod
-    def _extract_age_group(
-        table_name: str, measurement_type: str, x_var_type: str, age: int
-    ) -> AgeGroupType:
+    def _extract_age_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> AgeGroupType:
         if x_var_type in {"height", "length"}:
             return "0-2" if x_var_type == "length" else "2-5"
 
         if table_name in AGE_GROUP_CHOICES:
             return table_name  # type: ignore
 
-        # if measurement_type.endswith("velocity"):
-        #     if age < 1 * YEAR:
-        #         return "0-1"
-
-        if age < 2 * YEAR:
+        if age < years_to_days(2):
             return "0-2"
-        if age < 5 * YEAR:
+        if age < years_to_days(5):
             return "2-5"
-        if age < 10 * YEAR:
+        if age < years_to_days(10):
             return "5-10"
 
         return "10-19"
@@ -141,17 +128,13 @@ def main():
     data = GrowthData()
     for f in glob.glob("data/raw/**/*.xlsx"):
         dataset = RawTable.from_xlsx(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
+        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
         data.add_table(dataset)
     for f in glob.glob("data/raw/**/*.csv"):
         if "cdc" in f:
             continue
         dataset = RawTable.from_csv(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
+        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
         data.add_table(dataset)
 
     data.save_parquet()

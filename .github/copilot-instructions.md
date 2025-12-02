@@ -43,7 +43,7 @@ x_type = config.x_type  # "age"
 ### Measurement Aliases
 ```python
 # Resolve measurement aliases automatically
-resolved = ChoiceValidator.resolve_measurement_alias("wfa")  # → "weight"
+resolved = validator.resolve_measurement_alias("wfa")  # → "weight"
 ```
 
 ## Development Workflows
@@ -91,7 +91,7 @@ from src.utils.errors import NoReferenceDataError, InvalidChoicesError
 ```
 
 ### Data Validation
-- Use `ChoiceValidator` methods for input validation
+- Use `validator` methods for input validation
 - All measurement types have aliases (e.g., "wfa" → "weight")
 - Sex values: "M", "F", "U" (unknown)
 

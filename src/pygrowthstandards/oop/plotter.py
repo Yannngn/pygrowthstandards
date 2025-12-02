@@ -27,9 +27,7 @@ class Plotter:
     def setup(self):
         self.patient.calculate_all()
 
-    def get_user_data(
-        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
-    ) -> pd.DataFrame:
+    def get_user_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
         config = AGE_GROUP_CONFIG[age_group]
         lower_limit, upper_limit = config.limits
         x_var_type = config.x_type
@@ -45,23 +43,15 @@ class Plotter:
             else:
                 x_value: float = getattr(entry, x_var_type)
 
-            if (
-                lower_limit <= x_value <= upper_limit
-                and hasattr(entry, measurement_type)
-                and getattr(entry, measurement_type) is not None
-            ):
-                filtered_measurements.append(
-                    (x_value, getattr(entry, measurement_type))
-                )
+            if lower_limit <= x_value <= upper_limit and hasattr(entry, measurement_type) and getattr(entry, measurement_type) is not None:
+                filtered_measurements.append((x_value, getattr(entry, measurement_type)))
 
         x = [item[0] for item in filtered_measurements]
         y = [item[1] for item in filtered_measurements]
 
         return pd.DataFrame({"x": x, "child": y})
 
-    def get_reference_data(
-        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
-    ) -> GrowthTable:
+    def get_reference_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> GrowthTable:
         if age_group not in AGE_GROUP_CONFIG:
             raise ValueError(f"Invalid age group: {age_group}")
 
@@ -80,9 +70,7 @@ class Plotter:
 
         return data
 
-    def get_plot_data(
-        self, age_group: AgeGroupType, measurement_type: MeasurementTypeType
-    ) -> pd.DataFrame:
+    def get_plot_data(self, age_group: AgeGroupType, measurement_type: MeasurementTypeType) -> pd.DataFrame:
         user_data = self.get_user_data(age_group, measurement_type)
         reference_data = self.get_reference_data(age_group, measurement_type)
 
@@ -126,9 +114,7 @@ class Plotter:
         show: bool = False,
         output_path: str = "",
     ) -> Axes:
-        plot_data = self.get_reference_data(
-            age_group, measurement_type
-        ).convert_z_scores_to_values()
+        plot_data = self.get_reference_data(age_group, measurement_type).convert_z_scores_to_values()
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -138,9 +124,7 @@ class Plotter:
         measurement_config = MEASUREMENT_CONFIG[measurement_type]
 
         x_label = config.x_type.replace("_", " ").title()
-        y_label = (
-            f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
-        )
+        y_label = f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
@@ -153,9 +137,7 @@ class Plotter:
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(
-            f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})"
-        )
+        ax.set_title(f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
         set_xticks_by_range(ax, *config.limits)
 
         if show:
@@ -166,9 +148,7 @@ class Plotter:
 
         return ax
 
-    def plot_development_goals(
-        self, show: bool = False, output_path: str = ""
-    ) -> tuple[Axes, Axes]:
+    def plot_development_goals(self, show: bool = False, output_path: str = "") -> tuple[Axes, Axes]:
         """
         Create development goals plot with two stacked subplots:
         - Top: months [1, ..., 15]
@@ -180,11 +160,7 @@ class Plotter:
         labels_bottom = ["13", "14", "15", "18", "2a", "3a", "4a", "5a", "6a"]
         values_bottom = [13, 14, 15, 18, 24, 36, 48, 60, 72]
 
-        ordered_goals = [
-            DEVELOPMENT_GOALS[s]
-            for s in DEVELOPMENT_GOALS_ORDER
-            if s in DEVELOPMENT_GOALS
-        ]
+        ordered_goals = [DEVELOPMENT_GOALS[s] for s in DEVELOPMENT_GOALS_ORDER if s in DEVELOPMENT_GOALS]
         goals_top = [g for g in ordered_goals if g.max_age_months <= 15]
         goals_bottom = [g for g in ordered_goals if g.max_age_months > 15]
 
@@ -216,9 +192,7 @@ class Plotter:
             end = max(1, min(15, end))
             for m in range(start, end + 1):
                 idx = values_top.index(m)
-                ax_top.add_patch(
-                    Rectangle((idx, row), 1, 1, color="#ADD8E6", alpha=0.5)
-                )
+                ax_top.add_patch(Rectangle((idx, row), 1, 1, color="#ADD8E6", alpha=0.5))
         ax_top.set_xlim(0, len(values_top))
         ax_top.set_ylim(0, n_top)
         ax_top.set_xticks([i + 0.5 for i in range(len(values_top))])
@@ -231,18 +205,14 @@ class Plotter:
         ax_top.tick_params(axis="y", labelsize=9)
         ax_top.set_xticks(range(len(values_top) + 1), minor=True)
         ax_top.set_yticks(range(n_top + 1), minor=True)
-        ax_top.grid(
-            True, which="minor", axis="both", linestyle="-", linewidth=0.5, alpha=0.3
-        )
+        ax_top.grid(True, which="minor", axis="both", linestyle="-", linewidth=0.5, alpha=0.3)
         ax_top.grid(False, which="major")
 
         # Bottom subplot
         for row, goal in enumerate(goals_bottom):
             for idx, v in enumerate(values_bottom):
                 if goal.min_age_months <= v <= goal.max_age_months:
-                    ax_bottom.add_patch(
-                        Rectangle((idx, row), 1, 1, color="#ADD8E6", alpha=0.5)
-                    )
+                    ax_bottom.add_patch(Rectangle((idx, row), 1, 1, color="#ADD8E6", alpha=0.5))
         ax_bottom.set_xlim(0, len(values_bottom))
         ax_bottom.set_ylim(0, n_bottom)
         ax_bottom.set_xticks([i + 0.5 for i in range(len(values_bottom))])
@@ -256,9 +226,7 @@ class Plotter:
         ax_bottom.tick_params(axis="y", labelsize=9)
         ax_bottom.set_xticks(range(len(values_bottom) + 1), minor=True)
         ax_bottom.set_yticks(range(n_bottom + 1), minor=True)
-        ax_bottom.grid(
-            True, which="minor", axis="both", linestyle="-", linewidth=0.5, alpha=0.3
-        )
+        ax_bottom.grid(True, which="minor", axis="both", linestyle="-", linewidth=0.5, alpha=0.3)
         ax_bottom.grid(False, which="major")
 
         # Adjust margins for long PT labels and reduce unused space
@@ -270,9 +238,7 @@ class Plotter:
             plt.savefig(output_path)
         return ax_top, ax_bottom
 
-    def plot_achievements(
-        self, show: bool = False, output_path: str = ""
-    ) -> tuple[Axes, Axes]:
+    def plot_achievements(self, show: bool = False, output_path: str = "") -> tuple[Axes, Axes]:
         """
         Overlay the child's achievements on top of the development goals subplots.
         Colors: early=#A9A9A9, on-time=#32CD32, +1m=#FFD700, delayed=#FF4500.
@@ -284,11 +250,7 @@ class Plotter:
         values_top = list(range(1, 16))
         values_bottom = [13, 14, 15, 18, 24, 36, 48, 60, 72]
 
-        ordered_goals = [
-            DEVELOPMENT_GOALS[s]
-            for s in DEVELOPMENT_GOALS_ORDER
-            if s in DEVELOPMENT_GOALS
-        ]
+        ordered_goals = [DEVELOPMENT_GOALS[s] for s in DEVELOPMENT_GOALS_ORDER if s in DEVELOPMENT_GOALS]
         goals_top = [g for g in ordered_goals if g.max_age_months <= 15]
         goals_bottom = [g for g in ordered_goals if g.max_age_months > 15]
 
@@ -303,30 +265,22 @@ class Plotter:
             return values_top.index(m_int)
 
         def col_for_month_bottom(m: float) -> int:
-            idx = min(
-                range(len(values_bottom)), key=lambda i: abs(values_bottom[i] - m)
-            )
+            idx = min(range(len(values_bottom)), key=lambda i: abs(values_bottom[i] - m))
             return idx
 
         # Overlay child's achieved cells
-        for group in self.patient.developments:
+        for group in self.patient.development_goals:
             for ach in group.developments:
                 goal_cfg = DEVELOPMENT_GOALS.get(ach.development_goal)
                 if not goal_cfg:
                     continue
                 # child's age in months at achievement
-                achievement_month = (
-                    (ach.date) - self.patient.birthday_date
-                ).days / MONTH  # type: ignore
+                achievement_month = ((ach.date) - self.patient.birthday_date).days / MONTH  # type: ignore
 
                 # Determine color vs expected window
                 if achievement_month < goal_cfg.min_age_months:
                     color = "#A9A9A9"
-                elif (
-                    goal_cfg.min_age_months
-                    <= achievement_month
-                    <= goal_cfg.max_age_months
-                ):
+                elif goal_cfg.min_age_months <= achievement_month <= goal_cfg.max_age_months:
                     color = "#32CD32"
                 elif int(round(achievement_month)) == goal_cfg.max_age_months + 1:
                     color = "#FFD700"
@@ -337,15 +291,11 @@ class Plotter:
                 if goal_cfg in goals_top:
                     col = col_for_month_top(achievement_month)
                     row = row_for_goal_top(goal_cfg)
-                    ax_top.add_patch(
-                        Rectangle((col, row), 1, 1, color=color, alpha=0.8)
-                    )
+                    ax_top.add_patch(Rectangle((col, row), 1, 1, color=color, alpha=0.8))
                 else:
                     col = col_for_month_bottom(achievement_month)
                     row = row_for_goal_bottom(goal_cfg)
-                    ax_bottom.add_patch(
-                        Rectangle((col, row), 1, 1, color=color, alpha=0.8)
-                    )
+                    ax_bottom.add_patch(Rectangle((col, row), 1, 1, color=color, alpha=0.8))
 
         if show:
             plt.show()
