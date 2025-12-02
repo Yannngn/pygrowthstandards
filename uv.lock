@@ -1620,10 +1620,6 @@ excel = [
     { name = "xlrd" },
     { name = "xlsxwriter" },
 ]
-output-formatting = [
-    { name = "jinja2" },
-    { name = "tabulate" },
-]
 parquet = [
     { name = "pyarrow" },
 ]
@@ -1920,10 +1916,10 @@ wheels = [
 
 [[package]]
 name = "pygrowthstandards"
-version = "0.1.0"
+version = "0.13"
 source = { editable = "." }
 dependencies = [
-    { name = "pandas", extra = ["computation", "output-formatting", "parquet", "performance", "plot"] },
+    { name = "pandas", extra = ["computation", "parquet", "plot"] },
 ]
 
 [package.dev-dependencies]
@@ -1947,12 +1943,15 @@ lint = [
 pdf = [
     { name = "docling" },
 ]
+performance = [
+    { name = "pandas", extra = ["computation", "performance"] },
+]
 test = [
     { name = "pytest" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pandas", extras = ["performance", "computation", "plot", "output-formatting", "parquet"], specifier = ">=2.3.0" }]
+requires-dist = [{ name = "pandas", extras = ["computation", "parquet", "plot"], specifier = ">=2.1.0,<3.0.0" }]
 
 [package.metadata.requires-dev]
 build = [
@@ -1961,14 +1960,15 @@ build = [
 ]
 dev = [
     { name = "build", specifier = ">=1.3.0" },
-    { name = "pandas", extras = ["excel"], specifier = ">=2.3.0" },
+    { name = "pandas", extras = ["excel"], specifier = ">=2.1.0,<3.0.0" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "twine", specifier = ">=6.1.0" },
 ]
-excel = [{ name = "pandas", extras = ["excel"], specifier = ">=2.3.0" }]
+excel = [{ name = "pandas", extras = ["excel"], specifier = ">=2.1.0,<3.0.0" }]
 lint = [{ name = "ruff" }]
 pdf = [{ name = "docling", specifier = ">=2.42.2" }]
+performance = [{ name = "pandas", extras = ["performance", "computation"], specifier = ">=2.1.0,<3.0.0" }]
 test = [{ name = "pytest" }]
 
 [[package]]

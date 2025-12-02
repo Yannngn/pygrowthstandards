@@ -59,9 +59,10 @@ twine upload dist/*
 - [ ] Update version in `pyproject.toml`
 - [ ] Update version in `src/pygrowthstandards/__init__.py`
 - [ ] Update CHANGELOG.md
+- [ ] Update enviroment: `uv sync`
 - [ ] Run all tests: `pytest`
 - [ ] Run linting: `pre-commit run --all-files`
-- [ ] Build package: `python -m build`
+- [ ] Build package: `uv run python -m build`
 - [ ] Test package installation: `pip install dist/*.whl`
 - [ ] Create git tag: `git tag v0.1.0`
 - [ ] Push tag: `git push origin v0.1.0`
