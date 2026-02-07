@@ -127,6 +127,16 @@ The output of this script is:
 -0.94
 ```
 
+## Future API Enhancements
+
+We're actively researching ways to make PyGrowthStandards even more user-friendly! Check out our [Fluid API Research](FLUID_API_SUMMARY.md) for proposed enhancements including:
+
+- **Method chaining** for 50-60% code reduction
+- **Builder patterns** for declarative patient construction
+- **Unified facade** for simplified imports and batch processing
+
+All proposed changes maintain 100% backward compatibility. [Read the research](FLUID_API_RESEARCH.md) and share your feedback!
+
 ## Contributing
 
 Contributions are welcome! Please feel free to open an issue to report a bug or suggest a feature, or submit a pull request with your improvements.
