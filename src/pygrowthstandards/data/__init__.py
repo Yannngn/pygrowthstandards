@@ -2,13 +2,13 @@
 
 from pathlib import Path
 
-from pygrowthstandards.data.transform import GrowthData
+from pygrowthstandards.utils.version import get_package_version
 
 # Get the directory containing this file
 _DATA_DIR = Path(__file__).parent
 
 # Path to the reference data file
-REFERENCE_DATA_PATH = _DATA_DIR / f"pygrowthstandards_{GrowthData.version}.parquet"
+REFERENCE_DATA_PATH = _DATA_DIR / f"pygrowthstandards_{get_package_version()}.parquet"
 
 
 def get_data_path() -> Path:

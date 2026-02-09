@@ -1,22 +1,22 @@
 from dataclasses import dataclass, field
-from datetime import date as dt_date
 from datetime import datetime as dt_datetime
 
-from ..utils.config import MeasurementTypeType, TableNameType
+from pygrowthstandards.utils.config import MeasurementAliasType, TableNameType
+from pygrowthstandards.utils.date import DateType
 
 
 @dataclass
 class Measurement:
     value: float
-    measurement_type: MeasurementTypeType
+    measurement_type: MeasurementAliasType
     table_name: TableNameType = "growth"
-    date: dt_datetime | dt_date = field(default_factory=dt_datetime.now)
+    date: DateType = field(default_factory=dt_datetime.now)
 
 
 @dataclass
 class MeasurementGroup:
     table_name: TableNameType = "growth"
-    date: dt_datetime | dt_date = field(default_factory=dt_datetime.now)
+    date: DateType = field(default_factory=dt_datetime.now)
 
     stature: float | None = None
     weight: float | None = None
@@ -50,24 +50,30 @@ class MeasurementGroup:
         for key, value in data.items():
             if value is None or key == "date":
                 continue
-            measurements.append(
-                Measurement(value=value, measurement_type=key, date=data["date"])
-            )
+            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
 
         return measurements
 
     @classmethod
     def from_measurements(cls, measurements: list[Measurement]) -> "MeasurementGroup":
-        section = cls()
+        if not all(m.date == measurements[0].date for m in measurements):
+            raise ValueError("All measurements must have the same date")
+
+        section = cls(date=measurements[0].date)
         for measurement in measurements:
+            section.date = measurement.date
+
             if measurement.measurement_type == "stature":
                 section.stature = measurement.value
-            elif measurement.measurement_type == "weight":
-                section.weight = measurement.value
-            elif measurement.measurement_type == "head_circumference":
-                section.head_circumference = measurement.value
+                continue
 
-            section.date = measurement.date
+            if measurement.measurement_type == "weight":
+                section.weight = measurement.value
+                continue
+
+            if measurement.measurement_type == "head_circumference":
+                section.head_circumference = measurement.value
+                continue
 
         section._setup()
 

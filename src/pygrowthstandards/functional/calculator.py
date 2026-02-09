@@ -1,34 +1,34 @@
-from ..utils.config import DataSexType, MeasurementTypeType
-from ..utils.stats import calculate_z_score, normal_cdf
-from .data import DATA, get_keys, get_lms, get_table
+from collections.abc import Callable
+from functools import partial
+from typing import Literal
+
+from pygrowthstandards import functional as F
+from pygrowthstandards.utils.config import DataSexType
+from pygrowthstandards.utils.date import DateInputType
 
 
-def zscore(
-    measurement: MeasurementTypeType,
-    value: float,
-    sex: DataSexType = "U",
-    age_days: int | None = None,
-    gestational_age: int | None = None,
-) -> float:
-    keys = get_keys(measurement, sex, age_days, gestational_age=gestational_age)
+def calculator(
+    sex: DataSexType,
+    birth_date: DateInputType | None = None,
+    gestational_age_weeks: int | None = None,
+    gestational_age_days: int = 0,
+    output_stat: Literal["zscore", "percentile"] = "zscore",
+) -> Callable[..., float]:
+    gestational_age = None
+    if gestational_age_weeks is None and gestational_age_days != 0:
+        raise ValueError("gestational_age_days requires gestational_age_weeks to be specified")
+    if gestational_age_weeks is not None:
+        gestational_age = gestational_age_weeks * 7 + gestational_age_days
 
-    x = age_days if keys[-1] == "age" else gestational_age
+    func = F.percentile if output_stat == "percentile" else F.zscore
 
-    assert x is not None, "Either age_days or gestational_age must be provided."
+    if birth_date is not None and gestational_age is not None:
+        return partial(func, sex=sex, birth_date=birth_date, gestational_age=gestational_age)
 
-    data = get_table(DATA, keys)
-    lms = get_lms(data, x)
+    if birth_date is not None:
+        return partial(func, sex=sex, birth_date=birth_date)
 
-    return calculate_z_score(value, *lms)
+    if gestational_age is not None:
+        return partial(func, sex=sex, gestational_age=gestational_age)
 
-
-def percentile(
-    measurement: MeasurementTypeType,
-    value: float,
-    sex: DataSexType = "U",
-    age_days: int | None = None,
-    gestational_age: int | None = None,
-) -> float:
-    z = zscore(measurement, value, sex, age_days, gestational_age)
-
-    return normal_cdf(z)
+    return partial(func, sex=sex)

@@ -1,14 +1,11 @@
-import glob
-import os
+from pathlib import Path
 
 import pandas as pd
 
 try:
-    from docling.document_converter import DocumentConverter  # type: ignore
+    from docling.document_converter import DocumentConverter
 except ImportError as exc:
-    raise ImportError(
-        "Please install the 'docling' package or `pdf` extra to use this script."
-    ) from exc
+    raise ImportError("Please install the 'docling' package or `pdf` extra `pip install pygrowthstandards[pdf]` to use this script.") from exc
 
 # some manual changes are needed to the csv files after this script runs
 
@@ -27,7 +24,7 @@ def intergrowth_convert_weeks_days(weeks_days: str) -> int:
     return weeks * 7 + days
 
 
-def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
+def docling_extract_tables(converter: DocumentConverter, source: str | Path) -> None:
     conv_res = converter.convert(source)
 
     tables = []
@@ -35,7 +32,10 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
     for table in conv_res.document.tables:
         table_df: pd.DataFrame = table.export_to_dataframe()
 
-        index = "days" if "+" in table_df.iat[1, 0] else "weeks"
+        index = "weeks"
+        if len(table_df) > 1 and "+" in str(table_df.iat[1, 0]):
+            index = "days"
+
         header = [index, "sd3neg", "sd2neg", "sd1neg", "sd0", "sd1", "sd2", "sd3"]
         if any(str(col).startswith("Centiles") for col in table_df.columns):
             header = [index, "5", "10", "25", "50", "75", "90", "95"]
@@ -44,21 +44,18 @@ def docling_extract_tables(converter: DocumentConverter, source: str) -> None:
 
         tables.append(table_df)
 
-    element_csv_filename = os.path.join(source.replace(".pdf", ".csv"))
+    element_csv_filename = Path(source).with_suffix(".csv")
 
     if tables:
-        combined_df = pd.concat(tables, ignore_index=True)
-
+        combined_df: pd.DataFrame = pd.concat(tables, ignore_index=True)
         if "days" in combined_df.columns:
-            combined_df["days"] = combined_df["days"].apply(
-                intergrowth_convert_weeks_days
-            )
+            combined_df["days"] = combined_df["days"].apply(intergrowth_convert_weeks_days)
 
         combined_df.to_csv(element_csv_filename, index=False, header=header)
 
 
 def main():
-    source_list = glob.glob("data/raw/**/*.pdf")
+    source_list = list(Path("data/raw").rglob("*.pdf"))
     converter = DocumentConverter()
 
     for source in source_list:

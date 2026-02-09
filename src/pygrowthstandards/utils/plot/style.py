@@ -81,7 +81,7 @@ def set_style(fig: Figure, ax: Axes, style: dict = FIG_AXES_STYLE):
         direction=style.get("ytick.direction", "out"),
     )
 
-    fig.set_tight_layout(True)  # type: ignore
+    fig.tight_layout()
 
 
 def get_label_name(key: int | float):

@@ -1,17 +1,23 @@
-import glob
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import cast
 
 import pandas as pd
 
-from ..utils.config import AGE_GROUP_CHOICES, AgeGroupType
-from ..utils.constants import MONTH, WEEK, YEAR
-from .extract import RawTable
+from pygrowthstandards.data.extract import RawTable
+from pygrowthstandards.utils.config import (
+    AGE_GROUP_CHOICES,
+    AgeGroupType,
+    resolve_x_var_type,
+)
+from pygrowthstandards.utils.constants import MONTH, WEEK, YEAR
+from pygrowthstandards.utils.version import get_package_version
 
 
 @dataclass
 class GrowthData:
-    version: str = "1.1"
+    version: str = field(default_factory=get_package_version)
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
@@ -38,27 +44,21 @@ class GrowthData:
         for table in self.tables:
             table_dict = table.to_dict()
             table_dict.pop("x_var_unit")
-            points: list[dict] = table_dict.pop("points")
+            points = table_dict.pop("points")
 
             for point in points:
+                assert isinstance(point, dict)
                 record = {**table_dict, **point}
                 records.append(record)
 
         df = pd.DataFrame(records)
 
         df["age_group"] = df.apply(
-            lambda r: self._extract_age_group(
-                r["name"], r["measurement_type"], r["x_var_type"], r["x"]
-            ),
+            lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x_var_type"], r["x"]),
             axis=1,
         )
 
-        df["x_var_type"] = df.apply(
-            lambda r: "stature"
-            if r["x_var_type"] in {"length", "height"}
-            else r["x_var_type"],
-            axis=1,
-        )
+        df["x_var_type"] = df["x_var_type"].apply(resolve_x_var_type)
 
         # ensure required columns exist
         required = [
@@ -77,7 +77,7 @@ class GrowthData:
 
         return df[required]
 
-    def save_parquet(self, path: str = "data") -> None:
+    def save_parquet(self, path: str | Path = "data") -> None:
         """
         Saves the joined data to a Parquet file for efficient storage.
 
@@ -86,16 +86,12 @@ class GrowthData:
         self.transform_all()
         df = self.join_data()
 
-        if path.endswith(".parquet"):
+        if Path(path).suffix == ".parquet":
             df.to_parquet(path, index=False)
             return
 
-        df.to_parquet(
-            os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False
-        )
-        df.to_csv(
-            os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False
-        )
+        df.to_parquet(os.path.join(path, f"pygrowthstandards_{self.version}.parquet"), index=False)
+        df.to_csv(os.path.join(path, f"pygrowthstandards_{self.version}.csv"), index=False)
 
     @staticmethod
     def _transform_age_to_days(data: RawTable) -> RawTable:
@@ -114,14 +110,12 @@ class GrowthData:
         return data
 
     @staticmethod
-    def _extract_age_group(
-        table_name: str, measurement_type: str, x_var_type: str, age: int
-    ) -> AgeGroupType:
+    def _extract_age_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> AgeGroupType:
         if x_var_type in {"height", "length"}:
             return "0-2" if x_var_type == "length" else "2-5"
 
         if table_name in AGE_GROUP_CHOICES:
-            return table_name  # type: ignore
+            return cast(AgeGroupType, table_name)
 
         if measurement_type.endswith("velocity"):
             if age < 1 * YEAR:
@@ -135,27 +129,3 @@ class GrowthData:
             return "5-10"
 
         return "10-19"
-
-
-def main():
-    data = GrowthData()
-    for f in glob.glob("data/raw/**/*.xlsx"):
-        dataset = RawTable.from_xlsx(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
-        data.add_table(dataset)
-    for f in glob.glob("data/raw/**/*.csv"):
-        if "cdc" in f:
-            continue
-        dataset = RawTable.from_csv(f)
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
-        data.add_table(dataset)
-
-    data.save_parquet()
-
-
-if __name__ == "__main__":
-    main()

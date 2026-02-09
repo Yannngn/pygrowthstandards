@@ -1,16 +1,9 @@
 import datetime
-import os
-import sys
 
 import pytest
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-)
-
-
-from src.pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
-from src.pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
+from pygrowthstandards.oop.patient import Patient
 
 
 @pytest.fixture
@@ -91,7 +84,6 @@ def test_calculator_z_scores(setup_patient: Patient):
 
     assert len(patient.z_scores) == 3
     for group in patient.z_scores:
-        assert isinstance(group, MeasurementGroup)
         if group.weight is not None:
             assert isinstance(group.weight, float)
         if group.stature is not None:

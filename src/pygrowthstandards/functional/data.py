@@ -1,87 +1,67 @@
 import logging
-import os
+from typing import overload
 
 import pandas as pd
 
-from ..data.load import GrowthTable, load_reference
-from ..utils import stats
-from ..utils.config import MEASUREMENT_ALIASES, DataSexType, MeasurementTypeType
-from ..utils.constants import WEEK, YEAR
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
-
+from pygrowthstandards.data.load import GrowthTable, KeyObject, load_reference
+from pygrowthstandards.utils import stats
+from pygrowthstandards.utils.config import DataSexType, MeasurementAliasType
 
 try:
-    DATA = load_reference()
+    DATA: pd.DataFrame | None = load_reference()
 except FileNotFoundError:
-    logging.warning(
-        "Growth reference data file not found. Please ensure the data file is available."
-    )
+    msg = "Growth reference data file not found. Please ensure the data file is available."
+    logging.error(msg)
     DATA = None
 
 
-def get_keys(
-    measurement: MeasurementTypeType,
-    sex: DataSexType = "U",
+# Easier usage if the user imports from functional.data directly with key object
+@overload
+def get_table(data: pd.DataFrame, *, keys: KeyObject) -> GrowthTable: ...
+
+
+# Easier usage if the user imports from functional.data directly with arguments
+@overload
+def get_table(
+    data: pd.DataFrame,
+    *,
+    measurement: MeasurementAliasType,
+    sex: DataSexType | None = None,
     age_days: int | None = None,
     gestational_age: int | None = None,
-) -> tuple[str, str, str, str]:
-    if age_days is None and gestational_age is None:
-        raise ValueError("Either age_days or gestational_age must be provided.")
-
-    def normalized_measurement() -> str:
-        for key, aliases in MEASUREMENT_ALIASES.items():
-            normalized = measurement.lower().replace("-", "_")
-            if normalized in aliases | {key}:
-                return key
-        raise ValueError(f"Unknown measurement: {measurement}")
-
-    measurement_type = normalized_measurement()
-    sex = sex.lower() if sex in ["M", "F"] else "f"  # type: ignore
-
-    name = ""
-    x_var_type = ""
-
-    if age_days is not None:
-        x_var_type = "age"
-        if (
-            measurement_type in ["head_circumference", "weight_stature"]
-            and age_days > 5 * YEAR
-        ):
-            raise ValueError(f"No reference for {measurement_type} after 5 years.")
-
-        if measurement_type in ["weight"] and age_days > 10 * YEAR:
-            raise ValueError(f"No reference for {measurement_type} after 10 years.")
-
-        name = "growth" if age_days > 5 * YEAR else "child_growth"
-
-        if gestational_age is not None and age_days < 64 * WEEK:
-            if gestational_age < 28:
-                name = "very_preterm_growth"
-
-    if gestational_age is not None and (age_days == 0 or age_days is None):
-        x_var_type = "gestational_age"
-        if measurement_type in ["body_mass_index"]:
-            raise ValueError(
-                f"No reference for {measurement_type} at birth or fetal age."
-            )
-
-        if gestational_age > 28:
-            if measurement_type in ["weight_stature"]:
-                raise ValueError(
-                    f"No reference for {measurement_type} at birth or fetal age."
-                )
-            name = "newborn"
-        else:
-            name = "very_preterm_newborn"
-
-    return name, measurement_type, sex, x_var_type
+    x_var_type: str | None = None,
+    x_value: float | None = None,
+) -> GrowthTable: ...
 
 
-def get_table(data: pd.DataFrame, keys: tuple) -> GrowthTable:
-    # data = load_reference()
-    name, measurement, sex, x_var_type = keys
-    return GrowthTable.from_data(data, name, None, measurement, sex, x_var_type)
+def get_table(
+    data: pd.DataFrame,
+    *,
+    keys: KeyObject | None = None,
+    measurement: MeasurementAliasType | None = None,
+    sex: DataSexType | None = None,
+    age_days: int | None = None,
+    gestational_age: int | None = None,
+    x_var_type: str | None = None,
+    x_value: float | None = None,
+) -> GrowthTable:
+    # If keys provided, use them directly.
+    if keys is not None:
+        return GrowthTable.from_data(data, keys)
+
+    # Otherwise require a measurement to build keys.
+    if measurement is None:
+        raise TypeError("Either 'keys' or 'measurement' must be provided to get_table")
+
+    keys_obj = KeyObject.from_functional(
+        measurement,
+        sex,
+        age_days,
+        gestational_age,
+        x_var_type=x_var_type,
+        x_value=x_value,
+    )
+    return GrowthTable.from_data(data, keys_obj)
 
 
 def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:

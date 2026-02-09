@@ -1,38 +1,14 @@
 from dataclasses import dataclass
-from decimal import Decimal as D
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, cast
 
-from .constants import WEEK, YEAR
-
-# Templates
-X_TEMPLATE = D("0.00")
-MU_TEMPLATE = D("0.0000")
-LAMBDA_TEMPLATE = D("0.0000")
-SIGMA_TEMPLATE = D("0.00000")
-
-
-class DataSource(StrEnum):
-    WHO = "who"
-    INTERGROWTH = "intergrowth"
-
-
-class DataSex(StrEnum):
-    MALE = "M"
-    FEMALE = "F"
-    UNKNOWN = "U"
-
-
-class DataXType(StrEnum):
-    AGE = "age"
-    GESTATIONAL_AGE = "gestational_age"
-    STATURE = "stature"
+from pygrowthstandards.utils.constants import WEEK, YEAR
 
 
 class MeasurementType(StrEnum):
     STATURE = "stature"
     WEIGHT = "weight"
-    WEIGHT_STATURE = "weight_stature"
+    WEIGHT_STATURE_RATIO = "weight_stature_ratio"
     HEAD_CIRCUMFERENCE = "head_circumference"
     BODY_MASS_INDEX = "body_mass_index"
     WEIGHT_VELOCITY = "weight_velocity"
@@ -48,23 +24,95 @@ class AgeGroup(StrEnum):
     TEN_NINETEEN = "10-19"
     NEWBORN = "newborn"
     VERY_PRETERM_NEWBORN = "very_preterm_newborn"
-    VERY_PRETERM_GROWTH = "very_preterm_growth"
+    POSTNATAL_GROWTH_PRETERM = "postnatal_growth_preterm"
 
 
 # Type aliases using the enums
 DataSourceType = Literal["who", "intergrowth"]
 DataSexType = Literal["M", "F", "U"]
-DataXTypeType = Literal["age", "gestational_age", "stature"]
-MeasurementTypeType = Literal[
+DataXTypeType = Literal["age", "gestational_age", "post_menstrual_age", "stature"]
+
+StatureAlias = frozenset(
+    [
+        "hfa",
+        "lfa",
+        "lhfa",
+        "sfa",
+        "h",
+        "l",
+        "lh",
+        "s",
+        "height",
+        "length",
+        "length_height",
+        "stature",
+        "height_for_age",
+        "length_for_age",
+        "length_height_for_age",
+        "stature_for_age",
+    ]
+)
+StatureAliasType = Literal[
+    "hfa",
+    "lfa",
+    "lhfa",
+    "sfa",
+    "h",
+    "l",
+    "lh",
+    "s",
+    "height",
+    "length",
+    "length_height",
     "stature",
-    "weight",
-    "weight_stature",
-    "head_circumference",
-    "body_mass_index",
-    "weight_velocity",
-    "stature_velocity",
-    "head_circumference_velocity",
+    "height_for_age",
+    "length_for_age",
+    "length_height_for_age",
+    "stature_for_age",
 ]
+WeightAlias = frozenset(["wfa", "w", "weight"])
+WeightAliasType = Literal["wfa", "w", "weight"]
+
+HeadCircumferenceAlias = frozenset(["hcfa", "hc", "head_circumference"])
+HeadCircumferenceAliasType = Literal["hcfa", "hc", "head_circumference"]
+
+BodyMassIndexAlias = frozenset(["bmi", "bfa", "body_mass_index"])
+BodyMassIndexAliasType = Literal["bmi", "bfa", "body_mass_index"]
+
+WeightStatureAlias = frozenset(
+    [
+        "wfs",
+        "wfl",
+        "wfh",
+        "weight_length",
+        "weight_height",
+        "weight_stature",
+        "weight_stature_ratio",
+        "weight_for_stature",
+        "weight_for_length",
+        "weight_for_height",
+    ]
+)
+WeightStatureAliasType = Literal[
+    "wfs",
+    "wfl",
+    "wfh",
+    "weight_length",
+    "weight_height",
+    "weight_stature",
+    "weight_stature_ratio",
+    "weight_for_stature",
+    "weight_for_length",
+    "weight_for_height",
+]
+
+VelocityAlias = frozenset(["weight_velocity", "length_velocity", "head_circumference_velocity", "stature_velocity"])
+VelocityAliasType = Literal["weight_velocity", "length_velocity", "head_circumference_velocity", "stature_velocity"]
+
+MeasurementAliasType = (
+    StatureAliasType | WeightAliasType | HeadCircumferenceAliasType | BodyMassIndexAliasType | WeightStatureAliasType | VelocityAliasType
+)
+
 AgeGroupType = Literal[
     "0-1",
     "0-2",
@@ -73,17 +121,17 @@ AgeGroupType = Literal[
     "10-19",
     "newborn",
     "very_preterm_newborn",
-    "very_preterm_growth",
+    "postnatal_growth_preterm",
 ]
-TableNameType = Literal[
-    "growth", "child_growth", "very_preterm_growth", "very_preterm_newborn", "newborn"
-]
+
+TableNameType = Literal["growth", "child_growth", "postnatal_growth_preterm", "very_preterm_newborn", "newborn"]
 
 
 @dataclass(frozen=True)
 class AgeGroupConfig:
     """Configuration for age groups with limits, x_type, and table name."""
 
+    name: AgeGroupType
     limits: tuple[int, int]
     x_type: DataXTypeType
     table_name: TableNameType
@@ -96,6 +144,7 @@ class AgeGroupConfig:
 class MeasurementConfig:
     """Configuration for measurements with units and aliases."""
 
+    name: MeasurementAliasType
     unit: str
     aliases: frozenset[str] = frozenset()
 
@@ -104,78 +153,56 @@ class MeasurementConfig:
 
 
 # Configuration mappings
-AGE_GROUP_CONFIG: dict[AgeGroupType, AgeGroupConfig] = {
-    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(
-        (168, 230), "gestational_age", "very_preterm_newborn"
+AGE_GROUP_CONFIG: dict[AgeGroup, AgeGroupConfig] = {
+    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(AgeGroup.VERY_PRETERM_NEWBORN.value, (168, 230), "gestational_age", "very_preterm_newborn"),
+    AgeGroup.NEWBORN: AgeGroupConfig(AgeGroup.NEWBORN.value, (230, 300), "gestational_age", "newborn"),
+    AgeGroup.POSTNATAL_GROWTH_PRETERM: AgeGroupConfig(
+        AgeGroup.POSTNATAL_GROWTH_PRETERM.value, (27 * WEEK, 64 * WEEK), "post_menstrual_age", "postnatal_growth_preterm"
     ),
-    AgeGroup.NEWBORN: AgeGroupConfig((230, 300), "gestational_age", "newborn"),
-    AgeGroup.VERY_PRETERM_GROWTH: AgeGroupConfig(
-        (27 * WEEK, 64 * WEEK), "gestational_age", "very_preterm_growth"
-    ),
-    AgeGroup.ZERO_ONE: AgeGroupConfig((0, int(round(1 * YEAR))), "age", "child_growth"),
-    AgeGroup.ZERO_TWO: AgeGroupConfig((0, int(round(2 * YEAR))), "age", "child_growth"),
-    AgeGroup.TWO_FIVE: AgeGroupConfig(
-        (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"
-    ),
-    AgeGroup.FIVE_TEN: AgeGroupConfig(
-        (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"
-    ),
-    AgeGroup.TEN_NINETEEN: AgeGroupConfig(
-        (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"
-    ),
-}  # type: ignore
+    AgeGroup.ZERO_ONE: AgeGroupConfig(AgeGroup.ZERO_ONE.value, (0, int(round(1 * YEAR))), "age", "child_growth"),
+    AgeGroup.ZERO_TWO: AgeGroupConfig(AgeGroup.ZERO_TWO.value, (0, int(round(2 * YEAR))), "age", "child_growth"),
+    AgeGroup.TWO_FIVE: AgeGroupConfig(AgeGroup.TWO_FIVE.value, (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"),
+    AgeGroup.FIVE_TEN: AgeGroupConfig(AgeGroup.FIVE_TEN.value, (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"),
+    AgeGroup.TEN_NINETEEN: AgeGroupConfig(AgeGroup.TEN_NINETEEN.value, (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"),
+}
 
-MEASUREMENT_CONFIG: dict[MeasurementTypeType, MeasurementConfig] = {
-    MeasurementType.STATURE: MeasurementConfig(
-        "cm", frozenset({"lfa", "hfa", "lhfa", "sfa", "l", "h", "s"})
+MEASUREMENT_CONFIG: dict[MeasurementType, MeasurementConfig] = {
+    MeasurementType.STATURE: MeasurementConfig(MeasurementType.STATURE.value, "cm", StatureAlias),
+    MeasurementType.WEIGHT: MeasurementConfig(MeasurementType.WEIGHT.value, "kg", WeightAlias),
+    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig(MeasurementType.HEAD_CIRCUMFERENCE.value, "cm", HeadCircumferenceAlias),
+    MeasurementType.BODY_MASS_INDEX: MeasurementConfig(MeasurementType.BODY_MASS_INDEX.value, "kg/m²", BodyMassIndexAlias),
+    MeasurementType.WEIGHT_STATURE_RATIO: MeasurementConfig(MeasurementType.WEIGHT_STATURE_RATIO.value, "kg/cm", WeightStatureAlias),
+    MeasurementType.STATURE_VELOCITY: MeasurementConfig(
+        MeasurementType.STATURE_VELOCITY.value, "cm/month", aliases=frozenset(["length_velocity", "height_velocity", "stature_velocity"])
     ),
-    MeasurementType.WEIGHT: MeasurementConfig("kg", frozenset({"wfa", "w"})),
-    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig(
-        "cm", frozenset({"hcfa", "hc"})
+    MeasurementType.WEIGHT_VELOCITY: MeasurementConfig(
+        MeasurementType.WEIGHT_VELOCITY.value, "kg/month", aliases=frozenset(["weight_velocity"])
     ),
-    MeasurementType.BODY_MASS_INDEX: MeasurementConfig(
-        "kg/m²", frozenset({"bmi", "bfa"})
+    MeasurementType.HEAD_CIRCUMFERENCE_VELOCITY: MeasurementConfig(
+        MeasurementType.HEAD_CIRCUMFERENCE_VELOCITY.value, "cm/month", aliases=frozenset(["head_circumference_velocity"])
     ),
-    MeasurementType.WEIGHT_STATURE: MeasurementConfig(
-        "kg/cm",
-        frozenset(
-            {
-                "wfs",
-                "wfl",
-                "wfh",
-                "weight_length",
-                "weight_height",
-                "weight_for_stature",
-                "weight_for_length",
-                "weight_for_height",
-            }
-        ),
-    ),
-    MeasurementType.STATURE_VELOCITY: MeasurementConfig("cm/month"),
-    MeasurementType.WEIGHT_VELOCITY: MeasurementConfig("kg/month"),
-    MeasurementType.HEAD_CIRCUMFERENCE_VELOCITY: MeasurementConfig("cm/month"),
-}  # type: ignore
+}
 
 
 class ChoiceValidator:
     """Utility class for validating and resolving choices."""
 
     @staticmethod
-    def resolve_measurement_alias(alias: str) -> MeasurementTypeType | None:
+    def resolve_measurement_alias(alias: str) -> MeasurementAliasType | None:
         """Resolve measurement alias to canonical name."""
         alias_lower = alias.lower()
-        for measurement, config in MEASUREMENT_CONFIG.items():
+        for config in MEASUREMENT_CONFIG.values():
             # compare against the enum value (string) and configured aliases/units
-            if measurement == alias_lower or config.matches_alias(alias_lower):
-                return measurement
+            if config.matches_alias(alias_lower):
+                return config.name
         return None
 
     @staticmethod
     def get_age_group_for_age(age: int, x_type: DataXTypeType) -> AgeGroupType | None:
         """Find the appropriate age group for given age and x_type."""
-        for age_group, config in AGE_GROUP_CONFIG.items():
+        for config in AGE_GROUP_CONFIG.values():
             if config.x_type == x_type and config.contains_age(age):
-                return age_group
+                return config.name
         return None
 
     @staticmethod
@@ -183,19 +210,18 @@ class ChoiceValidator:
         """Validate if value is in choices."""
         return value in choices
 
-    @staticmethod
-    def get_measurement_unit(measurement: MeasurementTypeType) -> str:
-        """Get unit for measurement type."""
-        return MEASUREMENT_CONFIG[measurement].unit
 
+def resolve_x_var_type(x_type: str) -> DataXTypeType:
+    """Resolve x_var_type aliases to canonical values."""
+    normalized = x_type.lower().replace(" ", "_")
+    if normalized == "chronological_age":
+        return "age"
+    if normalized in {"length", "height"}:
+        return "stature"
+    if normalized in {"age", "gestational_age", "post_menstrual_age", "stature"}:
+        return cast(DataXTypeType, normalized)
 
-# Convenience functions
-def resolve_measurement(alias: str) -> MeasurementTypeType:
-    """Resolve measurement alias with error handling."""
-    result = ChoiceValidator.resolve_measurement_alias(alias)
-    if result is None:
-        raise ValueError(f"Unknown measurement alias: {alias}")
-    return result
+    raise ValueError(f"Invalid x_var_type: {x_type}. Must be 'age', 'gestational_age', 'post_menstrual_age', 'stature', 'length', or 'height'.")
 
 
 def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
@@ -207,25 +233,6 @@ def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
 
 
 # Backward compatibility - keep existing variables
-DATA_SOURCE_CHOICES = frozenset([e.value for e in DataSource])
-DATA_SEX_CHOICES = frozenset([e.value for e in DataSex])
-DATA_X_CHOICES = frozenset([e.value for e in DataXType])
-MEASUREMENT_TYPE_CHOICES = frozenset([e.value for e in MeasurementType])
+DATA_SEX_CHOICES = frozenset(["M", "F", "U"])
 AGE_GROUP_CHOICES = frozenset([e.value for e in AgeGroup])
-
-# Legacy dictionaries (derived from configs)
-UNITS = {measurement: config.unit for measurement, config in MEASUREMENT_CONFIG.items()}
-AGE_GROUP_LIMITS = {
-    age_group: config.limits for age_group, config in AGE_GROUP_CONFIG.items()
-}
-AGE_GROUP_X = {
-    age_group: config.x_type for age_group, config in AGE_GROUP_CONFIG.items()
-}
-AGE_GROUP_TABLE_NAME = {
-    age_group: config.table_name for age_group, config in AGE_GROUP_CONFIG.items()
-}
-MEASUREMENT_ALIASES = {
-    measurement: config.aliases
-    for measurement, config in MEASUREMENT_CONFIG.items()
-    if config.aliases
-}
+TABLE_NAME_CHOICES = frozenset(["growth", "child_growth", "postnatal_growth_preterm", "very_preterm_newborn", "newborn"])

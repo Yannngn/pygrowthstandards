@@ -42,7 +42,6 @@ Documentation = "https://github.com/Yannngn/pygrowthstandards#readme"
 dev = [
     { include-group = "lint" },
     { include-group = "test" },
-    { include-group = "excel" },
     { include-group = "build" },
 ]
 
@@ -73,7 +72,7 @@ packages = ["src/pygrowthstandards"]
 include = [
     "/src",
     "/tests",
-    "/data/pygrowthstandards_0.1.2.parquet",
+    "/data/pygrowthstandards_*.parquet",
     "/README.md",
     "/LICENSE",
     "/pyproject.toml",
@@ -82,24 +81,9 @@ include = [
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 144
 target-version = "py311"
 
-[tool.ruff.lint]
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "UP", # pyupgrade
-]
-ignore = [
-    "E501", # line too long, handled by black
-    "B008", # do not perform function calls in argument defaults
-    "C901", # too complex
-]
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]
+[tool.ty]
+# Configure source directories
+src.include = ["src"]

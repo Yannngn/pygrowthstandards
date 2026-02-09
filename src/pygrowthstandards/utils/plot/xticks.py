@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.axes import Axes
 
-from ..constants import MONTH, WEEK, YEAR
+from pygrowthstandards.utils.constants import MONTH, WEEK, YEAR
 
 
 # Helper to set ticks and labels
@@ -27,9 +27,7 @@ def set_xticks_by_range(ax: Axes, x_min: float, x_max: float):
     if x_max <= (YEAR * 5):  # up to 5 years, show every 3 months
         interval = MONTH * 3
         ticks = np.arange(x_min, x_max + MONTH, interval)
-        set_xticks(
-            ax, ticks, lambda d: f"{int(d // YEAR)}y {int((d % YEAR) // MONTH)}m"
-        )
+        set_xticks(ax, ticks, lambda d: f"{int(d // YEAR)}y {int((d % YEAR) // MONTH)}m")
         return
 
     if x_max <= (YEAR * 10):  # up to 10 years, show every year
