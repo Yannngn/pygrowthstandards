@@ -82,7 +82,7 @@ def zscore(
     birth_date: DateInputType,
     measurement_date: DateInputType,
     gestational_age_weeks: int | None = None,
-    gestational_age_days: int | None = None,
+    gestational_age_days: int = 0,
 ) -> float: ...
 
 
@@ -104,7 +104,7 @@ def zscore(
     age_days: int | None = None,
     gestational_age: int | None = None,
     gestational_age_weeks: int | None = None,
-    gestational_age_days: int | None = None,
+    gestational_age_days: int = 0,
     birth_date: DateInputType | None = None,
     measurement_date: DateInputType | None = None,
     x_var_type: str | None = None,
@@ -116,10 +116,9 @@ def zscore(
         age_days = (measurement_dt - birth_dt).days
 
     ga_days = gestational_age
+    # Only compute gestational age days from weeks/day pair when weeks provided
     if ga_days is None and gestational_age_weeks is not None:
-        ga_days = gestational_age_weeks * 7 + (gestational_age_days or 0)
-    elif ga_days is None and gestational_age_days is not None:
-        ga_days = gestational_age_days
+        ga_days = gestational_age_weeks * 7 + gestational_age_days
 
     keys = KeyObject.from_functional(
         measurement,

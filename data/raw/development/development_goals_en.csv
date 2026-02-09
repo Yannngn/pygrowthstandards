@@ -1,0 +1,45 @@
+slug,description,min_age_months,max_age_months
+moro-reflex,"Moro reflex (opens arms when startled/falling)",0,0
+flexed-posture,"Flexed posture of newborn (legs and arms together)",0,0
+watches-face,"Watches face of person speaking to them",1,3
+comfort-discomfort-signs,"Shows comfort (relaxes/smiles) and discomfort (cries)",1,3
+fixates-gaze,"Fixates gaze on people or objects",1,4
+lifts-head-prone,"When lying on stomach, lifts head",1,3
+smiles-spontaneously,"Smiles spontaneously",2,4
+differentiates-day-night,"Begins to differentiate day and night",2,4
+brings-to-midline,"Brings hands/position to midline",2,5
+holds-head-prone,"When lying on stomach, sustains head supported on forearm",2,5
+babbles,"Makes sounds / babbles",2,5
+actively-assists,"Actively helps when supported (not passive)",3,6
+rolls-supine-to-prone,"Rolls from supine to prone position",4,7
+assists-pull-to-sit,"Helps to sit up when held by hands",4,7
+reacts-to-sound,"Turns head toward sounds/noises",4,9
+responds-to-call,"Recognizes when called by name",6,9
+sits-without-support,"Sits without support",6,10
+transfers-objects,"Transfers objects from one hand to another",6,10
+differentiates-familiar-strangers,"Responds differently to familiar people and strangers",7,11
+imitates-sounds-gestures,"Imitates sounds and simple gestures",7,12
+crawls,"Crawls",7,13
+thumb-grasp,"Grasps objects with thumb",10,15
+says-one-word,"Says one word with meaning (e.g., mama)",10,15
+uses-gestures,"Makes gestures (waves, says bye-bye)",10,15
+walks-alone,"Walks alone, rarely falls",10,15
+removes-clothing-item,"Removes one piece of clothing",13,21
+two-to-three-word-phrases,"Combines 2-3 words",13,24
+walks-away-independently,"Walks away independently",13,24
+feeds-self-hands,"Feeds self with hands",13,24
+runs-and-climbs-steps,"Runs; climbs steps",14,24
+plays-alongside-peers,"Accepts/accompanies other children",21,36
+says-own-name,"Says own name",21,36
+dresses-with-help,"Dresses with help",21,48
+stands-on-one-foot,"Stands on one foot",21,48
+uses-sentences,"Uses sentences",21,48
+begins-toilet-training,"Begins sphincter control",21,48
+names-two-colors,"Recognizes/names two colors",24,48
+hops-on-one-foot,"Hops on one foot",24,60
+plays-with-peers,"Plays with other children",24,48
+imitates-daily-activities,"Imitates daily activities",24,60
+dresses-alone,"Dresses alone",36,60
+jumps-alternating-feet,"Jumps alternating feet",36,72
+alternates-cooperation-aggression,"Alternates cooperation and aggression",36,72
+expresses-preferences,"Expresses preferences and own ideas",36,72

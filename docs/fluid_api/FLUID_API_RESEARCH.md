@@ -987,9 +987,10 @@ class PatientBuilder:
         )
         
         for m in self._measurements:
-            date = m.pop("date")
+            date = m["date"]
+            measurement_data = {k: v for k, v in m.items() if k != "date"}
             patient.add_measurements(
-                MeasurementGroup(date=date, **m)
+                MeasurementGroup(date=date, **measurement_data)
             )
         
         return patient

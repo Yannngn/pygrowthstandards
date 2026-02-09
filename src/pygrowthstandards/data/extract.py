@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -230,7 +231,8 @@ class RawTable:
                 raise ValueError(f"Filename does not contain expected parts separated by '-': {filename}")
 
             if len(parts) > 4:
-                _part = parts.pop()  # remove extra part if exists
+                extra = parts.pop()  # remove extra part if exists
+                logging.warning(f"Filename has more than 4 parts, ignoring extra part: {extra} in {filename}")
 
             return parts
 
@@ -270,9 +272,13 @@ class RawTable:
         raw_kwargs["measurement_type"], x_var_type = handle_measurement()
 
         # Handling table_name
+        if not parts:
+            raise ValueError(f"Filename missing expected table_name component: {filename}")
         table = parts.pop()
         raw_kwargs["table_name"] = table
 
+        if not parts:
+            raise ValueError(f"Filename missing expected source component: {filename}")
         source = parts.pop()
         raw_kwargs["source"] = source
 

@@ -27,19 +27,19 @@
 
 ## Building the Package
 
-1. **Install build tools:**
+1. **Install build tools (dev deps managed by `uv`):**
    ```bash
-   pip install build twine
+   uv sync --dev
    ```
 
 2. **Build the package:**
    ```bash
-   python -m build
+   uv run python -m build
    ```
 
 3. **Check the build:**
    ```bash
-   twine check dist/*
+   uv run twine check dist/*
    ```
 
 ## Publishing to PyPI
@@ -59,11 +59,11 @@ twine upload dist/*
 - [ ] Update version in `pyproject.toml`
 - [ ] Update version in `src/pygrowthstandards/__init__.py`
 - [ ] Update CHANGELOG.md
-- [ ] Update enviroment: `uv sync`
+- [ ] Update environment: `uv sync`
 - [ ] Run all tests: `pytest`
 - [ ] Run linting: `pre-commit run --all-files`
-- [ ] Build package: `uv run python -m build`
-- [ ] Test package installation: `pip install dist/*.whl`
+ - [ ] Build package: `uv run python -m build`
+ - [ ] Test package installation: `uv run pip install dist/*.whl`
 - [ ] Create git tag: `git tag v0.1.0`
 - [ ] Push tag: `git push origin v0.1.0`
-- [ ] Upload to PyPI: `twine upload dist/*`
+ - [ ] Upload to PyPI: `uv run twine upload dist/*`

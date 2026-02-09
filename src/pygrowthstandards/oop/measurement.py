@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime as dt_datetime
+from typing import cast
 
 from pygrowthstandards.utils.config import MeasurementAliasType, TableNameType
 from pygrowthstandards.utils.date import DateType
@@ -7,6 +8,16 @@ from pygrowthstandards.utils.date import DateType
 
 @dataclass
 class Measurement:
+    """
+    Holds a single measurement value and its context.
+
+    Attributes:
+        value (float): The measurement value.
+        measurement_type (str): Type of measurement (e.g., 'stature').
+        table_name (TableNameType): Contextual table name.
+        date (DateType): Date of the measurement.
+    """
+
     value: float
     measurement_type: MeasurementAliasType
     table_name: TableNameType = "growth"
@@ -22,13 +33,23 @@ class MeasurementGroup:
     weight: float | None = None
     head_circumference: float | None = None
 
-    body_mass_index: float | None = field(init=False, repr=False)
-    weight_stature_ratio: float | None = field(init=False, repr=False)
+    body_mass_index: float | None = field(init=False, repr=False, default=None)
+    weight_stature_ratio: float | None = field(init=False, repr=False, default=None)
 
     def __post_init__(self):
+        """
+        Initializes derived metrics after dataclass init.
+        """
         self._setup()
 
     def to_dict(self) -> dict:
+        """
+        Convert the measurement group to a dictionary.
+
+        Returns:
+            dict: Keys include 'date', 'stature', 'weight', 'head_circumference',
+                'body_mass_index', 'weight_stature_ratio'.
+        """
         data = {
             "date": self.date,
             "stature": self.stature,
@@ -44,18 +65,35 @@ class MeasurementGroup:
         return data
 
     def to_measurements(self) -> list[Measurement]:
-        measurements = []
-        data = self.to_dict()
+        """
+        Convert stored values into Measurement objects.
 
-        for key, value in data.items():
-            if value is None or key == "date":
+        Returns:
+            list[Measurement]: List of Measurement instances for non-null values.
+        """
+        measurements: list[Measurement] = []
+        raw_fields = ["stature", "weight", "head_circumference"]
+
+        for key in raw_fields:
+            value = getattr(self, key)
+            if value is None:
                 continue
-            measurements.append(Measurement(value=value, measurement_type=key, date=data["date"]))
+            measurements.append(
+                Measurement(
+                    value=value,
+                    measurement_type=cast(MeasurementAliasType, key),
+                    table_name=self.table_name,
+                    date=self.date,
+                )
+            )
 
         return measurements
 
     @classmethod
     def from_measurements(cls, measurements: list[Measurement]) -> "MeasurementGroup":
+        if not measurements:
+            raise ValueError("Measurements list cannot be empty")
+
         if not all(m.date == measurements[0].date for m in measurements):
             raise ValueError("All measurements must have the same date")
 
@@ -76,10 +114,15 @@ class MeasurementGroup:
                 continue
 
         section._setup()
-
         return section
 
     def _setup(self):
-        if self.weight is not None and self.stature is not None:
-            self.body_mass_index = pow(100, 2) * self.weight / pow(self.stature, 2)
+        """
+        Compute derived metrics: BMI and weight-to-stature ratio.
+        """
+        if self.weight is not None and self.stature is not None and self.stature != 0:
+            self.body_mass_index = (100**2) * self.weight / (self.stature**2)
             self.weight_stature_ratio = self.weight / self.stature
+        else:
+            self.body_mass_index = None
+            self.weight_stature_ratio = None

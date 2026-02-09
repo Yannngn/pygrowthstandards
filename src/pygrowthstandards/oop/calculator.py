@@ -36,7 +36,8 @@ class Calculator:
             raise ValueError(f"MeasurementGroup is missing data for '{measurement_type}'.")
 
         if not isinstance(self.data, pd.DataFrame):
-            raise NoReferenceDataException(measurement_type, "reference_data", age_days or gestational_age or -1)
+            age_value = age_days if age_days is not None else (gestational_age if gestational_age is not None else -1)
+            raise NoReferenceDataException(measurement_type, "reference_data", age_value)
 
         try:
             keys = KeyObject.from_functional(
@@ -49,7 +50,8 @@ class Calculator:
             age_value = age_days if age_days is not None else (gestational_age if gestational_age is not None else -1)
             raise NoReferenceDataException(measurement_type, "age", age_value) from exc
         if keys.x is None:
-            raise ValueError("X value must be provided to calculate z-score.")
+            age_value = age_days if age_days is not None else (gestational_age if gestational_age is not None else -1)
+            raise NoReferenceDataException(measurement_type, "age", age_value)
         table = get_table(self.data, keys=keys)
         lms = get_lms(table, keys.x)
 

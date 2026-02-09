@@ -47,11 +47,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Build package (uvx)
-        run: uvx build
+      - name: Build package (uv)
+        run: uv build
 
-      - name: Check package (uvx)
-        run: uvx check dist/*
+      - name: Validate package (twine)
+        run: uvx twine check dist/*
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6

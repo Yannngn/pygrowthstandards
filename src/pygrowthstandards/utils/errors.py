@@ -5,7 +5,7 @@ class NoReferenceDataException(Exception):
         self,
         measurement_type: str,
         age_type: str,
-        age_value: int,
+        age_value: int | float,
         sex: str | None = None,
     ):
         self.measurement_type = measurement_type

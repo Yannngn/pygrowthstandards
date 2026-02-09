@@ -51,7 +51,9 @@ def docling_extract_tables(converter: DocumentConverter, source: str | Path) -> 
         if "days" in combined_df.columns:
             combined_df["days"] = combined_df["days"].apply(intergrowth_convert_weeks_days)
 
-        combined_df.to_csv(element_csv_filename, index=False, header=header)
+        # Use the combined DataFrame's columns as the source of truth for the CSV header
+        final_header = list(combined_df.columns)
+        combined_df.to_csv(element_csv_filename, index=False, header=final_header)
 
 
 def main():

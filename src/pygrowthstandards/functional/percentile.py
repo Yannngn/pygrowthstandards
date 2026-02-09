@@ -82,7 +82,7 @@ def percentile(
     birth_date: DateInputType,
     measurement_date: DateInputType,
     gestational_age_weeks: int | None = None,
-    gestational_age_days: int | None = None,
+    gestational_age_days: int = 0,
 ) -> float: ...
 
 
@@ -104,7 +104,7 @@ def percentile(
     age_days: int | None = None,
     gestational_age: int | None = None,
     gestational_age_weeks: int | None = None,
-    gestational_age_days: int | None = None,
+    gestational_age_days: int = 0,
     birth_date: DateInputType | None = None,
     measurement_date: DateInputType | None = None,
     x_var_type: str | None = None,
@@ -118,10 +118,9 @@ def percentile(
             raise ValueError("measurement_date cannot be before birth_date")
 
     ga_days = gestational_age
+    # Only compute gestational age days from weeks/day pair when weeks provided
     if ga_days is None and gestational_age_weeks is not None:
-        ga_days = gestational_age_weeks * 7 + (gestational_age_days or 0)
-    elif ga_days is None and gestational_age_days is not None:
-        ga_days = gestational_age_days
+        ga_days = gestational_age_weeks * 7 + gestational_age_days
 
     keys = KeyObject.from_functional(
         measurement,
@@ -132,8 +131,10 @@ def percentile(
         x_value=x_value,
     )
 
-    assert keys.x is not None, "X value must be provided to calculate percentile."
-    assert isinstance(DATA, pd.DataFrame), "Growth reference data is not available. Please ensure the data file is present."
+    if keys.x is None:
+        raise ValueError("X value must be provided to calculate percentile.")
+    if not isinstance(DATA, pd.DataFrame):
+        raise RuntimeError("Growth reference data is not available. Please ensure the data file is present.")
 
     data = get_table(DATA, keys=keys)
     lms = get_lms(data, keys.x)  # from functional will always return x.

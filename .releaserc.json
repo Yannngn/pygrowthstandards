@@ -32,7 +32,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "python -c \"import re; p='pyproject.toml'; t=open(p).read(); open(p,'w').write(re.sub(r'version = \\\"[^\\\"]*\\\"', 'version = \\\"${nextRelease.version}\\\"', t, count=1))\""
+        "prepareCmd": "python -c \"import re; p='pyproject.toml'; t=open(p).read(); open(p,'w').write(re.sub(r'version = \\\"[^\\\"]*\\\"', 'version = \\\"${nextRelease.version}\\\"', t, count=1))\" && uv run python -m pygrowthstandards.data.main"
       }
     ],
     [
@@ -40,7 +40,8 @@
       {
         "assets": [
           "CHANGELOG.md",
-          "pyproject.toml"
+          "pyproject.toml",
+          "src/pygrowthstandards/data/pygrowthstandards_*.parquet"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
@@ -48,7 +49,7 @@
     [
       "@semantic-release/github",
       {
-        "successComment": "🎉 This ${issue.pull_request ? 'PR is included in version `${nextRelease.version}`' : 'issue has been resolved in version `${nextRelease.version}`'}. The release is available on [GitHub release](${releases})",
+        "successComment": "🎉 ${issue.pull_request ? 'PR is included in version ' + nextRelease.version : 'Issue has been resolved in version ' + nextRelease.version}. The release is available on [GitHub release](${releases})",
         "failComment": false,
         "failTitle": false,
         "labels": false,

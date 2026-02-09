@@ -4,14 +4,15 @@ import pandas as pd
 
 from pygrowthstandards.data.load import load_reference
 from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.utils.config import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 
 
 def get_reference_row(
     *,
-    age_group: str,
-    name: str,
-    measurement_type: str,
-    sex: str,
+    age_group: AgeGroupType,
+    name: TableNameType,
+    measurement_type: MeasurementAliasType,
+    sex: DataSexType,
     x_var_type: str,
     min_x: float | None = None,
     max_x: float | None = None,
@@ -38,9 +39,9 @@ def get_reference_row(
 
 def get_measurements(
     *,
-    age_group: str,
-    name: str,
-    sex: str,
+    age_group: AgeGroupType,
+    name: TableNameType,
+    sex: DataSexType,
     x_var_type: str,
     desired: list[str] | None = None,
 ) -> list[str]:

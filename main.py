@@ -1,9 +1,9 @@
 import datetime
 from typing import cast
 
+from pygrowthstandards import MeasurementGroup, Patient
 from pygrowthstandards.utils.config import AgeGroupType, MeasurementAliasType
-from src.pygrowthstandards import MeasurementGroup, Patient
-from src.pygrowthstandards.utils.errors import InvalidChoicesError
+from pygrowthstandards.utils.errors import InvalidChoicesError
 
 
 def main():

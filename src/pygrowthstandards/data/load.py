@@ -233,6 +233,8 @@ class GrowthTable:
         :param keys: The KeyObject containing filtering keys.
         :return: An instance of GrowthTable.
         """
+        # Normalize incoming reference-style DataFrame columns to canonical values
+        data = _normalize_reference_data(data.copy())
         filtered = cls.filter_by_keys(data, keys)
 
         source = filtered["source"].unique()[0]

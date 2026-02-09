@@ -21,15 +21,15 @@ Our research identified ways to significantly improve developer experience:
 ## 🎯 Proposed Changes (3 Phases)
 
 ### Phase 1: Method Chaining (Recommended First)
-Transform this:
+Transform this (abbreviated; full pre-refactor example ~15-20 lines in the research docs):
 ```python
 patient = Patient(sex="M", birthday_date=datetime.date(2022, 1, 1))
 patient.add_measurements(MeasurementGroup(...))
 patient.add_measurements(MeasurementGroup(...))
 patient.calculate_all()
 plotter = Plotter(patient)
-plotter.plot("weight", age_group="0-2")
-# ~15-20 lines
+    plotter.plot("weight", age_group="0-2")
+    # (abbreviated here) full pre-refactor example (~15-20 lines) in the research docs
 ```
 
 Into this:
@@ -39,7 +39,7 @@ patient = (Patient(sex="M", birthday_date=datetime.date(2022, 1, 1))
     .measured_at(date2, weight=10.2, stature=75.7)
     .calculate_all()
     .plot("weight", age_group="0-2"))
-# ~5-7 lines (60% reduction!)
+# ~5-7 lines (example condensed here; ~60% reduction vs. full pre-refactor example)
 ```
 
 ### Phase 2: Builder Pattern

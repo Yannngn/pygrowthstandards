@@ -5,8 +5,29 @@ from typing import TypeAlias
 DateType: TypeAlias = datetime.date | datetime.datetime
 DateInputType: TypeAlias = DateType | str
 
+# Preferred date order for ambiguous inputs. Set to "DMY" (day-month-year) by
+# default. Set to "MDY" to prefer month-day-year parsing. If strict ISO-only
+# parsing is required, set to "ISO" and only ISO `YYYY-MM-DD` strings will be
+# accepted.
+DATE_ORDER = "DMY"  # one of: "DMY", "MDY", "ISO"
+
 
 def handle_date_input(date_input: DateInputType) -> datetime.datetime:
+    """
+    Normalize different date input types to a `datetime.datetime` at midnight.
+
+    Accepts `datetime.date`, `datetime.datetime`, or `str` inputs. For string
+    inputs this function prefers ISO `YYYY-MM-DD` parsing first. For other
+    formats it will attempt flexible parsing using `dateutil.parser.parse` with
+    a `dayfirst` flag controlled by the module-level `DATE_ORDER` variable
+    (default: `DMY`). If `python-dateutil` is not available, only ISO
+    `YYYY-MM-DD` strings are accepted.
+
+    Raises:
+        ValueError: when a string cannot be parsed as a date.
+        TypeError: when an unsupported type is provided.
+    """
+
     if isinstance(date_input, datetime.datetime):
         return date_input
 
@@ -14,19 +35,30 @@ def handle_date_input(date_input: DateInputType) -> datetime.datetime:
         return datetime.datetime.combine(date_input, datetime.time.min)
 
     if isinstance(date_input, str):
-        date_formats = [
-            "%Y-%m-%d",  # ISO format
-            "%Y/%m/%d",
-            "%d-%m-%Y",  # DMY
-            "%d/%m/%Y",
-            "%m-%d-%Y",  # MDY
-            "%m/%d/%Y",
-        ]
+        # Try strict ISO first (unambiguous)
+        with contextlib.suppress(ValueError):
+            return datetime.datetime.strptime(date_input, "%Y-%m-%d")
 
-        for fmt in date_formats:
-            with contextlib.suppress(ValueError):
-                return datetime.datetime.strptime(date_input, fmt)
+        # If configured for ISO-only behaviour, fail now with a clear message
+        if DATE_ORDER == "ISO":
+            raise ValueError(f"Invalid date string: '{date_input}'. Only ISO format 'YYYY-MM-DD' is accepted when DATE_ORDER='ISO'.")
 
-        raise ValueError(f"Invalid date string: '{date_input}'. Supported formats: YYYY-MM-DD, DD-MM-YYYY, MM-DD-YYYY, and variants with '/'.")
+        # Fall back to dateutil for flexible parsing, honoring dayfirst preference
+        dayfirst = DATE_ORDER == "DMY"
+        try:
+            from dateutil.parser import parse as _dateutil_parse
+
+            parsed = _dateutil_parse(date_input, dayfirst=dayfirst)
+            # Ensure we return a datetime (not a date)
+            if isinstance(parsed, datetime.date) and not isinstance(parsed, datetime.datetime):
+                parsed = datetime.datetime.combine(parsed, datetime.time.min)
+
+            return parsed
+
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid date string: '{date_input}'. Provide ISO 'YYYY-MM-DD' or an unambiguous date string. "
+                f"(Parsing attempted with dayfirst={dayfirst}.)"
+            ) from exc
 
     raise TypeError(f"Invalid date input type: {type(date_input)}. Expected datetime.date, datetime.datetime, or str.")

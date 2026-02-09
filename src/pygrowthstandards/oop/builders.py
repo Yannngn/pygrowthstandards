@@ -5,17 +5,7 @@ from pygrowthstandards.oop.patient import Patient
 from pygrowthstandards.utils.config import DataSexType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 
-# from pygrowthstandards.builders import PatientBuilder
 
-
-# patient = (
-#     PatientBuilder()
-#     .with_sex("M")
-#     .born_on("2022-01-01")
-#     .measured_at("2022-07-01", weight=8.6, stature=68.4)
-#     .measured_at("2023-01-01", weight=10.2, stature=75.7)
-#     .build_and_calculate()
-# )
 class PatientBuilder:
     """Builder class for creating Patient instances with a fluent interface."""
 
@@ -31,11 +21,15 @@ class PatientBuilder:
             getattr(self, "birthday_date", None),
             getattr(self, "gestational_age_weeks", 40),
             getattr(self, "gestational_age_days", 0),
-            self.measurements,
+            measurements=self.measurements,
         )
         return self
 
     def calculate(self) -> Self:
+        # Guard: ensure `build()` has been called before `calculate()`
+        if not hasattr(self, "patient") or self.patient is None:
+            raise RuntimeError("build() must be called before calculate() - call PatientBuilder.build() first")
+
         self.patient.calculate_all()
         return self
 

@@ -1,3 +1,5 @@
+from typing import cast
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
@@ -119,27 +121,33 @@ class Plotter:
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
-            style.set_style(fig, ax)
+            style.set_style(fig, cast(Axes, ax))
 
         config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(str(measurement_type)) or str(measurement_type)
+
+        # Ensure measurement_type is treated as a string for formatting and lookup
+        measurement_raw_str = str(measurement_type)
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_raw_str) or measurement_raw_str
         measurement_config = MEASUREMENT_CONFIG[MeasurementType(resolved_measurement)]
 
+        # Use a guaranteed string for label formatting
+        measurement_str = str(resolved_measurement)
+
         x_label = config.x_type.replace("_", " ").title()
-        y_label = f"{measurement_type.replace('_', ' ').title()} ({measurement_config.unit})"
+        y_label = f"{measurement_str.replace('_', ' ').title()} ({measurement_config.unit})"
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
             ax.plot(
                 plot_data["x"],
                 plot_data[z],
-                label=f"{measurement_type.replace('_', ' ').title()} (Z={z})",
+                label=f"{measurement_str.replace('_', ' ').title()} (Z={z})",
                 **style.get_label_style(label),
             )
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(f"{measurement_type.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
+        ax.set_title(f"{measurement_str.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
         set_xticks_by_range(ax, *config.limits)
 
         if show:

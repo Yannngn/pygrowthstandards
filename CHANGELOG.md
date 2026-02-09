@@ -1,10 +1,3 @@
-# [0.2.0](https://github.com/Yannngn/pygrowthstandards/compare/v0.1.3...v0.2.0) (2026-02-09)
-
-
-### Features
-
-* fluid interface for patient ([cdbd2dd](https://github.com/Yannngn/pygrowthstandards/commit/cdbd2dd3858404f1c006540eb2552e9216658cde))
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -12,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# [0.2.0](https://github.com/Yannngn/pygrowthstandards/compare/v0.1.3...v0.2.0) (2026-02-09)
+
+
+### Features
+
+* fluid interface for patient ([cdbd2dd](https://github.com/Yannngn/pygrowthstandards/commit/cdbd2dd3858404f1c006540eb2552e9216658cde))
 
 ## [0.1.3] - 2025-12-02
 
@@ -70,5 +70,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Tagged alpha release (no code changes since previous tag)
-
-## [Unreleased]

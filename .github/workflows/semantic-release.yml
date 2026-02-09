@@ -23,10 +23,19 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies (uv)
+        run: uv sync --group excel
+
       - name: Install dependencies
         run: npm install semantic-release @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/github
 
       - name: Run semantic-release
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}

@@ -3,8 +3,6 @@ from scipy.interpolate import interp1d
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 
-from pygrowthstandards.utils.errors import NoReferenceDataException
-
 
 def normal_cdf(z: float) -> float:
     """
@@ -48,7 +46,7 @@ def numpy_calculate_value_for_z_score(z_score: float, lamb: np.ndarray, mu: np.n
     :param sigm: An array of S parameters from the LMS method.
     :return: An array of calculated values.
     """
-    z_score = float(z_score)
+    z_score = np.float64(z_score)
     lamb = np.asarray(lamb, dtype=np.float64)
     mu = np.asarray(mu, dtype=np.float64)
     sigm = np.asarray(sigm, dtype=np.float64)
@@ -205,7 +203,7 @@ def interpolate_lms(
     """
 
     if x < x_values.min() or x > x_values.max():
-        raise NoReferenceDataException("x", "x_values", int(x))
+        raise ValueError(f"x value {x} is out of bounds for interpolation (min: {x_values.min()}, max: {x_values.max()})")
 
     distances = np.abs(x_values - float(x))
     idx_sorted = np.argsort(distances)

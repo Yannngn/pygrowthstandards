@@ -28,8 +28,8 @@ All calculations use the LMS (Lambda-Mu-Sigma) method:
 ### Type System (`src/utils/config.py`)
 Use the centralized config system instead of magic strings:
 ```python
-from src.utils.config import MeasurementTypeType, DataSexType, AgeGroupType
-from src.utils.config import AGE_GROUP_CONFIG, MEASUREMENT_CONFIG
+from pygrowthstandards.utils.config import MeasurementTypeType, DataSexType, AgeGroupType
+from pygrowthstandards.utils.config import AGE_GROUP_CONFIG, MEASUREMENT_CONFIG
 ```
 
 ### Age Group Resolution
@@ -70,7 +70,7 @@ pytest tests/oop/
 ### Data Processing
 ```bash
 # Regenerate reference data (requires raw data files)
-python -m src.data.main
+python -m pygrowthstandards.data.main
 ```
 
 ## Key Patterns
@@ -86,7 +86,7 @@ python -m src.data.main
 
 ### Error Handling
 ```python
-from src.utils.errors import NoReferenceDataError, InvalidChoicesError
+from pygrowthstandards.utils.errors import NoReferenceDataError, InvalidChoicesError
 # Custom exceptions for missing data and invalid parameters
 ```
 
@@ -98,9 +98,9 @@ from src.utils.errors import NoReferenceDataError, InvalidChoicesError
 ## File Organization Conventions
 
 ### Import Patterns
-- Use absolute imports: `from src.utils.config import ...`
+- Use absolute imports: `from pygrowthstandards.utils.config import ...`
 - Avoid `sys.path` manipulation
-- Run modules with: `python -m src.module.name`
+- Run modules with: `python -m pygrowthstandards.module.name`
 
 ### Configuration Over Code
 - All choices defined in `src/utils/config.py` with validation

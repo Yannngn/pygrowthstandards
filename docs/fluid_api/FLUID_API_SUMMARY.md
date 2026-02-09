@@ -47,7 +47,7 @@ plotter.plot(...)
 
 # After (7 lines - 68% reduction)
 patient = (Patient(sex="M", birthday_date=datetime.date(2022, 1, 1))
-    .measured_at(date, weight=8.6, stature=68.4)
+    .measured_at(datetime.date(2022, 7, 1), weight=8.6, stature=68.4)
     .calculate_all()
     .plot("weight", age_group="0-2"))
 ```

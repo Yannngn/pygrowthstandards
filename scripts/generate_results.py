@@ -152,8 +152,6 @@ def main():
     )
     save_plot(newborn_patient, "newborn", "weight", "weight_newborn.png")
 
-    save_plot(newborn_patient, "newborn", "weight", "weight_newborn.png")
-
     very_preterm_patient = build_newborn_patient(
         gestational_weeks=30,
         gestational_days=0,
