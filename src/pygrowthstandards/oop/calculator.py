@@ -1,13 +1,14 @@
 import logging
-import os
+from typing import cast
 
 import pandas as pd
 
-from pygrowthstandards.data.transform import GrowthData
-
-from ..utils import stats
-from ..utils.errors import NoReferenceDataException
-from .measurement import MeasurementGroup
+from pygrowthstandards.data.load import KeyObject, load_reference
+from pygrowthstandards.functional.data import get_lms, get_table
+from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.utils import stats
+from pygrowthstandards.utils.config import DataSexType, MeasurementAliasType
+from pygrowthstandards.utils.errors import InvalidChoicesError, NoReferenceDataException
 
 
 class Calculator:
@@ -15,47 +16,53 @@ class Calculator:
     A class to perform calculations based on growth standards.
     """
 
-    path = "data"
-
-    x_var_types = {
-        "very_preterm_newborn": "gestational_age",
-        "newborn": "gestational_age",
-        "very_preterm_growth": "gestational_age",
-        "child_growth": "age",
-        "growth": "age",
-    }
-
     def __init__(self):
-        self.data = pd.read_parquet(
-            os.path.join(self.path, f"pygrowthstandards_{GrowthData.version}.parquet")
-        )
+        try:
+            self.data = load_reference()
+        except FileNotFoundError as exc:
+            logging.error(str(exc))
+            self.data = None
 
     def calculate_z_score(
-        self, measurement_group: MeasurementGroup, measurement_type: str, age_value: int
+        self,
+        measurement_group: MeasurementGroup,
+        measurement_type: MeasurementAliasType,
+        sex: DataSexType,
+        age_days: int | None = None,
+        gestational_age: int | None = None,
     ) -> float:
         value = getattr(measurement_group, measurement_type, None)
         if value is None:
-            raise ValueError(
-                f"MeasurementGroup with age {age_value} does not have data for '{measurement_type}'."
+            raise ValueError(f"MeasurementGroup is missing data for '{measurement_type}'.")
+
+        if not isinstance(self.data, pd.DataFrame):
+            raise NoReferenceDataException(measurement_type, "reference_data", age_days or gestational_age or -1)
+
+        try:
+            keys = KeyObject.from_functional(
+                measurement=measurement_type,
+                sex=sex,
+                age_days=age_days,
+                gestational_age=gestational_age,
             )
+        except ValueError as exc:
+            age_value = age_days if age_days is not None else (gestational_age if gestational_age is not None else -1)
+            raise NoReferenceDataException(measurement_type, "age", age_value) from exc
+        if keys.x is None:
+            raise ValueError("X value must be provided to calculate z-score.")
+        table = get_table(self.data, keys=keys)
+        lms = get_lms(table, keys.x)
 
-        age_type = self.x_var_types[measurement_group.table_name]
-
-        filtered_data = self._filter_measurement_data(
-            self.data, measurement_type, age_type, age_value
-        )
-        L, M, S = self._get_lms_params(filtered_data, age_value)
-
-        return stats.calculate_z_score(value, L, M, S)
+        return stats.calculate_z_score(value, *lms)
 
     def calculate_measurement_group(
         self,
         measurement_group: MeasurementGroup,
-        age_value: int,
+        sex: DataSexType,
+        age_days: int | None = None,
+        gestational_age: int | None = None,
     ) -> MeasurementGroup:
-        z_score_group = MeasurementGroup(
-            table_name=measurement_group.table_name, date=measurement_group.date
-        )
+        z_score_group = MeasurementGroup(table_name=measurement_group.table_name, date=measurement_group.date)
 
         data = measurement_group.to_dict()
 
@@ -64,41 +71,15 @@ class Calculator:
                 continue
 
             try:
-                z_score = self.calculate_z_score(measurement_group, key, age_value)
+                z_score = self.calculate_z_score(
+                    measurement_group,
+                    cast(MeasurementAliasType, key),
+                    sex,
+                    age_days=age_days,
+                    gestational_age=gestational_age,
+                )
                 setattr(z_score_group, key, z_score)
-            except NoReferenceDataException as e:
+            except (InvalidChoicesError, NoReferenceDataException) as e:
                 logging.debug(f"Skipping {key} for date {measurement_group.date}: {e}")
 
         return z_score_group
-
-    @staticmethod
-    def _filter_measurement_data(
-        data: pd.DataFrame, measurement_type: str, age_type: str, age_value: int
-    ) -> pd.DataFrame:
-        filtered_data = data[
-            (data["measurement_type"] == measurement_type)
-            & (data["x_var_type"] == age_type)
-        ].copy()
-
-        if filtered_data.empty:
-            raise NoReferenceDataException(measurement_type, age_type, age_value)
-
-        return filtered_data
-
-    @staticmethod
-    def _get_lms_params(
-        fdata: pd.DataFrame, age_value: int
-    ) -> tuple[float, float, float]:
-        if age_value not in fdata["x"].values:
-            return stats.interpolate_lms(
-                age_value,
-                fdata["x"].to_numpy(),
-                fdata["l"].to_numpy(),
-                fdata["m"].to_numpy(),
-                fdata["s"].to_numpy(),
-            )
-        else:
-            # Use LMS directly
-            row = fdata[fdata["x"] == age_value].iloc[0]
-
-            return row["l"], row["m"], row["s"]

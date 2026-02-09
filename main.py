@@ -1,13 +1,13 @@
 import datetime
+from typing import cast
 
+from pygrowthstandards.utils.config import AgeGroupType, MeasurementAliasType
 from src.pygrowthstandards import MeasurementGroup, Patient, Plotter
 from src.pygrowthstandards.utils.errors import InvalidChoicesError
 
 
 def main():
-    patient = Patient(
-        birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=38
-    )
+    patient = Patient(birthday_date=datetime.date(2020, 1, 1), sex="M", gestational_age_weeks=38)
     # calculator.plot_all_standards()
 
     patient.add_measurements(
@@ -135,8 +135,8 @@ def main():
         ]:
             try:
                 plotter.plot(
-                    age_group,  # type: ignore
-                    measurement_type,  # type: ignore
+                    cast(AgeGroupType, age_group),
+                    cast(MeasurementAliasType, measurement_type),
                     output_path=f"results/user_table_{age_group}_{measurement_type}.png",
                 )
             except InvalidChoicesError as e:

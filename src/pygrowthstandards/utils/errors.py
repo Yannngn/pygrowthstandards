@@ -23,7 +23,5 @@ class NoReferenceDataException(Exception):
 
 class InvalidChoicesError(KeyError):
     def __init__(self, measurement_type: str | None, age_group: str | None) -> None:
-        message = (
-            f"Invalid measurement type '{measurement_type}' for age group '{age_group}'"
-        )
+        message = f"Invalid measurement type '{measurement_type}' for age group '{age_group}'"
         super().__init__(message)

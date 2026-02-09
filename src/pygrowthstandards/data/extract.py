@@ -1,39 +1,45 @@
-import glob
-import logging
-import os
 import tempfile
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from ..utils.config import (
+from pygrowthstandards.utils.config import (
     DATA_SEX_CHOICES,
     ChoiceValidator,
     DataSexType,
     DataSourceType,
-    MeasurementTypeType,
+    MeasurementAliasType,
     TableNameType,
 )
-from ..utils.constants import MONTH, WEEK
-from ..utils.stats import estimate_lms_from_sd
+from pygrowthstandards.utils.constants import MONTH, WEEK
+from pygrowthstandards.utils.stats import estimate_lms_from_sd
 
 
 @dataclass
 class DataPoint:
-    x: float
+    """
+    Represents a single data point in the growth standards dataset.
+        x for age or stature
+        L for the Box-Cox transformation power
+        M for the median
+        S for the coefficient of variation
+        is_derived indicates whether the LMS values were derived from SD columns or provided directly.
+    """
+
+    x: int | float
     L: float
     M: float
     S: float
     is_derived: bool = False
 
     def __post_init__(self):
-        if not all(
-            isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)
-        ):
+        if not all(isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)):
             raise ValueError("All attributes must be numeric values.")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, float | bool]:
         """
         Converts the DataPoint instance to a dictionary.
 
@@ -72,7 +78,7 @@ class DataPoint:
         return cls(data["x"], L, M, S, True)
 
     @staticmethod
-    def _create_lms_data(data: dict) -> tuple[float, float, float]:
+    def _create_lms_data(data: dict[str, float]) -> tuple[float, float, float]:
         required_sd = ["sd3neg", "sd2neg", "sd1neg", "sd0", "sd1", "sd2", "sd3"]
 
         if not all(k in data for k in required_sd):
@@ -84,12 +90,13 @@ class DataPoint:
         return estimate_lms_from_sd(zscores, values)
 
 
+# TODO: Business decision: use lenght or height or use stature as the standard term for both? For now, we will use stature as the standard term and map length and height to stature in the alias system.
 @dataclass
 class RawTable:
-    source: DataSourceType
-    name: TableNameType
-    sex: DataSexType
-    measurement_type: MeasurementTypeType
+    source: DataSourceType  # who, intergrowth, cdc, etc.
+    name: TableNameType  # child_growth, growth, newborn, etc.
+    sex: DataSexType  # M, F, U
+    measurement_type: MeasurementAliasType  # stature, weight etc
     x_var_type: str
     x_var_unit: str
     points: list[DataPoint]
@@ -104,20 +111,16 @@ class RawTable:
                 self.x_var_type,
             }
         ):
-            raise ValueError(
-                "Source, name, measurement_type, and x_var_type must be strings."
-            )
+            raise ValueError("Source, name, measurement_type, and x_var_type must be strings.")
 
-        if not isinstance(self.points, list) or not all(
-            isinstance(point, DataPoint) for point in self.points
-        ):
+        if not isinstance(self.points, list) or not all(isinstance(point, DataPoint) for point in self.points):
             raise ValueError("Points must be a list of DataPoint instances.")
 
         # Validate using the new config system
         if not ChoiceValidator.validate_choice(self.sex, DATA_SEX_CHOICES):
             raise ValueError(f"Invalid sex: {self.sex}")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, str | list]:
         """
         Converts the RawTable instance to a dictionary.
 
@@ -135,15 +138,15 @@ class RawTable:
         }
 
     @classmethod
-    def from_csv(cls, csv_path: str) -> "RawTable":
+    def from_csv(cls, csv_path: str | Path) -> "RawTable":
         """
         Create a RawTable instance from a CSV file.
 
         Args:
-            csv_path (str): Path to the CSV file.
+            csv_path (str | Path): Path to the CSV file.
 
         Returns:
-            Dataset: An instance of Dataset.
+            RawTable: An instance of RawTable.
         """
         df = pd.read_csv(csv_path, dtype=str, encoding="utf-8")
 
@@ -151,8 +154,9 @@ class RawTable:
 
         df.columns = [col.lower() for col in df.columns]
         x_column = df.columns[0]
+        clean_dict: dict[str, Any] = {}
 
-        # Weight for Length/Height datasets
+        # Weight for Length/Height/Stature datasets
         if x_column in {"length", "height", "stature"}:
             df["x"] = df[x_column]
 
@@ -179,15 +183,15 @@ class RawTable:
             df["x"] = df[x_column].astype(float).astype(int)
             clean_dict = cls._handle_measurement_for_age(x_column, **raw_kwargs)
 
-        return cls(**clean_dict, points=cls._get_points(df))  # type: ignore
+        return cls(**clean_dict, points=cls._get_points(df))
 
     @classmethod
-    def from_xlsx(cls, xlsx_path: str) -> "RawTable":
+    def from_xlsx(cls, xlsx_path: str | Path) -> "RawTable":
         """
         Create a RawTable instance from an XLSX file.
 
         Args:
-            xlsx_path (str): Path to the XLSX file.
+            xlsx_path (str | Path): Path to the XLSX file.
 
         Returns:
             RawTable: An instance of RawTable.
@@ -199,70 +203,91 @@ class RawTable:
         first_sheet_name = list(df.keys())[0]
         first_sheet_data = df[first_sheet_name]
 
+        import os
+
         # Use the Excel file name (without extension) for the temp CSV file
-        base_name = os.path.splitext(os.path.basename(xlsx_path))[0]
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".csv", prefix=base_name + "-", delete=False
-        ) as tmpfile:
+        base_name = Path(xlsx_path).stem
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", prefix=base_name + "-", delete=False) as tmpfile:
             first_sheet_data.to_csv(tmpfile.name, index=False)
             tmp_csv_path = tmpfile.name
 
-        # Create Dataset from the temporary CSV
-        dataset = cls.from_csv(tmp_csv_path)
-
-        # Remove the temporary file
-        os.remove(tmp_csv_path)
-
-        return dataset
+        try:
+            # Create Dataset from the temporary CSV
+            dataset = cls.from_csv(tmp_csv_path)
+            return dataset
+        finally:
+            os.remove(tmp_csv_path)
 
     @staticmethod
-    def _process_path(filepath: str) -> dict[str, str]:
+    def _process_path(filepath: str | Path) -> dict[str, str]:
         raw_kwargs = {}
-        x_var_type = ""
-        filename = os.path.splitext(os.path.basename(filepath))[0]
+        filename = Path(filepath).stem
 
-        parts = filename.split("-")
-        if len(parts) > 4:
-            _ = parts.pop()
+        def preprocess() -> list[str]:
+            parts = filename.split("-")
 
-        # Handling sex with validation
-        sex = parts.pop().upper()
-        if not ChoiceValidator.validate_choice(
-            sex, DATA_SEX_CHOICES
-        ):  # 1mon and 2mon from velocity datasets
+            if len(parts) < 2:
+                raise ValueError(f"Filename does not contain expected parts separated by '-': {filename}")
+
+            if len(parts) > 4:
+                _part = parts.pop()  # remove extra part if exists
+
+            return parts
+
+        parts = preprocess()
+
+        def handle_sex() -> str:
+            # Handling sex with validation
             sex = parts.pop().upper()
 
-        if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):
-            raise ValueError(f"Invalid sex found in filename: {sex}")
+            if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):  # 1mon and 2mon from velocity datasets
+                sex = parts.pop().upper()
 
-        raw_kwargs["sex"] = sex
+            if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):
+                raise ValueError(f"Invalid sex found in filename: {sex}")
+
+            return sex
+
+        raw_kwargs["sex"] = handle_sex()
+
+        def handle_measurement() -> tuple[str, str]:
+            # Handling Measurement with alias resolution
+            x_var_type = ""
+
+            measurement_type = parts.pop()
+            if measurement_type in {"weight_length", "weight_height"}:
+                x_var_type = measurement_type.replace("weight_", "")
+                measurement_type = "weight"
+
+            # Try to resolve measurement alias
+            resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
+            if resolved_measurement:
+                measurement_type = resolved_measurement
+
+            return measurement_type, x_var_type
 
         # Handling Measurement with alias resolution
-        measurement_type = parts.pop()
-        if measurement_type in {"weight_length", "weight_height"}:
-            x_var_type = measurement_type.replace("weight_", "")
-            measurement_type = "weight"
-
-        # Try to resolve measurement alias
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
-        if resolved_measurement:
-            measurement_type = resolved_measurement
-
-        raw_kwargs["measurement_type"] = measurement_type
+        raw_kwargs["measurement_type"], x_var_type = handle_measurement()
 
         # Handling table_name
-        table = parts.pop().replace("birth", "newborn")
+        table = parts.pop()
         raw_kwargs["table_name"] = table
 
         source = parts.pop()
         raw_kwargs["source"] = source
 
-        if not x_var_type:
-            x_var_type = "gestational_age" if "birth" in filename else "age"
+        def handle_x_var_type(x_var_type: str) -> str:
+            if not x_var_type:
+                if "newborn" in filename:
+                    x_var_type = "gestational_age"
+                elif "preterm" in filename:
+                    x_var_type = "post_menstrual_age"
+                else:
+                    x_var_type = "age"
 
-        raw_kwargs["x_var_type"] = x_var_type
+            return x_var_type
+
+        raw_kwargs["x_var_type"] = handle_x_var_type(x_var_type)
 
         return raw_kwargs
 
@@ -276,9 +301,7 @@ class RawTable:
         **kwargs,
     ):
         # Resolve measurement alias if needed
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
             measurement_type = resolved_measurement
 
@@ -301,7 +324,7 @@ class RawTable:
         **kwargs,
     ):
         # Handle velocity measurement type resolution
-        if measurement_type in {"length", "height"}:
+        if measurement_type in {"length", "height", "stature"}:
             measurement_type = "stature_velocity"
         elif measurement_type == "weight":
             measurement_type = "weight_velocity"
@@ -327,15 +350,11 @@ class RawTable:
         x_var_type: str,
         **kwargs,
     ):
-        # Handle measurement type resolution
-        measurement_type = measurement_type.replace(
-            "weight_stature", "weight_stature_ratio"
-        )
+        if measurement_type in {"weight_stature", "weight_stature_ratio"}:
+            measurement_type = "weight_stature_ratio"
 
         # Try to resolve measurement alias
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(
-            measurement_type
-        )
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
             measurement_type = resolved_measurement
 
@@ -367,15 +386,3 @@ class RawTable:
             return int(round(float(part.replace("mo", "").strip()) * MONTH))
 
         return int(round(float(part) * MONTH))
-
-
-def main():
-    for f in glob.glob("data/raw/**/*.xlsx"):
-        dataset = RawTable.from_xlsx(f)
-        logging.info(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
-
-
-if __name__ == "__main__":
-    main()

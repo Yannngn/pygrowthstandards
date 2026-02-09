@@ -1,68 +1,67 @@
-import glob
 import shutil
 from pathlib import Path
 
-from .extract import RawTable
-from .transform import GrowthData
+from pygrowthstandards.data.extract import RawTable
+from pygrowthstandards.data.transform import GrowthData
+
+RAW_ROOT = Path("data/raw")
+OUTPUT_ROOT = Path("data")
 
 
-def main():
-    print(f"GrowthData version: {GrowthData.version}")
+def _iter_raw_tables(raw_root: Path) -> list[RawTable]:
+    tables: list[RawTable] = []
 
-    data = GrowthData()
-    for f in glob.glob("data/raw/**/*.xlsx"):
-        dataset = RawTable.from_xlsx(f)
+    for raw_file in raw_root.rglob("*.xlsx"):
+        dataset = RawTable.from_xlsx(raw_file)
+        tables.append(dataset)
 
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
-
-        data.add_table(dataset)
-
-    for f in glob.glob("data/raw/**/*.csv"):
-        if "cdc" in f:
+    for raw_file in raw_root.rglob("*.csv"):
+        if not raw_file.name.startswith("who") and not raw_file.name.startswith("intergrowth"):
             continue
+        dataset = RawTable.from_csv(raw_file)
+        tables.append(dataset)
 
-        dataset = RawTable.from_csv(f)
+    return tables
 
-        print(
-            f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points."
-        )
 
+def _build_growth_data(tables: list[RawTable]) -> GrowthData:
+    data = GrowthData()
+    for dataset in tables:
+        print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
         data.add_table(dataset)
+    return data
 
-    data.transform_all()
-    data.save_parquet()
+
+def _copy_parquet_to_package(project_root: Path, version: str) -> None:
+    src_parquet = project_root / "data" / f"pygrowthstandards_{version}.parquet"
+    dst_dir = Path(__file__).resolve().parent
+    dst_parquet = dst_dir / f"pygrowthstandards_{version}.parquet"
+
+    for parquet in dst_dir.glob("pygrowthstandards_*.parquet"):
+        try:
+            parquet.unlink()
+            print(f"Deleted old destination Parquet: {parquet}")
+        except Exception as exc:
+            print(f"Failed to delete {parquet}: {exc}")
+
+    if not src_parquet.exists():
+        print(f"Source parquet not found: {src_parquet}")
+        return
+
+    shutil.copy2(src_parquet, dst_parquet)
+    print(f"Copied {src_parquet} -> {dst_parquet}")
+
+
+def main() -> None:
+    tables = _iter_raw_tables(RAW_ROOT)
+    data = _build_growth_data(tables)
+
+    print(f"GrowthData version: {data.version}")
+    data.save_parquet(OUTPUT_ROOT)
+
+    project_root = Path(__file__).resolve().parents[3]
+    _copy_parquet_to_package(project_root, data.version)
 
 
 if __name__ == "__main__":
     main()
-
-    # project_root -> .../pygrowthstandards (project root)
-    project_root = Path(__file__).resolve().parents[3]
-    src_parquet = (
-        project_root / "data" / f"pygrowthstandards_{GrowthData.version}.parquet"
-    )
-    dst_parquet = (
-        Path(__file__).resolve().parent
-        / f"pygrowthstandards_{GrowthData.version}.parquet"
-    )
-
-    try:
-        # Remove old parquet files in destination folder
-        dst_dir = dst_parquet.parent
-        for f in dst_dir.glob("pygrowthstandards_*.parquet"):
-            try:
-                if f.exists():
-                    f.unlink()
-                    print(f"Deleted old destination Parquet: {f}")
-            except Exception as e:
-                print(f"Failed to delete {f}: {e}")
-
-        if src_parquet.exists():
-            shutil.copy2(src_parquet, dst_parquet)
-            print(f"Copied {src_parquet} -> {dst_parquet}")
-        else:
-            print(f"Source parquet not found: {src_parquet}")
-    except Exception as e:
-        print(f"Failed to copy parquet: {e}")

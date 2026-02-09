@@ -21,12 +21,18 @@ Example usage:
 
 __version__ = "0.1.3"
 __author__ = "Yannngn"
-__email__ = "contato.yannnob@gmail.com"
+__email__ = "contato.yannnobrega@gmail.com"
 __license__ = "MIT"
 
-from . import functional, utils
-from .data import data_exists, get_data_path
-from .oop import Calculator, Measurement, MeasurementGroup, Patient, Plotter
+from pygrowthstandards import functional, utils
+from pygrowthstandards.data import data_exists, get_data_path
+from pygrowthstandards.oop import (
+    Calculator,
+    Measurement,
+    MeasurementGroup,
+    Patient,
+    Plotter,
+)
 
 
 def check_data():

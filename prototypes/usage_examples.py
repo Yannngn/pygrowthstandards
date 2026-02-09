@@ -8,8 +8,6 @@ The task: Create a male patient born on 2022-01-01, add measurements over time,
 calculate z-scores, display results, and generate a growth chart.
 """
 
-import datetime
-
 print("=" * 80)
 print("API STYLE COMPARISON")
 print("Task: Create patient, add measurements, calculate, display, and plot")

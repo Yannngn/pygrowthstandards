@@ -1,18 +1,11 @@
 import datetime
 
-from .measurement import MeasurementGroup
-from .patient import Patient
-from .plotter import Plotter
+from pygrowthstandards.oop.builders import PatientBuilder
+from pygrowthstandards.oop.plotter import Plotter
 
 
 def main():
-    # Create a patient (12 years old)
-    patient = Patient(
-        sex="M",
-        birthday_date=datetime.date(2012, 6, 1),
-        gestational_age_weeks=40,
-        gestational_age_days=0,
-    )
+    patient = PatientBuilder().with_sex("M").born_on(datetime.date(2012, 6, 1)).gestational_age(weeks=40, days=0).build().patient
 
     # Generate 20 measurement groups, more frequent in early years
     measurement_dates = [
@@ -106,13 +99,8 @@ def main():
         55.0,
     ]
 
-    for date, stature, weight, hc in zip(
-        measurement_dates, statures, weights, head_circumferences, strict=True
-    ):
-        mg = MeasurementGroup(
-            date=date, stature=stature, weight=weight, head_circumference=hc
-        )
-        patient.add_measurements(mg)
+    for date, stature, weight, hc in zip(measurement_dates, statures, weights, head_circumferences, strict=True):
+        patient.measured_at(date, weight=weight, stature=stature, head_circumference=hc)
 
     # Calculate z-scores for all measurements
     patient.calculate_all()

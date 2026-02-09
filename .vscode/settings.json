@@ -4,23 +4,28 @@
   ],
   "python.testing.pytestEnabled": true,
   "python.analysis.exclude": [
-      "**/.venv/*",
-      "build",
-      "dist",
-      "**/__pycache__",
-      "**/*.egg-info"
+    "**/.*",
+    ".venv",
+    "build",
+    "dist",
+    "**/__pycache__",
+    "**/*.egg-info",
+    "node_modules"
   ],
-
   // Ruff settings for VSCode
   "ruff.exclude": [
-      "**/.venv/*",
-      "build",
-      "dist",
-      "**/__pycache__",
-      "**/*.egg-info"
+    "**/.*",
+    ".venv",
+    "build",
+    "dist",
+    "**/__pycache__",
+    "**/*.egg-info",
+    "node_modules"
   ],
   "files.exclude": {
-      "**/__pycache__": true,
-      "**/*.egg-info": true
+    "node_modules": true,
+    ".venv": true,
+    "**/__pycache__": true,
+    "**/*.egg-info": true
   }
 }

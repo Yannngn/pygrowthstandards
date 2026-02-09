@@ -3,18 +3,14 @@ import datetime
 import pandas as pd
 
 
-def str_dataframe(
-    results: list[dict], date_list: list[datetime.date], age_list: list[int]
-) -> str:
+def str_dataframe(results: list[dict], date_list: list[datetime.date], age_list: list[int]) -> str:
     # This helper function is added to format the output
 
     # Flatten results for DataFrame with MultiIndex columns
     rows = []
     columns = set()
     subkey_order = ["value", "z"]
-    for idx, (result, date, age) in enumerate(
-        zip(results, date_list, age_list, strict=True), 1
-    ):
+    for idx, (result, date, age) in enumerate(zip(results, date_list, age_list, strict=True), 1):
         row: dict = {("Idx", ""): idx}
         # Add measurement date and child age (in days)
         row[("Date", "")] = date
@@ -33,9 +29,7 @@ def str_dataframe(
         return "No data to display."
 
     # Ensure consistent column order: Idx, Date, Age (days), then each measurement type with subkeys in order
-    measurement_types = sorted(
-        {mtype for mtype, _ in columns if mtype not in ["Idx", "Date", "Age (days)"]}
-    )
+    measurement_types = sorted({mtype for mtype, _ in columns if mtype not in ["Idx", "Date", "Age (days)"]})
     ordered_columns = [("Idx", ""), ("Date", ""), ("Age (days)", "")]
     for mtype in measurement_types:
         for subkey in subkey_order:
@@ -45,13 +39,11 @@ def str_dataframe(
 
     df = pd.DataFrame(rows)
     df = df.reindex(columns=ordered_columns)
-    df.columns = pd.MultiIndex.from_tuples(df.columns)  # type: ignore
+    df.columns = pd.MultiIndex.from_tuples(df.columns.values)
 
     # Format float columns to 2 decimal places
     float_cols = df.select_dtypes(include="float").columns
-    df[float_cols] = df[float_cols].map(
-        lambda x: f"{x:.2f}" if pd.notnull(x) else pd.NA
-    )
+    df[float_cols] = df[float_cols].map(lambda x: f"{x:.2f}" if pd.notnull(x) else pd.NA)
 
     pd.set_option("display.max_columns", None)
     # Use to_string with custom formatting for better visual separation
