@@ -108,7 +108,7 @@ def main():
         age_group="0-2",
         measurement_type="stature",
         show=False,
-        output_path="results/user_table_0_2_stature.png",
+        output_path="results/user_table_0_2_staturepatient.png",
     )
     patient.plot(
         age_group="5-10",
