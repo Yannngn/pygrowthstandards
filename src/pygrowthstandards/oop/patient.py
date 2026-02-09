@@ -2,9 +2,11 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Self
 
+from matplotlib.axes import Axes
+
 from pygrowthstandards.oop.calculator import Calculator
 from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
-from pygrowthstandards.utils.config import DataSexType, TableNameType
+from pygrowthstandards.utils.config import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 from pygrowthstandards.utils.results import str_dataframe
 
@@ -163,6 +165,15 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         self.z_scores = z_scores
 
         return self
+
+    def plot(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
+        from pygrowthstandards.oop.plotter import Plotter
+
+        plotter = Plotter(self)
+
+        ax = plotter.plot(age_group=age_group, measurement_type=measurement_type, show=show, output_path=output_path)
+
+        return ax
 
     def display_measurements(self) -> str:
         if not self.measurements:

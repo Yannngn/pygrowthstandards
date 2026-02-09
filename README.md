@@ -73,7 +73,6 @@ The object-oriented API is ideal for tracking a patient's growth over time. It u
 # filepath: main.py
 import datetime
 from pygrowthstandards.oop.builders import PatientBuilder
-from pygrowthstandards.oop.plotter import Plotter
 
 builder = (
     PatientBuilder()
@@ -89,8 +88,7 @@ builder.measured_at("2024-01-01", weight=12.6, stature=87.8, head_circumference=
 patient = builder.build_and_calculate()
 print(patient.display_measurements())
 
-plotter = Plotter(patient)
-plotter.plot(
+patient.plot(
     age_group="0-2",
     measurement_type="stature",
     show=False,

@@ -1,7 +1,6 @@
 import datetime
 
 from pygrowthstandards.oop.builders import PatientBuilder
-from pygrowthstandards.oop.plotter import Plotter
 
 
 def main():
@@ -105,26 +104,19 @@ def main():
     # Calculate z-scores for all measurements
     patient.calculate_all()
 
-    plotter = Plotter(patient)
-    plotter.plot(
+    patient.plot(
         age_group="0-2",
         measurement_type="stature",
         show=False,
-        output_path="results/user_table_0_2_stature.png",
+        output_path="results/user_table_0_2_staturepatient.png",
     )
-    plotter.plot(
-        age_group="2-5",
-        measurement_type="stature",
-        show=False,
-        output_path="results/user_table_2_5_stature.png",
-    )
-    plotter.plot(
+    patient.plot(
         age_group="5-10",
         measurement_type="stature",
         show=False,
         output_path="results/user_table_5_10_stature.png",
     )
-    plotter.plot(
+    patient.plot(
         age_group="10-19",
         measurement_type="stature",
         show=False,

@@ -2,7 +2,7 @@ import datetime
 from typing import cast
 
 from pygrowthstandards.utils.config import AgeGroupType, MeasurementAliasType
-from src.pygrowthstandards import MeasurementGroup, Patient, Plotter
+from src.pygrowthstandards import MeasurementGroup, Patient
 from src.pygrowthstandards.utils.errors import InvalidChoicesError
 
 
@@ -125,7 +125,6 @@ def main():
     )
     patient.calculate_all()
 
-    plotter = Plotter(patient)
     for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
         for measurement_type in [
             "stature",
@@ -134,7 +133,7 @@ def main():
             "body_mass_index",
         ]:
             try:
-                plotter.plot(
+                patient.plot(
                     cast(AgeGroupType, age_group),
                     cast(MeasurementAliasType, measurement_type),
                     output_path=f"results/user_table_{age_group}_{measurement_type}.png",

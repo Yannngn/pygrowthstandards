@@ -1,15 +1,17 @@
 import datetime
 from pathlib import Path
+from typing import cast
 
 import matplotlib
+from matplotlib.figure import Figure
+
+from pygrowthstandards.oop.patient import Patient
 
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402 (must import after backend set)
 
 from pygrowthstandards.oop.builders import PatientBuilder
-from pygrowthstandards.oop.plotter import Plotter
-
 
 RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
 
@@ -123,23 +125,22 @@ def build_newborn_patient(gestational_weeks, gestational_days, birth_date, weigh
     return patient
 
 
-def save_plot(plotter, age_group, measurement_type, filename, dpi=150):
-    ax = plotter.plot(age_group=age_group, measurement_type=measurement_type, show=False, output_path="")
+def save_plot(patient: Patient, age_group, measurement_type, filename, dpi=150):
+    ax = patient.plot(age_group=age_group, measurement_type=measurement_type, show=False, output_path="")
     output_path = RESULTS_DIR / filename
-    ax.figure.savefig(output_path, dpi=dpi, bbox_inches="tight")
-    plt.close(ax.figure)
+    cast(Figure, ax.figure).savefig(output_path, dpi=dpi, bbox_inches="tight")
+    plt.close(cast(Figure, ax.figure))
 
 
 def main():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     patient = build_sample_patient()
-    plotter = Plotter(patient)
 
-    save_plot(plotter, "0-2", "stature", "stature_0_2.png")
-    save_plot(plotter, "0-2", "weight", "weight_0_2.png")
-    save_plot(plotter, "0-2", "head_circumference", "head_circumference_0_2.png")
-    save_plot(plotter, "10-19", "stature", "stature_10_19.png")
+    save_plot(patient, "0-2", "stature", "stature_0_2.png")
+    save_plot(patient, "0-2", "weight", "weight_0_2.png")
+    save_plot(patient, "0-2", "head_circumference", "head_circumference_0_2.png")
+    save_plot(patient, "10-19", "stature", "stature_10_19.png")
 
     newborn_patient = build_newborn_patient(
         gestational_weeks=38,
@@ -149,8 +150,9 @@ def main():
         stature=50.0,
         head_circumference=34.0,
     )
-    newborn_plotter = Plotter(newborn_patient)
-    save_plot(newborn_plotter, "newborn", "weight", "weight_newborn.png")
+    save_plot(newborn_patient, "newborn", "weight", "weight_newborn.png")
+
+    save_plot(newborn_patient, "newborn", "weight", "weight_newborn.png")
 
     very_preterm_patient = build_newborn_patient(
         gestational_weeks=30,
@@ -160,8 +162,7 @@ def main():
         stature=40.0,
         head_circumference=29.0,
     )
-    very_preterm_plotter = Plotter(very_preterm_patient)
-    save_plot(very_preterm_plotter, "very_preterm_newborn", "weight", "weight_very_preterm_newborn.png")
+    save_plot(very_preterm_patient, "very_preterm_newborn", "weight", "weight_very_preterm_newborn.png")
 
 
 if __name__ == "__main__":
