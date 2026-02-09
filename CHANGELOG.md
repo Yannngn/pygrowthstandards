@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+
+## [0.1.3] - 2025-12-02
+
+### Notes
+- Published from a branch that was not merged into `main` at the time; this release is superseded by the next `main`-based release (v0.1.4+).
+
+### Changed
+- Simplified imports
+
+### Fixed
+- Fixed image link for stature growth chart
 
 ## [0.1.2] - 2025-08-22
 
@@ -31,3 +41,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data Visualization**: Matplotlib-based growth chart generation
 - **Performance Optimized**: Parquet-based data storage and NumPy operations
 
+## [0.1.1] - 2025-08-22
+
+### Changed
+- Trying to publish on PyPI
+
+### Fixed
+- Fixed version for publication on TestPyPI
+
+## [0.1.0] - 2025-08-22
+
+### Added
+- Tagged initial release
+
+## [0.1.0b] - 2025-08-22
+
+### Changed
+- Tagged beta release (no code changes since previous tag)
+
+## [0.1.0a1] - 2025-08-22
+
+### Added
+- Tagged alpha release (no code changes since previous tag)
+
+## [Unreleased]
