@@ -42,9 +42,7 @@ Documentation = "https://github.com/Yannngn/pygrowthstandards#readme"
 dev = [
     { include-group = "lint" },
     { include-group = "test" },
-    { include-group = "excel" },
     { include-group = "build" },
-    { include-group = "pdf" },
 ]
 
 excel = ["pandas[excel]>=2.1.0,<3.0.0"]
