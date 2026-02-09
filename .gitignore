@@ -1,7 +1,7 @@
-# Raw Files
-data/raw/**/*.csv
-data/raw/**/*.pdf
-data/raw/**/*.xlsx
+# Environment files
+.env
+.env.*
+*.env
 
 # Python-generated files
 __pycache__/

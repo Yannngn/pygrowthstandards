@@ -8,8 +8,8 @@ wget "https://cdn.who.int/media/docs/default-source/child-growth/growth-referenc
 
 
 # Height-for-age (5-19 years)
-wget "https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/height-for-age-(5-19-years)/hfa-boys-z-who-2007-exp.xlsx" -O "who-growth-stature-m.xlsx"
-wget "https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/height-for-age-(5-19-years)/hfa-girls-z-who-2007-exp.xlsx" -O "who-growth-stature-f.xlsx"
+wget "https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/height-for-age-(5-19-years)/hfa-boys-z-who-2007-exp.xlsx" -O "who-growth-height-m.xlsx"
+wget "https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/height-for-age-(5-19-years)/hfa-girls-z-who-2007-exp.xlsx" -O "who-growth-height-f.xlsx"
 
 
 # Weight-for-age (5-10 years)

@@ -1,12 +1,16 @@
-from src import functional as F
-from src.oop.calculator import Calculator
-from src.oop.measurement import MeasurementGroup
+import pytest
+
+from pygrowthstandards import functional as F
+from pygrowthstandards.oop.calculator import Calculator
+from pygrowthstandards.oop.measurement import MeasurementGroup
 
 # Benchmark the Functional Calculator for a single measurement
 
+pytestmark = pytest.mark.performance
+
 
 def test_benchmark_functional_single(benchmark):
-    benchmark(F.zscore, "stature", 50.0, "M", 365)
+    benchmark(F.zscore, "stature", 50.0, "M", age_days=365)
 
 
 # Benchmark the Functional Calculator for many measurements
@@ -15,7 +19,7 @@ def test_benchmark_functional_single(benchmark):
 def test_benchmark_functional_many(benchmark):
     def run_many_functional():
         for _ in range(100):
-            F.zscore("stature", 50.0, "M", 365)
+            F.zscore("stature", 50.0, "M", age_days=365)
 
     benchmark(run_many_functional)
 
@@ -27,7 +31,7 @@ def test_benchmark_calculator_single(benchmark):
     """Benchmark Calculator.calculate_z_score for one MeasurementGroup"""
     calc = Calculator()
     mg = MeasurementGroup(stature=75.0, weight=10.0)
-    benchmark(calc.calculate_z_score, mg, "stature", 365)
+    benchmark(calc.calculate_z_score, mg, "stature", "M", age_days=365)
 
 
 # Benchmark the OOP Calculator for many measurements
@@ -40,6 +44,6 @@ def test_benchmark_calculator_many(benchmark):
 
     def run_many_calculator():
         for mg in groups:
-            calc.calculate_measurement_group(mg, 365)
+            calc.calculate_measurement_group(mg, "M", age_days=365)
 
     benchmark(run_many_calculator)

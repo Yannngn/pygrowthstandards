@@ -1,8 +1,7 @@
 # pygrowthstandards
 
-<!-- [![PyPI version](https://badge.fury.io/py/pygrowthstandards.svg)](https://badge.fury.io/py/pygrowthstandards)
-[![Python Version](https://img.shields.io/pypi/pyversions/pygrowthstandards.svg)](https://pypi.org/project/pygrowthstandards) -->
-
+[![PyPI version](https://badge.fury.io/py/pygrowthstandards.svg)](https://badge.fury.io/py/pygrowthstandards)
+[![Python Version](https://img.shields.io/pypi/pyversions/pygrowthstandards.svg)](https://pypi.org/project/pygrowthstandards)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/pygrowthstandards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python package](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml/badge.svg)](https://github.com/Yannngn/pygrowthstandards/actions/workflows/python-package.yml)
@@ -28,10 +27,33 @@ This library implements standards from internationally recognized sources:
 - A straightforward functional API for one-off calculations.
 - Generate and save customizable growth charts.
 
+## Results Gallery
+
+Run `make results` to generate demo plots into the `results/` folder.
+
+| Stature (0-2 years) | Weight (0-2 years) |
+| --- | --- |
+| ![Stature 0-2](results/stature_0_2.png) | ![Weight 0-2](results/weight_0_2.png) |
+
+| Head Circumference (0-2 years) | Stature (10-19 years) |
+| --- | --- |
+| ![Head Circumference 0-2](results/head_circumference_0_2.png) | ![Stature 10-19](results/stature_10_19.png) |
+
+| Weight (Newborn) | Weight (Very Preterm Newborn) |
+| --- | --- |
+| ![Weight Newborn](results/weight_newborn.png) | ![Weight Very Preterm Newborn](results/weight_very_preterm_newborn.png) |
+
 ## Installation
 
-To install for development, clone the repository and install in editable mode:
-Use uv
+To install the latest stable release from PyPI:
+
+```bash
+pip install pygrowthstandards
+```
+
+### Development Installation
+
+To install for development, clone the repository and install in editable mode using uv:
 
 ```bash
 git clone https://github.com/Yannngn/pygrowthstandards.git
@@ -41,49 +63,32 @@ source .venv/bin/activate
 uv sync
 ```
 
-To install the latest stable release from PyPI [In Progress]:
-
-```bash
-pip install pygrowthstandards
-```
-
 ## Quick Start
 
 ### Object-Oriented Approach
 
-The object-oriented API is ideal for tracking a patient's growth over time. It uses a `Patient` object to store measurements and a `Plotter` to visualize them.
+The object-oriented API is ideal for tracking a patient's growth over time. It uses a fluent `PatientBuilder` to capture birth data and measurements, plus a `Plotter` to visualize them.
 
 ```python
 # filepath: main.py
 import datetime
-from src.oop.patient import Patient
-from src.oop.measurement import MeasurementGroup
-from src.oop.plotter import Plotter
+from pygrowthstandards.oop.builders import PatientBuilder
 
-# 1. Create a Patient
-patient = Patient(
-    sex="M",
-    birthday_date=datetime.date(2022, 1, 1),
+builder = (
+    PatientBuilder()
+    .with_sex("M")
+    .born_on(datetime.date(2022, 1, 1))
+    .gestational_age(weeks=40, days=0)
 )
 
-# 2. Add measurements over time
-measurements = [
-    MeasurementGroup(date=datetime.date(2022, 7, 1), weight=8.6, stature=68.4, head_circumference=44.5),
-    MeasurementGroup(date=datetime.date(2023, 1, 1), weight=10.2, stature=75.7, head_circumference=46.5),
-    MeasurementGroup(date=datetime.date(2024, 1, 1), weight=12.6, stature=87.8, head_circumference=48.5),
-]
-for mg in measurements:
-    patient.add_measurements(mg)
+builder.measured_at("2022-07-01", weight=8.6, stature=68.4, head_circumference=44.5)
+builder.measured_at("2023-01-01", weight=10.2, stature=75.7, head_circumference=46.5)
+builder.measured_at("2024-01-01", weight=12.6, stature=87.8, head_circumference=48.5)
 
-# 3. Calculate z-scores for all measurements
-patient.calculate_all()
-
-# 4. Display a summary table
+patient = builder.build_and_calculate()
 print(patient.display_measurements())
 
-# 5. Plot the growth charts
-plotter = Plotter(patient)
-plotter.plot(
+patient.plot(
     age_group="0-2",
     measurement_type="stature",
     show=False,
@@ -95,7 +100,7 @@ plotter.plot(
 
 After running the above code, you can view the generated growth chart:
 
-![Stature Growth Chart](results/user_table_0_2_stature.png)
+![Stature Growth Chart](results/stature_0_2.png)
 
 ### Functional Approach
 
@@ -103,17 +108,24 @@ For quick, single, stateless calculations, the functional API provides direct ac
 
 ```python
 # filepath: main.py
-from src import functional as F
+from pygrowthstandards import functional as F
 
-# Calculate z-scores for various measurements and ages
-z1 = F.zscore("stature", 50, "F", age_days=0, gestational_age=280)
-z2 = F.zscore("weight", 5, "F", age_days=30)
-z3 = F.zscore("head_circumference", 40, "F", age_days=180)
-z4 = F.zscore("stature", 80, "F", age_days=365)
-z5 = F.zscore("weight", 12, "F", age_days=730)
-z6 = F.zscore("head_circumference", 48, "F", age_days=1460)
+z1 = F.zscore("stature", 50, sex="F", age_days=0, gestational_age=280)
+z2 = F.zscore("weight", 5, sex="F", age_days=30)
+z3 = F.zscore("head_circumference", 40, sex="F", age_days=180)
 
-print(f"{z1:.2f}\n{z2:.2f}\n{z3:.2f}\n{z4:.2f}\n{z5:.2f}\n{z6:.2f}")
+# Birthdate + measurement date + GA weeks/days
+z4 = F.zscore(
+    "weight",
+    3.2,
+    sex="F",
+    birth_date="2024-01-01",
+    measurement_date="2024-01-15",
+    gestational_age_weeks=30,
+    gestational_age_days=2,
+)
+
+print(f"{z1:.2f}\n{z2:.2f}\n{z3:.2f}\n{z4:.2f}")
 ```
 
 The output of this script is:
@@ -126,6 +138,16 @@ The output of this script is:
 0.36
 -0.94
 ```
+
+## Future API Enhancements
+
+We're actively researching ways to make PyGrowthStandards even more user-friendly! Check out our [Fluid API Research](FLUID_API_SUMMARY.md) for proposed enhancements including:
+
+- **Method chaining** for 50-60% code reduction
+- **Builder patterns** for declarative patient construction
+- **Unified facade** for simplified imports and batch processing
+
+All proposed changes maintain 100% backward compatibility. [Read the research](FLUID_API_RESEARCH.md) and share your feedback!
 
 ## Contributing
 

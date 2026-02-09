@@ -1,0 +1,4 @@
+backup/
+*.parquet
+*.xlsx
+*.pdf
