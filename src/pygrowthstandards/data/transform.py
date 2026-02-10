@@ -7,12 +7,12 @@ from typing import cast
 
 import pandas as pd
 
-from pygrowthstandards.data.extract import RawTable
 from pygrowthstandards.config.growth import (
     AGE_GROUP_CHOICES,
     AgeGroupType,
     resolve_x_var_type,
 )
+from pygrowthstandards.data.extract import RawTable
 from pygrowthstandards.utils.constants import MONTH, WEEK, YEAR
 from pygrowthstandards.utils.version import get_package_version
 
@@ -25,6 +25,7 @@ class GrowthData:
         version: Package version for generated artifacts.
         tables: Raw tables accumulated for processing.
     """
+
     version: str = field(default_factory=get_package_version)
     tables: list[RawTable] = field(default_factory=list)
 

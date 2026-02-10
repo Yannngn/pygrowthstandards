@@ -6,9 +6,9 @@ from typing import Self
 
 from matplotlib.axes import Axes
 
+from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 from pygrowthstandards.oop.calculator import Calculator
 from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
-from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 from pygrowthstandards.utils.results import str_dataframe
 
@@ -26,6 +26,7 @@ class PatientBase:
         is_born: True when birthday_date is set.
         is_very_preterm: True when gestational age < 32 weeks.
     """
+
     sex: DataSexType
     birthday_date: DateInputType | None
     gestational_age_weeks: int = 40
@@ -124,6 +125,7 @@ class PatientBase:
 @dataclass
 class AddMeasurementPatientMixin:
     """Mixin that stores and updates measurement groups."""
+
     measurements: list[MeasurementGroup] = field(default_factory=list)
 
     def add_measurement(self, measurement: Measurement) -> Self:
@@ -170,6 +172,7 @@ class AddMeasurementPatientMixin:
 @dataclass
 class Patient(AddMeasurementPatientMixin, PatientBase):
     """Patient model with measurement tracking and z-score calculations."""
+
     z_scores: list[MeasurementGroup] = field(default_factory=list, init=False)
 
     # TODO: Simplify UX by calculating table_name based on birthdate and date of measurement.

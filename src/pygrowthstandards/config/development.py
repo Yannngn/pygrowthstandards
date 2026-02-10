@@ -7,6 +7,7 @@ from typing import Literal
 
 class DevelopmentGoals(StrEnum):
     """Canonical keys aligned to the developmental goals dataset."""
+
     # Canonical keys aligned to data/raw/development_goals_pt.csv
     MORO_REFLEX = "moro-reflex"
     FLEXED_POSTURE = "flexed-posture"

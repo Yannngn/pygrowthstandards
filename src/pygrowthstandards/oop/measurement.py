@@ -37,6 +37,7 @@ class MeasurementGroup:
         weight: Weight value in kg.
         head_circumference: Head circumference in cm.
     """
+
     table_name: TableNameType = "growth"
     date: DateType = field(default_factory=dt_datetime.now)
 

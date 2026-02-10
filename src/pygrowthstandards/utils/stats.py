@@ -15,7 +15,6 @@ def normal_cdf(z: float) -> float:
     Returns:
         Percentile in the range [0, 1].
     """
-
     return norm.cdf(z).item()
 
 
@@ -136,7 +135,6 @@ def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) ->
         ValueError: If z_score_idx does not contain zero.
         RuntimeError: If curve fitting fails.
     """
-
     if 0 not in z_score_idx:
         raise ValueError("z_scores must contain a zero value for M estimation.")
 
@@ -231,7 +229,6 @@ def interpolate_lms(
     Raises:
         ValueError: If x is outside the bounds of x_values.
     """
-
     if x < x_values.min() or x > x_values.max():
         raise ValueError(f"x value {x} is out of bounds for interpolation (min: {x_values.min()}, max: {x_values.max()})")
 

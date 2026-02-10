@@ -9,6 +9,7 @@ from pygrowthstandards.utils.constants import WEEK, YEAR
 
 class MeasurementType(StrEnum):
     """Canonical measurement identifiers used across the library."""
+
     STATURE = "stature"
     WEIGHT = "weight"
     WEIGHT_STATURE_RATIO = "weight_stature_ratio"
@@ -21,6 +22,7 @@ class MeasurementType(StrEnum):
 
 class AgeGroup(StrEnum):
     """Supported age group identifiers."""
+
     ZERO_ONE = "0-1"
     ZERO_TWO = "0-2"
     TWO_FIVE = "2-5"

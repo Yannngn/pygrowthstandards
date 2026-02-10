@@ -13,6 +13,7 @@ except ImportError as exc:
 def intergrowth_convert_weeks_days(weeks_days: str) -> int:
     """
     This function converts a string representing weeks and days into total days.
+
     The input format is expected to be "X+Y", where X is the number of weeks and Y is the number of days.
     """
     if "+" not in weeks_days:

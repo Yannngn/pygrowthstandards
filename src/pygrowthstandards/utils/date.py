@@ -27,7 +27,6 @@ def handle_date_input(date_input: DateInputType) -> datetime.datetime:
         ValueError: If a string cannot be parsed as a date.
         TypeError: If an unsupported type is provided.
     """
-
     if isinstance(date_input, datetime.datetime):
         return date_input
 

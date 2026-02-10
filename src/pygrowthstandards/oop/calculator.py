@@ -5,11 +5,11 @@ from typing import cast
 
 import pandas as pd
 
+from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.data.load import KeyObject, load_reference
 from pygrowthstandards.functional.data import get_lms, get_table
 from pygrowthstandards.oop.measurement import MeasurementGroup
 from pygrowthstandards.utils import stats
-from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.utils.errors import InvalidChoicesError, NoReferenceDataException
 
 

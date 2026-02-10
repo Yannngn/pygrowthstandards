@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
 
-from pygrowthstandards.data.load import GrowthTable, KeyObject
-from pygrowthstandards.oop.patient import Patient
 from pygrowthstandards.config.growth import (
     AGE_GROUP_CONFIG,
     MEASUREMENT_CONFIG,
@@ -17,12 +15,15 @@ from pygrowthstandards.config.growth import (
     MeasurementAliasType,
     MeasurementType,
 )
+from pygrowthstandards.data.load import GrowthTable, KeyObject
+from pygrowthstandards.oop.patient import Patient
 from pygrowthstandards.utils.plot import style
 from pygrowthstandards.utils.plot.xticks import set_xticks_by_range
 
 
 class Plotter:
     """Create reference and patient plots for growth data."""
+
     def __init__(self, patient: Patient):
         """Initialize the plotter with a patient instance.
 

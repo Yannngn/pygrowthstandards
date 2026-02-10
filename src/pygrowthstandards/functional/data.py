@@ -5,9 +5,9 @@ from typing import overload
 
 import pandas as pd
 
+from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.data.load import GrowthTable, KeyObject, load_reference
 from pygrowthstandards.utils import stats
-from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 
 try:
     DATA: pd.DataFrame | None = load_reference()

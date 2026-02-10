@@ -122,6 +122,7 @@ class RawTable:
         x_var_unit: Axis unit string.
         points: LMS datapoints.
     """
+
     source: DataSourceType  # who, intergrowth, cdc, etc.
     name: TableNameType  # child_growth, growth, newborn, etc.
     sex: DataSexType  # M, F, U
@@ -227,7 +228,6 @@ class RawTable:
         Returns:
             Parsed RawTable instance.
         """
-
         df = pd.read_excel(xlsx_path, sheet_name=None)
 
         # Assume we want the first sheet only
