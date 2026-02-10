@@ -5,7 +5,7 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config.growth import (
     AGE_GROUP_CHOICES,
     DATA_SEX_CHOICES,
     TABLE_NAME_CHOICES,

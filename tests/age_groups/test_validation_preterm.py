@@ -2,7 +2,7 @@ import pytest
 
 from pygrowthstandards.functional import zscore
 from pygrowthstandards.oop.calculator import Calculator
-from pygrowthstandards.utils.config import MeasurementAliasType
+from pygrowthstandards.config.growth import MeasurementAliasType
 from pygrowthstandards.utils.constants import WEEK
 from pygrowthstandards.utils.stats import calculate_z_score
 from tests.validation_utils import (

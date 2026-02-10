@@ -6,7 +6,7 @@ from typing import cast
 import pandas as pd
 
 from pygrowthstandards.data.extract import RawTable
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config.growth import (
     AGE_GROUP_CHOICES,
     AgeGroupType,
     resolve_x_var_type,

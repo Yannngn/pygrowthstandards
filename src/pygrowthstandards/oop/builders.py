@@ -2,7 +2,7 @@ from typing import Self
 
 from pygrowthstandards.oop.measurement import MeasurementGroup
 from pygrowthstandards.oop.patient import Patient
-from pygrowthstandards.utils.config import DataSexType
+from pygrowthstandards.config.growth import DataSexType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 
 

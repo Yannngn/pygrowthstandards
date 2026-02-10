@@ -5,7 +5,7 @@ import pandas as pd
 
 from pygrowthstandards.data.load import GrowthTable, KeyObject, load_reference
 from pygrowthstandards.utils import stats
-from pygrowthstandards.utils.config import DataSexType, MeasurementAliasType
+from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 
 try:
     DATA: pd.DataFrame | None = load_reference()

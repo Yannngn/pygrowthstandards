@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime as dt_datetime
 from typing import cast
 
-from pygrowthstandards.utils.config import MeasurementAliasType, TableNameType
+from pygrowthstandards.config.growth import MeasurementAliasType, TableNameType
 from pygrowthstandards.utils.date import DateType
 
 

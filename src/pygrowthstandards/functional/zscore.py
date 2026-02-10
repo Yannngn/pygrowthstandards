@@ -3,7 +3,7 @@ from typing import overload
 import pandas as pd
 
 from pygrowthstandards.functional.data import DATA, KeyObject, get_lms, get_table
-from pygrowthstandards.utils.config import DataSexType, MeasurementAliasType
+from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 from pygrowthstandards.utils.stats import calculate_z_score
 

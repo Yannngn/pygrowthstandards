@@ -3,7 +3,7 @@ from functools import partial
 from typing import Literal
 
 from pygrowthstandards import functional as F
-from pygrowthstandards.utils.config import DataSexType
+from pygrowthstandards.config.growth import DataSexType
 from pygrowthstandards.utils.date import DateInputType
 
 

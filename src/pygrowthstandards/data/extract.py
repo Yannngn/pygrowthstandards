@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config.growth import (
     DATA_SEX_CHOICES,
     ChoiceValidator,
     DataSexType,

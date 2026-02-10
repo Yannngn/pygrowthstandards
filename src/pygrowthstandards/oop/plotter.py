@@ -6,7 +6,7 @@ from matplotlib.axes import Axes
 
 from pygrowthstandards.data.load import GrowthTable, KeyObject
 from pygrowthstandards.oop.patient import Patient
-from pygrowthstandards.utils.config import (
+from pygrowthstandards.config.growth import (
     AGE_GROUP_CONFIG,
     MEASUREMENT_CONFIG,
     AgeGroup,

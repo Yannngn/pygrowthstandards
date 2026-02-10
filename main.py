@@ -2,7 +2,7 @@ import datetime
 from typing import cast
 
 from pygrowthstandards import MeasurementGroup, Patient
-from pygrowthstandards.utils.config import AgeGroupType, MeasurementAliasType
+from pygrowthstandards.config.growth import AgeGroupType, MeasurementAliasType
 from pygrowthstandards.utils.errors import InvalidChoicesError
 
 

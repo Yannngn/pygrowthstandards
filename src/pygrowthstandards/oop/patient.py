@@ -6,7 +6,7 @@ from matplotlib.axes import Axes
 
 from pygrowthstandards.oop.calculator import Calculator
 from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
-from pygrowthstandards.utils.config import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
+from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 from pygrowthstandards.utils.results import str_dataframe
 
