@@ -1,0 +1,18 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-test.yml
+    with:
+      python-versions: '["3.11", "3.12", "3.13", "3.14"]'
+      install-extras: "--dev"

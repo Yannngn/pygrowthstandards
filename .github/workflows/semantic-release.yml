@@ -29,7 +29,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies (uv)
-        run: uv sync --group excel
+        run: uv sync
 
       - name: Install dependencies
         run: npm install semantic-release @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/github
