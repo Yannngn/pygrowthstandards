@@ -1,3 +1,6 @@
+"""Custom error types for growth reference lookups."""
+
+
 class NoReferenceDataException(Exception):
     """Raised when no reference data is found for the specified parameters."""
 
@@ -8,6 +11,14 @@ class NoReferenceDataException(Exception):
         age_value: int | float,
         sex: str | None = None,
     ):
+        """Initialize the exception with lookup context.
+
+        Args:
+            measurement_type: Measurement alias.
+            age_type: Age axis type label.
+            age_value: Age value used for lookup.
+            sex: Optional sex identifier.
+        """
         self.measurement_type = measurement_type
         self.age_type = age_type
         self.age_value = age_value
@@ -22,6 +33,14 @@ class NoReferenceDataException(Exception):
 
 
 class InvalidChoicesError(KeyError):
+    """Raised when a measurement is invalid for an age group."""
+
     def __init__(self, measurement_type: str | None, age_group: str | None) -> None:
+        """Initialize the error message.
+
+        Args:
+            measurement_type: Measurement alias.
+            age_group: Age group identifier.
+        """
         message = f"Invalid measurement type '{measurement_type}' for age group '{age_group}'"
         super().__init__(message)

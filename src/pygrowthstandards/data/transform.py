@@ -1,3 +1,5 @@
+"""Transform raw growth tables into normalized reference datasets."""
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,28 +19,32 @@ from pygrowthstandards.utils.version import get_package_version
 
 @dataclass
 class GrowthData:
+    """Aggregates raw tables and produces normalized reference data.
+
+    Attributes:
+        version: Package version for generated artifacts.
+        tables: Raw tables accumulated for processing.
+    """
     version: str = field(default_factory=get_package_version)
     tables: list[RawTable] = field(default_factory=list)
 
     def add_table(self, table: RawTable) -> None:
-        """
-        Adds a RawTable to the GrowthData collection.
+        """Append a RawTable to the collection.
 
-        :param table: The RawTable object to add.
+        Args:
+            table: RawTable instance to add.
         """
         self.tables.append(table)
 
     def transform_all(self) -> None:
-        """
-        Transforms all tables in the GrowthData collection by converting age to days.
-        """
+        """Convert all tables to a common x-axis unit (days)."""
         self.tables = list(map(self._transform_age_to_days, self.tables))
 
     def join_data(self) -> pd.DataFrame:
-        """
-        Joins all RawTables in the GrowthData collection into a single DataFrame.
+        """Combine all raw tables into a single normalized DataFrame.
 
-        :return: A pandas DataFrame containing all data points from the tables.
+        Returns:
+            Joined DataFrame with canonical columns.
         """
         records = []
         for table in self.tables:
@@ -78,10 +84,10 @@ class GrowthData:
         return df[required]
 
     def save_parquet(self, path: str | Path = "data") -> None:
-        """
-        Saves the joined data to a Parquet file for efficient storage.
+        """Persist the normalized data to parquet and CSV files.
 
-        :param path: The file path to save the Parquet file.
+        Args:
+            path: Output directory or parquet path.
         """
         self.transform_all()
         df = self.join_data()
@@ -95,6 +101,14 @@ class GrowthData:
 
     @staticmethod
     def _transform_age_to_days(data: RawTable) -> RawTable:
+        """Normalize x values to days in-place.
+
+        Args:
+            data: RawTable to mutate.
+
+        Returns:
+            Mutated RawTable instance.
+        """
         if data.x_var_unit.lower().startswith("da"):
             data.x_var_unit = "days"
             return data
@@ -111,6 +125,17 @@ class GrowthData:
 
     @staticmethod
     def _extract_age_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> AgeGroupType:
+        """Determine the age group for a given data point.
+
+        Args:
+            table_name: Source table name.
+            measurement_type: Measurement alias.
+            x_var_type: Axis type.
+            age: Age in days.
+
+        Returns:
+            Age group key.
+        """
         if x_var_type in {"height", "length"}:
             return "0-2" if x_var_type == "length" else "2-5"
 

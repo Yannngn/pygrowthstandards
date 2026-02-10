@@ -1,3 +1,5 @@
+"""Statistical utilities for LMS calculations and interpolation."""
+
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import curve_fit
@@ -5,25 +7,29 @@ from scipy.stats import norm
 
 
 def normal_cdf(z: float) -> float:
-    """
-    Convert a z-score to its percentile (0-100).
+    """Convert a z-score to its percentile (0-1).
 
-    :param z: The z-score.
-    :return: The percentile (0-100).
+    Args:
+        z: The z-score.
+
+    Returns:
+        Percentile in the range [0, 1].
     """
 
     return norm.cdf(z).item()
 
 
 def calculate_value_for_z_score(z_score: float, lamb: float, mu: float, sigm: float) -> float:
-    """
-    Calculate the value for a given z-score based on the LMS method.
+    """Calculate the value for a given z-score based on the LMS method.
 
-    :param z_score: The z-score to calculate the value for.
-    :param lamb: The L parameter from the LMS method.
-    :param mu: The M parameter from the LMS method.
-    :param sigm: The S parameter from the LMS method.
-    :return: The calculated value.
+    Args:
+        z_score: Z-score to invert.
+        lamb: L parameter from LMS.
+        mu: M parameter from LMS.
+        sigm: S parameter from LMS.
+
+    Returns:
+        Calculated measurement value.
     """
     z_score = float(z_score)
     lamb = float(lamb)
@@ -37,14 +43,16 @@ def calculate_value_for_z_score(z_score: float, lamb: float, mu: float, sigm: fl
 
 
 def numpy_calculate_value_for_z_score(z_score: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray) -> np.ndarray:
-    """
-    Calculate values for z-score using the LMS method.
+    """Calculate values for a z-score using the LMS method.
 
-    :param z_score: A float z-score.
-    :param lamb: An array of L parameters from the LMS method.
-    :param mu: An array of M parameters from the LMS method.
-    :param sigm: An array of S parameters from the LMS method.
-    :return: An array of calculated values.
+    Args:
+        z_score: Z-score to invert.
+        lamb: Array of L parameters.
+        mu: Array of M parameters.
+        sigm: Array of S parameters.
+
+    Returns:
+        Array of calculated values.
     """
     z_score = np.float64(z_score)
     lamb = np.asarray(lamb, dtype=np.float64)
@@ -63,14 +71,16 @@ def numpy_calculate_value_for_z_score(z_score: float, lamb: np.ndarray, mu: np.n
 
 
 def calculate_z_score(value: float, lamb: float, mu: float, sigm: float) -> float:
-    """
-    Calculate the z-score for a given value based on the LMS method.
+    """Calculate the z-score for a given value based on the LMS method.
 
-    :param value: The value to calculate the z-score for.
-    :param l: The L parameter from the LMS method.
-    :param m: The M parameter from the LMS method.
-    :param s: The S parameter from the LMS method.
-    :return: The calculated z-score.
+    Args:
+        value: Measurement value.
+        lamb: L parameter from LMS.
+        mu: M parameter from LMS.
+        sigm: S parameter from LMS.
+
+    Returns:
+        Calculated z-score.
     """
     value = float(value)
     lamb = float(lamb)
@@ -84,14 +94,16 @@ def calculate_z_score(value: float, lamb: float, mu: float, sigm: float) -> floa
 
 
 def numpy_calculate_z_score(value: float, lamb: np.ndarray, mu: np.ndarray, sigm: np.ndarray) -> np.ndarray:
-    """
-    Calculate z-scores for a given value based on the LMS method.
+    """Calculate z-scores for a given value based on the LMS method.
 
-    :param value: The value to calculate the z-score for.
-    :param lamb: An array of L parameters from the LMS method.
-    :param mu: An array of M parameters from the LMS method.
-    :param sigm: An array of S parameters from the LMS method.
-    :return: An array of calculated z-scores.
+    Args:
+        value: Measurement value.
+        lamb: Array of L parameters.
+        mu: Array of M parameters.
+        sigm: Array of S parameters.
+
+    Returns:
+        Array of calculated z-scores.
     """
     value = float(value)
     lamb = np.asarray(lamb, dtype=np.float64)
@@ -111,7 +123,19 @@ def numpy_calculate_z_score(value: float, lamb: np.ndarray, mu: np.ndarray, sigm
 
 
 def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) -> tuple[float, float, float]:
-    """Estimate L, M, S parameters from SD values and z-scores."""
+    """Estimate L, M, S parameters from SD values and z-scores.
+
+    Args:
+        z_score_idx: Z-score values for the SD columns.
+        z_score_values: Measurement values at those z-scores.
+
+    Returns:
+        Tuple of (L, M, S).
+
+    Raises:
+        ValueError: If z_score_idx does not contain zero.
+        RuntimeError: If curve fitting fails.
+    """
 
     if 0 not in z_score_idx:
         raise ValueError("z_scores must contain a zero value for M estimation.")
@@ -151,15 +175,16 @@ def estimate_lms_from_sd(z_score_idx: np.ndarray, z_score_values: np.ndarray) ->
 
 
 def interpolate_array(x: int | float, x_values: np.ndarray, y_values: np.ndarray, n_points: int = 5) -> float:
-    """
-    Interpolate LMS parameters for a given x using the closest points from provided data.
-    Uses cubic spline interpolation if enough points, otherwise falls back to linear.
+    """Interpolate values for a given x using nearest points.
 
-    :param x_values: Array of x-coordinates (must be numeric and sortable).
-    :param y_values: Array of y-coordinates corresponding to x_values.
-    :param x: The x-value at which to interpolate.
-    :param n_points: Number of closest points to use for interpolation (default 5).
-    :return: Interpolated value as float.
+    Args:
+        x: X value to interpolate.
+        x_values: Array of x-coordinates.
+        y_values: Array of y-coordinates corresponding to x_values.
+        n_points: Number of closest points to use.
+
+    Returns:
+        Interpolated value.
     """
     if n_points == -1:
         n_points = 5  # Default to 5 points
@@ -190,16 +215,21 @@ def interpolate_lms(
     s_values: np.ndarray,
     n_points: int = 4,
 ) -> tuple[float, float, float]:
-    """
-    Interpolate LMS parameters for a given x using the closest points from provided data.
+    """Interpolate LMS parameters for a given x using closest points.
 
-    :param x_values: Array of x-coordinates (must be numeric and sortable).
-    :param l_values: Array of L values corresponding to x_values.
-    :param m_values: Array of M values corresponding to x_values.
-    :param s_values: Array of S values corresponding to x_values.
-    :param x: The x-value at which to interpolate.
-    :param n_points: float of closest points to use for interpolation (default 4).
-    :return: Interpolated tuple (L, M, S) as floats.
+    Args:
+        x: X value to interpolate.
+        x_values: Array of x-coordinates.
+        l_values: Array of L values.
+        m_values: Array of M values.
+        s_values: Array of S values.
+        n_points: Number of closest points to use.
+
+    Returns:
+        Interpolated tuple (L, M, S).
+
+    Raises:
+        ValueError: If x is outside the bounds of x_values.
     """
 
     if x < x_values.min() or x > x_values.max():

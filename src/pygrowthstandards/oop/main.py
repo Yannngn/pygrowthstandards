@@ -1,9 +1,12 @@
+"""Demo script for the object-oriented API."""
+
 import datetime
 
 from pygrowthstandards.oop.builders import PatientBuilder
 
 
 def main():
+    """Run example OOP calculations and generate plots."""
     patient = PatientBuilder().with_sex("M").born_on(datetime.date(2012, 6, 1)).gestational_age(weeks=40, days=0).build().patient
 
     # Generate 20 measurement groups, more frequent in early years

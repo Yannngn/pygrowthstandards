@@ -1,3 +1,5 @@
+"""CLI for rebuilding packaged growth reference data."""
+
 import shutil
 from pathlib import Path
 
@@ -12,6 +14,14 @@ CSV_ONLY = True
 
 
 def _iter_raw_tables(raw_root: Path) -> list[RawTable]:
+    """Discover raw files and parse them into RawTable objects.
+
+    Args:
+        raw_root: Root path containing raw data files.
+
+    Returns:
+        List of parsed RawTable instances.
+    """
     tables: list[RawTable] = []
 
     if not CSV_ONLY:
@@ -29,6 +39,14 @@ def _iter_raw_tables(raw_root: Path) -> list[RawTable]:
 
 
 def _build_growth_data(tables: list[RawTable]) -> GrowthData:
+    """Assemble GrowthData from parsed RawTable objects.
+
+    Args:
+        tables: Parsed raw tables.
+
+    Returns:
+        GrowthData with all tables attached.
+    """
     data = GrowthData()
     for dataset in tables:
         print(f"Processed {dataset.name} for {dataset.measurement_type} ({dataset.sex}) with {len(dataset.points)} points.")
@@ -37,6 +55,12 @@ def _build_growth_data(tables: list[RawTable]) -> GrowthData:
 
 
 def _copy_parquet_to_package(project_root: Path, version: str) -> None:
+    """Copy generated parquet into the package data directory.
+
+    Args:
+        project_root: Root of the repository.
+        version: Version string used for the parquet name.
+    """
     src_parquet = project_root / "data" / f"pygrowthstandards_{version}.parquet"
     dst_dir = Path(__file__).resolve().parent
     dst_parquet = dst_dir / f"pygrowthstandards_{version}.parquet"
@@ -58,6 +82,12 @@ def _copy_parquet_to_package(project_root: Path, version: str) -> None:
 
 
 def _move_files_to_backup(project_root: Path, version: str) -> None:
+    """Archive generated artifacts into the backup folder.
+
+    Args:
+        project_root: Root of the repository.
+        version: Version string used for the artifact names.
+    """
     src_parquet = project_root / "data" / f"pygrowthstandards_{version}.parquet"
     dst_dir = project_root / "data" / "backup"
     dst_parquet = dst_dir / f"pygrowthstandards_{version}.parquet"
@@ -80,6 +110,7 @@ def _move_files_to_backup(project_root: Path, version: str) -> None:
 
 
 def main() -> None:
+    """Generate and publish reference datasets from raw inputs."""
     tables = _iter_raw_tables(RAW_ROOT)
     data = _build_growth_data(tables)
 

@@ -1,3 +1,5 @@
+"""Patient models and operations for the object-oriented API."""
+
 import datetime
 from dataclasses import dataclass, field
 from typing import Self
@@ -13,6 +15,17 @@ from pygrowthstandards.utils.results import str_dataframe
 
 @dataclass
 class PatientBase:
+    """Base patient attributes and age calculations.
+
+    Attributes:
+        sex: Sex identifier.
+        birthday_date: Birth date or None for unborn patients.
+        gestational_age_weeks: Gestational age in weeks.
+        gestational_age_days: Additional gestational days.
+        gestational_age: Computed gestational age timedelta.
+        is_born: True when birthday_date is set.
+        is_very_preterm: True when gestational age < 32 weeks.
+    """
     sex: DataSexType
     birthday_date: DateInputType | None
     gestational_age_weeks: int = 40
@@ -23,10 +36,19 @@ class PatientBase:
     is_very_preterm: bool = field(init=False)
 
     def __post_init__(self):
+        """Initialize derived attributes and the calculator."""
         self._setup()
         self.calculator = Calculator()
 
     def age(self, date: DateInputType | None = None) -> datetime.timedelta:
+        """Return chronological age at the given date.
+
+        Args:
+            date: Date to compute age against. Defaults to now.
+
+        Returns:
+            Age as a timedelta.
+        """
         assert self.birthday_date is not None, "Patient must be born to calculate age."
         if date is not None:
             dt = handle_date_input(date)
@@ -38,10 +60,29 @@ class PatientBase:
         return dt - self._birthday_date
 
     def post_menstrual_age(self, date: DateInputType | None = None) -> datetime.timedelta:
-        """Age from birth plus gestational age, used for preterm infants."""
+        """Return post-menstrual age (chronological + gestational).
+
+        Args:
+            date: Date to compute age against. Defaults to now.
+
+        Returns:
+            Post-menstrual age as a timedelta.
+        """
         return self.age(date) + self.gestational_age
 
     def get_age(self, age_type: str = "age", date: DateInputType | None = None) -> int:
+        """Return age in days for the requested age_type.
+
+        Args:
+            age_type: One of "age", "gestational_age", or "post_menstrual_age".
+            date: Date to compute age against.
+
+        Returns:
+            Age in days.
+
+        Raises:
+            ValueError: If the age_type is invalid.
+        """
         if age_type in ["age", "chronological_age"]:
             return self.age(date).days
 
@@ -54,6 +95,7 @@ class PatientBase:
         raise ValueError(f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'post_menstrual_age'.")
 
     def _setup(self):
+        """Populate derived fields from initial inputs."""
         self.gestational_age = datetime.timedelta(weeks=self.gestational_age_weeks, days=self.gestational_age_days)
 
         if self.birthday_date is not None:
@@ -66,6 +108,14 @@ class PatientBase:
             self.is_very_preterm = False
 
     def _chronological_age_days(self, date: datetime.date | None = None) -> int | None:
+        """Return chronological age in days if the patient is born.
+
+        Args:
+            date: Date to compute age against.
+
+        Returns:
+            Age in days, or None if unknown.
+        """
         if self.birthday_date is None:
             return None
         return self.age(date).days
@@ -73,9 +123,18 @@ class PatientBase:
 
 @dataclass
 class AddMeasurementPatientMixin:
+    """Mixin that stores and updates measurement groups."""
     measurements: list[MeasurementGroup] = field(default_factory=list)
 
     def add_measurement(self, measurement: Measurement) -> Self:
+        """Add a single measurement to the appropriate group.
+
+        Args:
+            measurement: Measurement to add.
+
+        Returns:
+            Self for chaining.
+        """
         for group in self.measurements:
             if group.date != measurement.date:
                 continue
@@ -95,6 +154,14 @@ class AddMeasurementPatientMixin:
         return self
 
     def add_measurements(self, measurements: MeasurementGroup) -> Self:
+        """Append a measurement group to the patient.
+
+        Args:
+            measurements: MeasurementGroup to add.
+
+        Returns:
+            Self for chaining.
+        """
         self.measurements.append(measurements)
 
         return self
@@ -102,6 +169,7 @@ class AddMeasurementPatientMixin:
 
 @dataclass
 class Patient(AddMeasurementPatientMixin, PatientBase):
+    """Patient model with measurement tracking and z-score calculations."""
     z_scores: list[MeasurementGroup] = field(default_factory=list, init=False)
 
     # TODO: Simplify UX by calculating table_name based on birthdate and date of measurement.
@@ -113,6 +181,18 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         stature: float | None = None,
         head_circumference: float | None = None,
     ) -> Self:
+        """Record measurements on a specific date.
+
+        Args:
+            date: Measurement date. Defaults to now.
+            table_name: Reference table name to associate.
+            weight: Weight in kg.
+            stature: Stature in cm.
+            head_circumference: Head circumference in cm.
+
+        Returns:
+            Self for chaining.
+        """
         if date is not None:
             date = handle_date_input(date)
         else:
@@ -144,8 +224,10 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         return self
 
     def calculate_all(self) -> Self:
-        """
-        Calculates z-scores for all measurement groups in the patient.
+        """Calculate z-scores for all measurement groups.
+
+        Returns:
+            Self with populated z_scores.
         """
         z_scores: list[MeasurementGroup] = []
 
@@ -167,6 +249,17 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         return self
 
     def plot(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
+        """Plot measurement history against reference curves.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+            show: Whether to show the plot.
+            output_path: Optional output file path.
+
+        Returns:
+            Matplotlib Axes object.
+        """
         from pygrowthstandards.oop.plotter import Plotter
 
         plotter = Plotter(self)
@@ -176,6 +269,11 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         return ax
 
     def display_measurements(self) -> str:
+        """Return a formatted table of measurements and z-scores.
+
+        Returns:
+            Table string for display.
+        """
         if not self.measurements:
             return "No measurements available."
 

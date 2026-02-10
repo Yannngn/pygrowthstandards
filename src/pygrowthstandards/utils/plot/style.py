@@ -1,3 +1,5 @@
+"""Plot styling utilities for growth charts."""
+
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
@@ -55,7 +57,13 @@ FIG_AXES_STYLE = {
 
 
 def set_style(fig: Figure, ax: Axes, style: dict = FIG_AXES_STYLE):
-    """Apply the style dictionary to a matplotlib figure and axes."""
+    """Apply the style dictionary to a matplotlib figure and axes.
+
+    Args:
+        fig: Matplotlib Figure instance.
+        ax: Matplotlib Axes instance.
+        style: Style mapping to apply.
+    """
     fig.patch.set_facecolor(style.get("figure.facecolor", "#ffffff"))
     ax.set_facecolor(style.get("axes.facecolor", "#f9f9f9"))
     for spine in ax.spines.values():
@@ -85,6 +93,14 @@ def set_style(fig: Figure, ax: Axes, style: dict = FIG_AXES_STYLE):
 
 
 def get_label_name(key: int | float):
+    """Map z-score or percentile keys to style labels.
+
+    Args:
+        key: Z-score (int) or percentile (float).
+
+    Returns:
+        Style label string.
+    """
     if isinstance(key, int):
         return f"sd{key}" if key >= 0 else f"sd{-key}neg"
 
@@ -97,7 +113,14 @@ def get_label_name(key: int | float):
 
 
 def get_label_style(key):
-    """Return style dict for a given SD or percentile key."""
+    """Return style dict for a given SD or percentile key.
+
+    Args:
+        key: Style label key.
+
+    Returns:
+        Style dictionary for plotting.
+    """
     if key in SD_STYLES:
         return SD_STYLES[key]
     if key in PERCENTILE_STYLES:

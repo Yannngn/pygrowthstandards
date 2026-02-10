@@ -1,3 +1,5 @@
+"""Object-oriented calculator for growth z-score computations."""
+
 import logging
 from typing import cast
 
@@ -17,6 +19,7 @@ class Calculator:
     """
 
     def __init__(self):
+        """Load reference data for subsequent calculations."""
         try:
             self.data = load_reference()
         except FileNotFoundError as exc:
@@ -31,6 +34,22 @@ class Calculator:
         age_days: int | None = None,
         gestational_age: int | None = None,
     ) -> float:
+        """Compute a z-score for a single measurement value.
+
+        Args:
+            measurement_group: Group containing measurement values.
+            measurement_type: Measurement alias to compute.
+            sex: Sex identifier.
+            age_days: Chronological age in days.
+            gestational_age: Gestational age in days.
+
+        Returns:
+            Computed z-score.
+
+        Raises:
+            ValueError: If the measurement value is missing.
+            NoReferenceDataException: If reference data is unavailable.
+        """
         value = getattr(measurement_group, measurement_type, None)
         if value is None:
             raise ValueError(f"MeasurementGroup is missing data for '{measurement_type}'.")
@@ -64,6 +83,17 @@ class Calculator:
         age_days: int | None = None,
         gestational_age: int | None = None,
     ) -> MeasurementGroup:
+        """Compute z-scores for each non-null measurement in the group.
+
+        Args:
+            measurement_group: Group containing measurement values.
+            sex: Sex identifier.
+            age_days: Chronological age in days.
+            gestational_age: Gestational age in days.
+
+        Returns:
+            MeasurementGroup with z-scores.
+        """
         z_score_group = MeasurementGroup(table_name=measurement_group.table_name, date=measurement_group.date)
 
         data = measurement_group.to_dict()

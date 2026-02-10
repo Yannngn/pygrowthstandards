@@ -1,3 +1,5 @@
+"""Functional data access helpers for reference tables."""
+
 import logging
 from typing import overload
 
@@ -45,6 +47,24 @@ def get_table(
     x_var_type: str | None = None,
     x_value: float | None = None,
 ) -> GrowthTable:
+    """Return a GrowthTable filtered to the requested measurement context.
+
+    Args:
+        data: Reference data DataFrame.
+        keys: Pre-built lookup keys.
+        measurement: Measurement alias.
+        sex: Sex identifier.
+        age_days: Chronological age in days.
+        gestational_age: Gestational age in days.
+        x_var_type: Explicit axis type when providing x_value.
+        x_value: Explicit axis value.
+
+    Returns:
+        GrowthTable filtered to the requested context.
+
+    Raises:
+        TypeError: If neither keys nor measurement are provided.
+    """
     # If keys provided, use them directly.
     if keys is not None:
         return GrowthTable.from_data(data, keys)
@@ -65,12 +85,17 @@ def get_table(
 
 
 def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
-    """
-    Get the L, M, S values for a given x from the GrowthTable.
+    """Return LMS parameters at a given x, interpolating if needed.
 
-    :param table: The GrowthTable instance.
-    :param x: The x value (e.g., age in days).
-    :return: A tuple of (L, M, S).
+    Args:
+        table: GrowthTable instance.
+        x: Axis value to lookup.
+
+    Returns:
+        Tuple of (L, M, S) values.
+
+    Raises:
+        ValueError: If interpolation is attempted out of range.
     """
     if x not in table.x:
         return stats.interpolate_lms(x, table.x, table.L, table.M, table.S)

@@ -19,7 +19,9 @@ Example usage:
     >>> patient.calculate_all()
 """
 
-__version__ = "0.1.3"
+from pygrowthstandards.utils.version import get_package_version
+
+__version__ = get_package_version()
 __author__ = "Yannngn"
 __email__ = "contato.yannnobrega@gmail.com"
 __license__ = "MIT"
@@ -36,7 +38,11 @@ from pygrowthstandards.oop import (
 
 
 def check_data():
-    """Check if reference data is available and print status information."""
+    """Check that reference data is available and report status.
+
+    Returns:
+        None
+    """
     if data_exists():
         print(f"✓ Reference data is available at: {get_data_path()}")
         from .data.load import load_reference

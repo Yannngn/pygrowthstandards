@@ -1,3 +1,5 @@
+"""Measurement value containers for the OOP API."""
+
 from dataclasses import dataclass, field
 from datetime import datetime as dt_datetime
 from typing import cast
@@ -12,10 +14,10 @@ class Measurement:
     Holds a single measurement value and its context.
 
     Attributes:
-        value (float): The measurement value.
-        measurement_type (str): Type of measurement (e.g., 'stature').
-        table_name (TableNameType): Contextual table name.
-        date (DateType): Date of the measurement.
+        value: The measurement value.
+        measurement_type: Type of measurement (e.g., "stature").
+        table_name: Contextual table name.
+        date: Date of the measurement.
     """
 
     value: float
@@ -26,6 +28,15 @@ class Measurement:
 
 @dataclass
 class MeasurementGroup:
+    """Grouped measurements recorded at a single date.
+
+    Attributes:
+        table_name: Reference table name.
+        date: Date of the measurement group.
+        stature: Stature value in cm.
+        weight: Weight value in kg.
+        head_circumference: Head circumference in cm.
+    """
     table_name: TableNameType = "growth"
     date: DateType = field(default_factory=dt_datetime.now)
 
@@ -91,6 +102,17 @@ class MeasurementGroup:
 
     @classmethod
     def from_measurements(cls, measurements: list[Measurement]) -> "MeasurementGroup":
+        """Create a measurement group from individual Measurement objects.
+
+        Args:
+            measurements: List of Measurement values.
+
+        Returns:
+            MeasurementGroup with shared date.
+
+        Raises:
+            ValueError: If measurements are empty or have mixed dates.
+        """
         if not measurements:
             raise ValueError("Measurements list cannot be empty")
 

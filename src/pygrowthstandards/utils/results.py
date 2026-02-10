@@ -1,9 +1,21 @@
+"""Formatting helpers for presenting results."""
+
 import datetime
 
 import pandas as pd
 
 
 def str_dataframe(results: list[dict], date_list: list[datetime.date], age_list: list[int]) -> str:
+    """Render measurement results as a string table.
+
+    Args:
+        results: List of measurement dictionaries.
+        date_list: Measurement dates aligned to results.
+        age_list: Ages in days aligned to results.
+
+    Returns:
+        Formatted table string.
+    """
     # This helper function is added to format the output
 
     # Flatten results for DataFrame with MultiIndex columns

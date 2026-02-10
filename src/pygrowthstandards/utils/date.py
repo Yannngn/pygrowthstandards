@@ -1,3 +1,5 @@
+"""Date parsing helpers and input type aliases."""
+
 import contextlib
 import datetime
 from typing import TypeAlias
@@ -13,19 +15,17 @@ DATE_ORDER = "DMY"  # one of: "DMY", "MDY", "ISO"
 
 
 def handle_date_input(date_input: DateInputType) -> datetime.datetime:
-    """
-    Normalize different date input types to a `datetime.datetime` at midnight.
+    """Normalize a date input to a midnight datetime.
 
-    Accepts `datetime.date`, `datetime.datetime`, or `str` inputs. For string
-    inputs this function prefers ISO `YYYY-MM-DD` parsing first. For other
-    formats it will attempt flexible parsing using `dateutil.parser.parse` with
-    a `dayfirst` flag controlled by the module-level `DATE_ORDER` variable
-    (default: `DMY`). If `python-dateutil` is not available, only ISO
-    `YYYY-MM-DD` strings are accepted.
+    Args:
+        date_input: Date input as datetime/date or a string.
+
+    Returns:
+        Parsed datetime at midnight.
 
     Raises:
-        ValueError: when a string cannot be parsed as a date.
-        TypeError: when an unsupported type is provided.
+        ValueError: If a string cannot be parsed as a date.
+        TypeError: If an unsupported type is provided.
     """
 
     if isinstance(date_input, datetime.datetime):

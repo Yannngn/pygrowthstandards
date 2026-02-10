@@ -1,3 +1,5 @@
+"""Load and query growth reference data for calculations and plotting."""
+
 import logging
 from dataclasses import dataclass, field
 from typing import cast
@@ -26,7 +28,16 @@ from pygrowthstandards.utils.stats import numpy_calculate_value_for_z_score
 # FIXME: Move lower
 @dataclass
 class KeyObject:
-    "This object has the job to get the user input and convert it to the correct format expected by the data loading functions. It also has the job to validate the user input and raise errors if the input is invalid."
+    """Normalized lookup keys for reference data selection.
+
+    Attributes:
+        name: Table name identifier.
+        measurement_type: Canonical measurement alias.
+        sex: Sex identifier.
+        x_var_type: Axis type identifier.
+        x: Axis value for lookup.
+        age_group: Optional age group identifier.
+    """
 
     name: str
     measurement_type: MeasurementAliasType
@@ -37,6 +48,17 @@ class KeyObject:
 
     @staticmethod
     def _normalize_age_group(age_group: str) -> AgeGroupType:
+        """Normalize a human-readable age group into a canonical key.
+
+        Args:
+            age_group: Input age group string.
+
+        Returns:
+            Canonical age group key.
+
+        Raises:
+            ValueError: If the age group is not recognized.
+        """
         normalized = age_group.lower().replace(" ", "_")
         if normalized in AGE_GROUP_CHOICES:
             return cast(AgeGroupType, normalized)
@@ -45,6 +67,17 @@ class KeyObject:
 
     @staticmethod
     def _normalize_measurement(measurement: str) -> MeasurementAliasType:
+        """Normalize a measurement label into a canonical alias.
+
+        Args:
+            measurement: Input measurement string.
+
+        Returns:
+            Canonical measurement alias.
+
+        Raises:
+            ValueError: If the measurement cannot be resolved.
+        """
         normalized = measurement.lower().replace("-", "_")
         resolved = ChoiceValidator.resolve_measurement_alias(normalized)
         if resolved is None:
@@ -54,6 +87,14 @@ class KeyObject:
 
     @staticmethod
     def _normalize_sex(sex: str | None) -> DataSexType:
+        """Normalize sex input, defaulting unknowns to 'U'.
+
+        Args:
+            sex: Input sex value.
+
+        Returns:
+            Canonical sex value.
+        """
         if sex is None:
             return "U"
 
@@ -67,6 +108,18 @@ class KeyObject:
 
     @staticmethod
     def _resolve_x_and_type(age_days: int | None, gestational_age: int | None) -> tuple[DataXTypeType, float]:
+        """Resolve the x axis type and value from age inputs.
+
+        Args:
+            age_days: Chronological age in days.
+            gestational_age: Gestational age in days.
+
+        Returns:
+            Tuple of x_var_type and x value.
+
+        Raises:
+            ValueError: If no age inputs are provided.
+        """
         if age_days is not None:
             if gestational_age is not None and gestational_age < 28 * WEEK:
                 post_menstrual_age = age_days + gestational_age
@@ -81,6 +134,14 @@ class KeyObject:
 
     @staticmethod
     def _normalize_x_var_type(x_var_type: str) -> DataXTypeType:
+        """Normalize an x_var_type alias to its canonical value.
+
+        Args:
+            x_var_type: Input axis type string.
+
+        Returns:
+            Canonical axis type.
+        """
         return resolve_x_var_type(x_var_type)
 
     # TODO: Move to utils.config
@@ -91,6 +152,20 @@ class KeyObject:
         age_days: int | None,
         gestational_age: int | None,
     ) -> TableNameType:
+        """Determine the reference table name for the given inputs.
+
+        Args:
+            measurement: Measurement alias.
+            x_var_type: Axis type.
+            age_days: Chronological age in days.
+            gestational_age: Gestational age in days.
+
+        Returns:
+            Table name identifier.
+
+        Raises:
+            ValueError: If the inputs are inconsistent with available data.
+        """
         if x_var_type == "post_menstrual_age":
             return "postnatal_growth_preterm"
 
@@ -117,6 +192,17 @@ class KeyObject:
 
     @staticmethod
     def _normalize_name(name: str) -> TableNameType:
+        """Normalize a table name to its canonical value.
+
+        Args:
+            name: Input table name.
+
+        Returns:
+            Canonical table name.
+
+        Raises:
+            ValueError: If the table name is not recognized.
+        """
         normalized = name.lower().replace(" ", "_")
         if normalized in TABLE_NAME_CHOICES:
             return cast(TableNameType, normalized)
@@ -125,6 +211,17 @@ class KeyObject:
 
     @staticmethod
     def _normalize_x(x_value: float | None) -> float:
+        """Normalize and validate an x value.
+
+        Args:
+            x_value: Input x value.
+
+        Returns:
+            Normalized x value.
+
+        Raises:
+            ValueError: If the value is missing.
+        """
         if x_value is None:
             raise ValueError("x_value is required for the selected x_var_type.")
         return float(x_value)
@@ -139,6 +236,19 @@ class KeyObject:
         x_var_type: str | None = None,
         x_value: float | None = None,
     ) -> "KeyObject":
+        """Build a KeyObject from functional API inputs.
+
+        Args:
+            measurement: Measurement alias.
+            sex: Sex identifier.
+            age_days: Chronological age in days.
+            gestational_age: Gestational age in days.
+            x_var_type: Explicit axis type when providing x_value.
+            x_value: Explicit axis value.
+
+        Returns:
+            KeyObject for reference lookup.
+        """
         normalized_measurement = cls._normalize_measurement(measurement)
         if x_var_type is not None:
             resolved_x_var_type = cls._normalize_x_var_type(x_var_type)
@@ -167,6 +277,18 @@ class KeyObject:
         x_var_type: DataXTypeType,
         sex: DataSexType | None = None,
     ) -> "KeyObject":
+        """Build a KeyObject from object-oriented API inputs.
+
+        Args:
+            name: Table name identifier.
+            measurement_type: Measurement alias.
+            age_group: Age group identifier.
+            x_var_type: Axis type.
+            sex: Sex identifier.
+
+        Returns:
+            KeyObject for reference lookup.
+        """
         return cls(
             cls._normalize_name(name),
             cls._normalize_measurement(measurement_type),
@@ -181,8 +303,20 @@ class KeyObject:
 # TODO: make another layer of abstraction for the growth table and separate standards and child data
 @dataclass
 class GrowthTable:
-    """
-    Represents a growth table containing data points for growth standards.
+    """Structured LMS arrays for a single measurement and cohort.
+
+    Attributes:
+        source: Data source identifier.
+        name: Table name identifier.
+        age_group: Age group identifier.
+        measurement_type: Measurement alias.
+        sex: Sex identifier.
+        x_var_type: Axis type identifier.
+        x: Array of x values.
+        L: Array of L values.
+        M: Array of M values.
+        S: Array of S values.
+        is_derived: Array of derivation flags.
     """
 
     source: DataSourceType
@@ -201,6 +335,18 @@ class GrowthTable:
 
     @staticmethod
     def filter_by_keys(data: pd.DataFrame, keys: KeyObject) -> pd.DataFrame:
+        """Filter reference data to the rows matching the given keys.
+
+        Args:
+            data: Reference data DataFrame.
+            keys: Normalized lookup keys.
+
+        Returns:
+            Filtered DataFrame.
+
+        Raises:
+            InvalidChoicesError: If no data matches the keys.
+        """
         filtered = data.copy()
         filtered = filtered[(filtered["name"] == keys.name)]
         if keys.age_group is not None:
@@ -226,12 +372,14 @@ class GrowthTable:
 
     @classmethod
     def from_data(cls, data: pd.DataFrame, keys: KeyObject) -> "GrowthTable":
-        """
-        Loads a GrowthTable from a DataFrame, filtering by measurement_type, sex, and x_var_type.
+        """Load a GrowthTable from a normalized DataFrame.
 
-        :param data: The DataFrame containing the growth data.
-        :param keys: The KeyObject containing filtering keys.
-        :return: An instance of GrowthTable.
+        Args:
+            data: Reference data DataFrame.
+            keys: Normalized lookup keys.
+
+        Returns:
+            GrowthTable populated from the data.
         """
         # Normalize incoming reference-style DataFrame columns to canonical values
         data = _normalize_reference_data(data.copy())
@@ -258,10 +406,13 @@ class GrowthTable:
         )
 
     def convert_z_scores_to_values(self, z_scores: list[float] | None = None) -> pd.DataFrame:
-        """
-        Converts the GrowthTable to a DataFrame suitable for plotting.
+        """Compute value curves for the requested z-scores.
 
-        :return: A DataFrame with columns for x, L, M, S, and is_derived.
+        Args:
+            z_scores: Z-scores to compute. Defaults to [-3, -2, 0, 2, 3].
+
+        Returns:
+            DataFrame of x values and computed curves.
         """
         if not z_scores:
             z_scores = [-3, -2, 0, 2, 3]
@@ -280,10 +431,13 @@ class GrowthTable:
         return data
 
     def add_child_data(self, child_data: pd.DataFrame) -> None:
-        """
-        Adds child data to the GrowthTable.
+        """Merge child observations into the table for plotting.
 
-        :param child_data: A DataFrame containing child data with columns 'x' and 'child'.
+        Args:
+            child_data: DataFrame with columns 'x' and 'child'.
+
+        Raises:
+            ValueError: If the data is missing required columns.
         """
         if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
             raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
@@ -302,11 +456,11 @@ class GrowthTable:
                 self.y[idx] = y_val
 
     def cut_data(self, lower_limit: float, upper_limit: float) -> None:
-        """
-        Cuts the data in the GrowthTable to the specified limits.
+        """Trim the table arrays to the provided x range.
 
-        :param lower_limit: The lower limit for the x variable.
-        :param upper_limit: The upper limit for the x variable.
+        Args:
+            lower_limit: Lower bound for x values.
+            upper_limit: Upper bound for x values.
         """
         mask = (self.x >= lower_limit) & (self.x <= upper_limit)
         self.x = self.x[mask]
@@ -317,10 +471,13 @@ class GrowthTable:
 
 
 def load_reference():
-    """
-    Loads the growth reference data from the packaged parquet file and returns a DataFrame.
+    """Load the packaged reference data into a DataFrame.
 
-    :return: A DataFrame containing the growth reference data.
+    Returns:
+        DataFrame of reference data.
+
+    Raises:
+        FileNotFoundError: If the packaged data is missing.
     """
     from pygrowthstandards.data import data_exists, get_data_path
 
@@ -334,7 +491,14 @@ def load_reference():
 
 
 def _normalize_reference_data(data: pd.DataFrame) -> pd.DataFrame:
-    """Normalize reference data columns to canonical config values."""
+    """Normalize reference data columns to canonical config values.
+
+    Args:
+        data: Input reference DataFrame.
+
+    Returns:
+        Normalized DataFrame.
+    """
 
     def resolve_measurement(value: str) -> str:
         if value is None:

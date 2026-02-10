@@ -1,9 +1,12 @@
+"""Developmental milestone configuration and lookup data."""
+
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal
 
 
 class DevelopmentGoals(StrEnum):
+    """Canonical keys aligned to the developmental goals dataset."""
     # Canonical keys aligned to data/raw/development_goals_pt.csv
     MORO_REFLEX = "moro-reflex"
     FLEXED_POSTURE = "flexed-posture"
@@ -103,14 +106,13 @@ DevelopmentLanguageType = Literal["pt", "en"]
 
 @dataclass(frozen=True)
 class DevelopmentGoalConfig:
-    """
-    Configuration for a development goal.
+    """Configuration for a developmental goal and its age range.
 
     Attributes:
-    - key: Unique identifier for the goal.
-    - descriptions: Descriptions of the goal by language code.
-    - min_age_months: Minimum age (in months) for achieving the goal.
-    - max_age_months: Maximum age (in months) for achieving the goal.
+        key: Unique identifier for the goal.
+        descriptions: Localized descriptions keyed by language code.
+        min_age_months: Minimum age in months.
+        max_age_months: Maximum age in months.
     """
 
     key: str

@@ -1,3 +1,5 @@
+"""Compute z-scores using the functional API."""
+
 from typing import overload
 
 import pandas as pd
@@ -110,6 +112,28 @@ def zscore(
     x_var_type: str | None = None,
     x_value: float | None = None,
 ) -> float:
+    """Calculate a z-score for a measurement.
+
+    Args:
+        measurement: Measurement alias or canonical name.
+        value: Observed measurement value.
+        sex: Sex used for reference selection.
+        age_days: Chronological age in days.
+        gestational_age: Gestational age in days.
+        gestational_age_weeks: Gestational age in weeks.
+        gestational_age_days: Additional gestational days when weeks provided.
+        birth_date: Date of birth to derive age from dates.
+        measurement_date: Measurement date to derive age.
+        x_var_type: Explicit x axis type when using x_value.
+        x_value: Explicit x axis value.
+
+    Returns:
+        The z-score computed using LMS parameters.
+
+    Raises:
+        ValueError: If required inputs are missing or inconsistent.
+        RuntimeError: If reference data is unavailable.
+    """
     if age_days is None and birth_date is not None and measurement_date is not None:
         birth_dt = handle_date_input(birth_date)
         measurement_dt = handle_date_input(measurement_date)

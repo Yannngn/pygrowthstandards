@@ -1,3 +1,5 @@
+"""Extract growth reference tables from raw CSV and XLSX sources."""
+
 import logging
 import tempfile
 from dataclasses import dataclass
@@ -21,13 +23,14 @@ from pygrowthstandards.utils.stats import estimate_lms_from_sd
 
 @dataclass
 class DataPoint:
-    """
-    Represents a single data point in the growth standards dataset.
-        x for age or stature
-        L for the Box-Cox transformation power
-        M for the median
-        S for the coefficient of variation
-        is_derived indicates whether the LMS values were derived from SD columns or provided directly.
+    """Single LMS data point for a given x value.
+
+    Attributes:
+        x: X-axis value (age in days or stature).
+        L: Box-Cox power.
+        M: Median value.
+        S: Coefficient of variation.
+        is_derived: True when LMS values were derived from SDs.
     """
 
     x: int | float
@@ -37,15 +40,19 @@ class DataPoint:
     is_derived: bool = False
 
     def __post_init__(self):
+        """Validate numeric inputs after initialization.
+
+        Raises:
+            ValueError: If any LMS values are not numeric.
+        """
         if not all(isinstance(value, int | float) for value in (self.x, self.L, self.M, self.S)):
             raise ValueError("All attributes must be numeric values.")
 
     def to_dict(self) -> dict[str, float | bool]:
-        """
-        Converts the DataPoint instance to a dictionary.
+        """Convert the data point to a serializable dictionary.
 
         Returns:
-            dict: A dictionary representation of the DataPoint.
+            A dictionary with LMS fields and flags.
         """
         return {
             "x": self.x,
@@ -57,14 +64,13 @@ class DataPoint:
 
     @classmethod
     def from_dict(cls, data: dict) -> "DataPoint":
-        """
-        Create a DataPoint instance from a dictionary.
+        """Create a data point from a dict with LMS or SD fields.
 
         Args:
-            data (dict): Dictionary containing 'x', 'L', 'M', and 'S' keys.
+            data: Mapping containing LMS or SD columns.
 
         Returns:
-            DataPoint: An instance of DataPoint.
+            A populated DataPoint instance.
         """
         if "l" in data and "m" in data and "s" in data:
             return cls(
@@ -80,6 +86,17 @@ class DataPoint:
 
     @staticmethod
     def _create_lms_data(data: dict[str, float]) -> tuple[float, float, float]:
+        """Derive LMS parameters from SD columns.
+
+        Args:
+            data: Mapping of SD columns.
+
+        Returns:
+            Tuple of (L, M, S).
+
+        Raises:
+            ValueError: If required SD columns are missing.
+        """
         required_sd = ["sd3neg", "sd2neg", "sd1neg", "sd0", "sd1", "sd2", "sd3"]
 
         if not all(k in data for k in required_sd):
@@ -94,6 +111,17 @@ class DataPoint:
 # TODO: Business decision: use lenght or height or use stature as the standard term for both? For now, we will use stature as the standard term and map length and height to stature in the alias system.
 @dataclass
 class RawTable:
+    """Container for raw reference data parsed from a single file.
+
+    Attributes:
+        source: Data source identifier.
+        name: Table name identifier.
+        sex: Sex identifier for the dataset.
+        measurement_type: Measurement alias.
+        x_var_type: Axis type string.
+        x_var_unit: Axis unit string.
+        points: LMS datapoints.
+    """
     source: DataSourceType  # who, intergrowth, cdc, etc.
     name: TableNameType  # child_growth, growth, newborn, etc.
     sex: DataSexType  # M, F, U
@@ -103,6 +131,11 @@ class RawTable:
     points: list[DataPoint]
 
     def __post_init__(self):
+        """Validate basic types for required attributes.
+
+        Raises:
+            ValueError: If required fields are invalid.
+        """
         if not all(
             isinstance(value, str)
             for value in {
@@ -122,11 +155,10 @@ class RawTable:
             raise ValueError(f"Invalid sex: {self.sex}")
 
     def to_dict(self) -> dict[str, str | list]:
-        """
-        Converts the RawTable instance to a dictionary.
+        """Serialize the raw table for downstream transforms.
 
         Returns:
-            dict: A dictionary representation of the RawTable.
+            A dictionary representation of the raw table.
         """
         return {
             "source": self.source,
@@ -140,14 +172,13 @@ class RawTable:
 
     @classmethod
     def from_csv(cls, csv_path: str | Path) -> "RawTable":
-        """
-        Create a RawTable instance from a CSV file.
+        """Create a RawTable from a CSV file on disk.
 
         Args:
-            csv_path (str | Path): Path to the CSV file.
+            csv_path: Path to the CSV file.
 
         Returns:
-            RawTable: An instance of RawTable.
+            Parsed RawTable instance.
         """
         df = pd.read_csv(csv_path, dtype=str, encoding="utf-8")
 
@@ -188,14 +219,13 @@ class RawTable:
 
     @classmethod
     def from_xlsx(cls, xlsx_path: str | Path) -> "RawTable":
-        """
-        Create a RawTable instance from an XLSX file.
+        """Create a RawTable from an XLSX file by converting to CSV.
 
         Args:
-            xlsx_path (str | Path): Path to the XLSX file.
+            xlsx_path: Path to the XLSX file.
 
         Returns:
-            RawTable: An instance of RawTable.
+            Parsed RawTable instance.
         """
 
         df = pd.read_excel(xlsx_path, sheet_name=None)
@@ -221,6 +251,14 @@ class RawTable:
 
     @staticmethod
     def _process_path(filepath: str | Path) -> dict[str, str]:
+        """Extract metadata from a raw filename.
+
+        Args:
+            filepath: Path to the raw file.
+
+        Returns:
+            Dictionary with parsed metadata.
+        """
         raw_kwargs = {}
         filename = Path(filepath).stem
 
@@ -306,6 +344,19 @@ class RawTable:
         x_var_type: str,
         **kwargs,
     ):
+        """Build kwargs for weight-for-length/height tables.
+
+        Args:
+            source: Data source identifier.
+            table_name: Table name identifier.
+            sex: Sex identifier.
+            measurement_type: Measurement alias.
+            x_var_type: Axis type.
+            **kwargs: Ignored extra fields.
+
+        Returns:
+            Dictionary of normalized kwargs.
+        """
         # Resolve measurement alias if needed
         resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)
         if resolved_measurement:
@@ -329,6 +380,19 @@ class RawTable:
         x_var_type: str,
         **kwargs,
     ):
+        """Build kwargs for velocity tables.
+
+        Args:
+            source: Data source identifier.
+            table_name: Table name identifier.
+            sex: Sex identifier.
+            measurement_type: Measurement alias.
+            x_var_type: Axis type.
+            **kwargs: Ignored extra fields.
+
+        Returns:
+            Dictionary of normalized kwargs.
+        """
         # Handle velocity measurement type resolution
         if measurement_type in {"length", "height", "stature"}:
             measurement_type = "stature_velocity"
@@ -356,6 +420,20 @@ class RawTable:
         x_var_type: str,
         **kwargs,
     ):
+        """Build kwargs for standard measurement-by-age tables.
+
+        Args:
+            x_column: Axis column name.
+            source: Data source identifier.
+            table_name: Table name identifier.
+            sex: Sex identifier.
+            measurement_type: Measurement alias.
+            x_var_type: Axis type.
+            **kwargs: Ignored extra fields.
+
+        Returns:
+            Dictionary of normalized kwargs.
+        """
         if measurement_type in {"weight_stature", "weight_stature_ratio"}:
             measurement_type = "weight_stature_ratio"
 
@@ -375,6 +453,14 @@ class RawTable:
 
     @staticmethod
     def _get_points(data: pd.DataFrame):
+        """Convert a DataFrame into a list of DataPoint objects.
+
+        Args:
+            data: Raw DataFrame with LMS/SD columns.
+
+        Returns:
+            List of DataPoint instances.
+        """
         data_points = []
 
         for _, row in data.iterrows():
@@ -385,6 +471,14 @@ class RawTable:
 
     @staticmethod
     def _parse_interval(part: str) -> int:
+        """Parse interval text into days.
+
+        Args:
+            part: Interval string value.
+
+        Returns:
+            Interval value in days.
+        """
         if part.endswith("wks"):
             return int(round(float(part.replace("wks", "").strip()) * WEEK))
 

@@ -1,3 +1,5 @@
+"""Configuration types and lookup helpers for growth standards."""
+
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal, cast
@@ -6,6 +8,7 @@ from pygrowthstandards.utils.constants import WEEK, YEAR
 
 
 class MeasurementType(StrEnum):
+    """Canonical measurement identifiers used across the library."""
     STATURE = "stature"
     WEIGHT = "weight"
     WEIGHT_STATURE_RATIO = "weight_stature_ratio"
@@ -17,6 +20,7 @@ class MeasurementType(StrEnum):
 
 
 class AgeGroup(StrEnum):
+    """Supported age group identifiers."""
     ZERO_ONE = "0-1"
     ZERO_TWO = "0-2"
     TWO_FIVE = "2-5"
@@ -129,7 +133,14 @@ TableNameType = Literal["growth", "child_growth", "postnatal_growth_preterm", "v
 
 @dataclass(frozen=True)
 class AgeGroupConfig:
-    """Configuration for age groups with limits, x_type, and table name."""
+    """Configuration for an age group slice of reference data.
+
+    Attributes:
+        name: Canonical age group key.
+        limits: Inclusive min/max bounds in days.
+        x_type: Axis type associated with the group.
+        table_name: Reference table name.
+    """
 
     name: AgeGroupType
     limits: tuple[int, int]
@@ -137,18 +148,40 @@ class AgeGroupConfig:
     table_name: TableNameType
 
     def contains_age(self, age: int) -> bool:
+        """Check whether the age is within the configured limits.
+
+        Args:
+            age: Age in days.
+
+        Returns:
+            True when the age is within the inclusive limits.
+        """
         return self.limits[0] <= age <= self.limits[1]
 
 
 @dataclass(frozen=True)
 class MeasurementConfig:
-    """Configuration for measurements with units and aliases."""
+    """Configuration for a measurement, including units and aliases.
+
+    Attributes:
+        name: Canonical measurement key.
+        unit: Display unit string.
+        aliases: Alias set accepted for this measurement.
+    """
 
     name: MeasurementAliasType
     unit: str
     aliases: frozenset[str] = frozenset()
 
     def matches_alias(self, alias: str) -> bool:
+        """Check whether a string matches a configured alias or unit.
+
+        Args:
+            alias: Candidate alias or unit.
+
+        Returns:
+            True when the alias matches.
+        """
         return alias.lower() in self.aliases or alias == self.unit
 
 
@@ -185,11 +218,18 @@ MEASUREMENT_CONFIG: dict[MeasurementType, MeasurementConfig] = {
 
 
 class ChoiceValidator:
-    """Utility class for validating and resolving choices."""
+    """Helpers for validating and resolving configuration choices."""
 
     @staticmethod
     def resolve_measurement_alias(alias: str) -> MeasurementAliasType | None:
-        """Resolve measurement alias to canonical name."""
+        """Resolve a measurement alias into its canonical name.
+
+        Args:
+            alias: Input alias or unit.
+
+        Returns:
+            Canonical measurement name if found, otherwise None.
+        """
         alias_lower = alias.lower()
         for config in MEASUREMENT_CONFIG.values():
             # compare against the enum value (string) and configured aliases/units
@@ -199,7 +239,15 @@ class ChoiceValidator:
 
     @staticmethod
     def get_age_group_for_age(age: int, x_type: DataXTypeType) -> AgeGroupType | None:
-        """Find the appropriate age group for given age and x_type."""
+        """Return the matching age group for the given age and x_type.
+
+        Args:
+            age: Age in days.
+            x_type: Axis type to match.
+
+        Returns:
+            Age group key if found, otherwise None.
+        """
         for config in AGE_GROUP_CONFIG.values():
             if config.x_type == x_type and config.contains_age(age):
                 return config.name
@@ -207,12 +255,30 @@ class ChoiceValidator:
 
     @staticmethod
     def validate_choice(value: str, choices: frozenset[str]) -> bool:
-        """Validate if value is in choices."""
+        """Check whether a value is in the allowed choices.
+
+        Args:
+            value: Candidate value to validate.
+            choices: Set of allowed values.
+
+        Returns:
+            True when the value is allowed.
+        """
         return value in choices
 
 
 def resolve_x_var_type(x_type: str) -> DataXTypeType:
-    """Resolve x_var_type aliases to canonical values."""
+    """Normalize x_var_type aliases to canonical values.
+
+    Args:
+        x_type: Input axis type string.
+
+    Returns:
+        Canonical axis type.
+
+    Raises:
+        ValueError: If the axis type is not supported.
+    """
     normalized = x_type.lower().replace(" ", "_")
     if normalized == "chronological_age":
         return "age"
@@ -225,7 +291,18 @@ def resolve_x_var_type(x_type: str) -> DataXTypeType:
 
 
 def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
-    """Get age group with error handling."""
+    """Return the configured age group for the given age and x_type.
+
+    Args:
+        age: Age in days.
+        x_type: Axis type to match.
+
+    Returns:
+        The resolved age group.
+
+    Raises:
+        ValueError: If no matching age group exists.
+    """
     result = ChoiceValidator.get_age_group_for_age(age, x_type)
     if result is None:
         raise ValueError(f"No age group found for age {age} with x_type {x_type}")

@@ -1,3 +1,5 @@
+"""Object-oriented API entry points for growth calculations."""
+
 from pygrowthstandards.oop.builders import PatientBuilder
 from pygrowthstandards.oop.calculator import Calculator
 from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup

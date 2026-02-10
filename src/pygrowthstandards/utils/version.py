@@ -1,3 +1,5 @@
+"""Helpers for resolving package version information."""
+
 from __future__ import annotations
 
 import contextlib
@@ -9,8 +11,8 @@ from pathlib import Path
 def get_package_version() -> str:
     """Return the package version with a repo fallback.
 
-    Uses import metadata when installed; falls back to pyproject.toml
-    when running from a source checkout.
+    Returns:
+        Package version string.
     """
     with contextlib.suppress(PackageNotFoundError):
         return version("pygrowthstandards")

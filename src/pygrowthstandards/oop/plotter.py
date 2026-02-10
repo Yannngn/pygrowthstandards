@@ -1,3 +1,5 @@
+"""Plotting utilities for the OOP API."""
+
 from typing import cast
 
 import matplotlib.pyplot as plt
@@ -20,14 +22,30 @@ from pygrowthstandards.utils.plot.xticks import set_xticks_by_range
 
 
 class Plotter:
+    """Create reference and patient plots for growth data."""
     def __init__(self, patient: Patient):
+        """Initialize the plotter with a patient instance.
+
+        Args:
+            patient: Patient containing measurements.
+        """
         self.patient = patient
         self.setup()
 
     def setup(self):
+        """Ensure patient calculations are up to date."""
         self.patient.calculate_all()
 
     def get_user_data(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+        """Return user measurements for a given age group and measurement.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+
+        Returns:
+            DataFrame with columns "x" and "child".
+        """
         config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
         lower_limit, upper_limit = config.limits
         x_var_type = config.x_type
@@ -52,6 +70,18 @@ class Plotter:
         return pd.DataFrame({"x": x, "child": y})
 
     def get_reference_data(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> GrowthTable:
+        """Load reference data for a given age group and measurement.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+
+        Returns:
+            GrowthTable containing reference LMS data.
+
+        Raises:
+            ValueError: If age_group is invalid or data is unavailable.
+        """
         try:
             age_group_enum = AgeGroup(age_group)
         except ValueError as exc:
@@ -74,6 +104,15 @@ class Plotter:
         return data
 
     def get_plot_data(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+        """Return combined reference and user data for plotting.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+
+        Returns:
+            DataFrame with reference curves and user data.
+        """
         user_data = self.get_user_data(age_group, measurement_type)
         reference_data = self.get_reference_data(age_group, measurement_type)
 
@@ -88,6 +127,18 @@ class Plotter:
         show: bool = False,
         output_path: str = "",
     ) -> Axes:
+        """Plot user measurements over reference curves.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+            ax: Optional Axes to draw into.
+            show: Whether to display the plot.
+            output_path: Optional file path for saving.
+
+        Returns:
+            Matplotlib Axes object.
+        """
         user_data = self.get_user_data(age_group, measurement_type)
         ax = self.reference_plot(age_group, measurement_type, ax, False, "")
 
@@ -117,6 +168,18 @@ class Plotter:
         show: bool = False,
         output_path: str = "",
     ) -> Axes:
+        """Plot only the reference curves.
+
+        Args:
+            age_group: Age group identifier.
+            measurement_type: Measurement alias.
+            ax: Optional Axes to draw into.
+            show: Whether to display the plot.
+            output_path: Optional file path for saving.
+
+        Returns:
+            Matplotlib Axes object.
+        """
         plot_data = self.get_reference_data(age_group, measurement_type).convert_z_scores_to_values()
 
         if ax is None:
