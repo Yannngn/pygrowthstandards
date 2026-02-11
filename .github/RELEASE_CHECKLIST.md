@@ -49,4 +49,4 @@ Notes & caveats
 - `semantic-release` must have permission to push commits and tags back to the repository (the default `GITHUB_TOKEN` granted to Actions is usually sufficient).
 - Ensure PyPI/TestPyPI tokens are set in repository secrets before expecting automatic publishing to succeed.
 
-Want me to also update `PUBLISHING.md` with these condensed steps or scan recent commits to see whether a bump will be triggered automatically?
+

@@ -27,7 +27,7 @@ def handle_date_input(date_input: DateInputType | None) -> datetime.datetime:
             - str: Parsed as ISO format (YYYY-MM-DD) or flexible format based on DATE_ORDER setting.
 
     Returns:
-        Parsed datetime at midnight (00:00:00).
+        Parsed datetime or date as datetime at midnight (00:00:00).
 
     Raises:
         ValueError: If a string cannot be parsed as a date, or if ISO-only mode is enabled

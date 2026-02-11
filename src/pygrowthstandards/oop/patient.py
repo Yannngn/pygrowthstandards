@@ -50,12 +50,17 @@ class PatientBase:
 
         Returns:
             Age as a timedelta.
+
+        Raises:
+            ValueError: If patient is not born or date is before birthday.
         """
-        assert self.birthday_date is not None, "Patient must be born to calculate age."
+        if self.birthday_date is None:
+            raise ValueError("Patient must be born to calculate age.")
 
         dt = handle_date_input(date)
 
-        assert dt >= self._birthday_date, "Date must be after the birthday date."
+        if dt < self._birthday_date:
+            raise ValueError("Date must be on or after the birthday date.")
 
         return dt - self._birthday_date
 
@@ -213,13 +218,15 @@ class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBas
 
         Args:
             date: Measurement date. Defaults to now.
-            table_name: Reference table name to associate.
             weight: Weight in kg.
             stature: Stature in cm.
             head_circumference: Head circumference in cm.
 
         Returns:
             Self for chaining.
+
+        Raises:
+            ValueError: If no measurement is provided or measurements map to different tables.
         """
         dt = handle_date_input(date)
 
@@ -384,4 +391,5 @@ class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBas
 
             results_list.append(result_dict)
 
+        return str_dataframe(results=results_list, date_list=date_list, age_list=age_list)
         return str_dataframe(results=results_list, date_list=date_list, age_list=age_list)

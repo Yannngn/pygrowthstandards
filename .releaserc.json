@@ -32,7 +32,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "python -c \"import re; p='pyproject.toml'; t=open(p).read(); open(p,'w').write(re.sub(r'version = \\\"[^\\\"]*\\\"', 'version = \\\"${nextRelease.version}\\\"', t, count=1))\" && uv run python -m pygrowthstandards.data.main"
+        "prepareCmd": "uv run python -c \"import re; p='pyproject.toml'; t=open(p).read(); open(p,'w').write(re.sub(r'version = \\\"[^\\\"]*\\\"', 'version = \\\"${nextRelease.version}\\\"', t, count=1))\" && uv run python -m pygrowthstandards.data.main"
       }
     ],
     [

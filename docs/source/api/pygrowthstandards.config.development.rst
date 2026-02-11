@@ -1,5 +1,5 @@
 pygrowthstandards.config.development
-====================================
+=====================================
 
 .. automodule:: pygrowthstandards.config.development
 

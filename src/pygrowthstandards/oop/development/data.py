@@ -17,12 +17,13 @@ class DevelopmentGoal:
     goal: DevelopmentGoalType
     date: DateInputType = field(default_factory=dt_datetime.now)
 
-    status: DevelopmentStatusType = field(init=False)
+    status: DevelopmentStatusType | None = field(init=False, default=None)
 
     def __post_init__(self):
         # Validate that the development goal exists in the configuration
 
         self.date = handle_date_input(self.date)
+        self.status = None
 
         if self.goal not in DEVELOPMENT_GOALS:
             raise ValueError(f"Invalid development goal: {self.goal}")
@@ -39,17 +40,19 @@ class DevelopmentGoal:
         ):  # TODO: review threshold for preterm classification on the development context
             # (weeks premature)
             age -= 40 * WEEK - gestational_age  # age = chronological age - (40 weeks - gestational age)
+            age = max(0, age)  # Corrected age cannot be negative
 
         child_age_months = age / MONTH
 
         # TODO: review thresholds for "slightly delayed" and "delayed" status // Using Brazil MS guidelines
         if child_age_months <= goal_config.max_age_months:
-            return "on_time"
+            self.status = "achieved"
+        elif child_age_months <= goal_config.max_age_months + 1:
+            self.status = "slightly_delayed"
+        else:
+            self.status = "delayed"
 
-        if child_age_months <= goal_config.max_age_months + 1:
-            return "slightly_delayed"
-
-        return "delayed"
+        return self.status
 
 
 # FIXME: Keep it like that or as a list of str
@@ -61,9 +64,11 @@ class DevelopmentGoalGroup:
     def __post_init__(self):
         self.date = handle_date_input(self.date)
 
-    def validate(self, age: int, gestational_age: int | None = None):
+    def validate(self, age: int, gestational_age: int | None = None) -> dict[DevelopmentGoalType, DevelopmentStatusType]:
+        result = {}
         for dev in self.goals:
-            dev.validate(age, gestational_age)
+            result[dev.goal] = dev.validate(age, gestational_age)
+        return result
 
     @classmethod
     def from_development_list(cls, development_list: list[DevelopmentGoalType], date: DateInputType | None = None) -> "DevelopmentGoalGroup":

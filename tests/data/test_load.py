@@ -85,13 +85,18 @@ def test_convert_z_scores_to_values():
     assert "y" not in result_df.columns
 
 
-def test_add_child_data_and_merge():
+def test_add_patient_data_and_merge():
     df = make_dummy_df()
     gt = GrowthTable.from_data(data=df, keys=KEYS)
-    # Prepare child data
-    child_df = pd.DataFrame({"x": [3], "child": [50.0]})
-    gt.add_child_data(child_df)
-    # merge should include new x
-    assert 3 in gt.x.tolist()
-    # y attribute set
-    assert hasattr(gt, "y")
+    # Prepare patient data
+    patient_df = pd.DataFrame({"x": [3], "patient": [50.0]})
+    gt.add_patient_data(patient_df)
+    # patient data should be stored separately
+    assert 3 in gt._patient_x.tolist()
+    assert 50.0 in gt._patient_y.tolist()
+    # reference x should not be modified
+    assert 3 not in gt.x.tolist()
+    # convert_z_scores_to_values should include patient data
+    result = gt.convert_z_scores_to_values()
+    assert 3 in result["x"].tolist()
+    assert 50.0 in result["y"].tolist()

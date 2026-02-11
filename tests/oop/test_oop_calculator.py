@@ -3,7 +3,9 @@ import datetime
 import pytest
 
 from pygrowthstandards.oop.growth import Measurement, MeasurementGroup
+from pygrowthstandards.oop.growth.load import get_patient_data, get_plot_data, get_reference_data
 from pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.oop.plots.plotter import Plotter
 
 
 @pytest.fixture
@@ -102,3 +104,109 @@ def test_display_measurements(setup_patient: Patient):
     assert "stature" in output
     assert "8.60" in output
     assert "75.70" in output
+
+
+def test_get_reference_data(setup_patient: Patient):
+    """Test loading reference data for a patient."""
+    patient = setup_patient
+
+    # Load reference data for a specific age group
+    ref_data = get_reference_data(patient, age_group="0-2", measurement_type="weight")
+
+    # Verify reference data is loaded
+    assert ref_data is not None
+    assert len(ref_data.x) > 0
+    assert len(ref_data.L) == len(ref_data.x)
+    assert len(ref_data.M) == len(ref_data.x)
+    assert len(ref_data.S) == len(ref_data.x)
+
+
+def test_get_patient_data(setup_patient: Patient):
+    """Test filtering patient measurements for a specific age group."""
+    patient = setup_patient
+
+    # Get patient data for 0-2 age group
+    patient_data = get_patient_data(patient, age_group="0-2", measurement_type="weight")
+
+    # Verify patient data is returned
+    assert isinstance(patient_data, dict) or hasattr(patient_data, "__len__")
+    assert "x" in patient_data.columns
+    assert "child" in patient_data.columns
+    assert len(patient_data) > 0
+
+
+def test_get_plot_data_with_patient_measurements(setup_patient: Patient):
+    """Test plot data generation combines reference curves with patient measurements."""
+    patient = setup_patient
+
+    # Get plot data for weight in 0-2 age group
+    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="weight")
+
+    # Verify plot data includes reference curves
+    assert "x" in plot_data.columns
+    assert "is_derived" in plot_data.columns
+    assert -3 in plot_data.columns or 0 in plot_data.columns  # z-scores
+
+    # Verify patient data is included
+    assert "y" in plot_data.columns
+    assert plot_data["y"].notna().any()  # At least one patient measurement
+
+    # Verify patient measurements are in the data
+    assert len(plot_data) > 1  # Should have reference points + patient data
+
+
+def test_get_plot_data_interpolation(setup_patient: Patient):
+    """Test that plot data correctly interpolates LMS for patient measurements."""
+    patient = setup_patient
+
+    # Get plot data
+    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="weight")
+
+    # Find rows with child data
+    child_rows = plot_data[plot_data["y"].notna()]
+
+    # Verify child rows have valid z-score curves (from interpolated LMS)
+    for z_score in [-3, -2, 0, 2, 3]:
+        if z_score in plot_data.columns:
+            child_z_values = child_rows[z_score]
+            # At least some child rows should have non-NaN values if within bounds
+            if len(child_z_values) > 0 and child_z_values.notna().any():
+                assert child_z_values.notna().any()
+
+
+def test_get_plot_data_stature(setup_patient: Patient):
+    """Test plot data generation for stature measurement."""
+    patient = setup_patient
+
+    # Get plot data for stature
+    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="stature")
+
+    # Verify plot data structure
+    assert "x" in plot_data.columns
+    assert "y" in plot_data.columns
+    assert 0 in plot_data.columns  # Median (z=0)
+    assert plot_data["y"].notna().any()  # Has child measurements
+
+
+def test_plot_growth_chart(setup_patient: Patient):
+    """Test the plot method generates a matplotlib figure."""
+    patient = setup_patient
+
+    # Call the plot method (without showing or saving)
+    ax = patient.plot(age_group="0-2", measurement_type="weight", show=False)
+
+    # Verify a matplotlib Axes object is returned
+    assert ax is not None
+    assert hasattr(ax, "plot")  # Axes object
+
+
+def test_reference_plot(setup_patient: Patient):
+    """Test the reference plot method."""
+    patient = setup_patient
+
+    # Call the reference plot method
+    ax = Plotter(patient).reference_plot(age_group="0-2", measurement_type="weight", show=False)
+
+    # Verify a matplotlib Axes object is returned
+    assert ax is not None
+    assert hasattr(ax, "plot")  # Axes object

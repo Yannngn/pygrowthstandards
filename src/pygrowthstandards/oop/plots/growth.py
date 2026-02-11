@@ -57,13 +57,11 @@ class GrowthPlotterMixin:
         config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
         set_xticks_by_range(ax, *config.limits)
 
-        if show:
-            plt.show()
-
         if output_path:
             plt.savefig(output_path)
 
-        return ax
+        if show:
+            plt.show()
 
     def reference_plot(
         self,

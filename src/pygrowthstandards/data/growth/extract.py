@@ -74,7 +74,7 @@ class DataPoint:
         """
         if "l" in data and "m" in data and "s" in data:
             return cls(
-                x=float(data["x"]),
+                x=data["x"],
                 L=float(data["l"]),
                 M=float(data["m"]),
                 S=float(data["s"]),
@@ -203,6 +203,8 @@ class RawTable:
             interval_min_list, interval_max_list = [], []
             for value in df[x_column]:
                 age_parts: list[str] = str(value).split("-")
+                if len(age_parts) != 2:
+                    raise ValueError(f"Invalid interval format: {value}. Expected 'min-max' format.")
                 min_part, max_part = age_parts[0].strip(), age_parts[1].strip()
 
                 interval_min_list.append(cls._parse_interval(min_part))
@@ -269,8 +271,9 @@ class RawTable:
                 raise ValueError(f"Filename does not contain expected parts separated by '-': {filename}")
 
             if len(parts) > 4:
-                extra = parts.pop()  # remove extra part if exists
-                logging.warning(f"Filename has more than 4 parts, ignoring extra part: {extra} in {filename}")
+                extras = parts[4:]
+                parts = parts[:4]
+                logging.warning(f"Filename has more than 4 parts, ignoring extra parts: {extras} in {filename}")
 
             return parts
 
@@ -279,8 +282,12 @@ class RawTable:
         def handle_sex() -> str:
             # Handling sex with validation
             sex = parts.pop().upper()
-
+            if not parts:
+                raise ValueError(f"Filename missing sex component: {filename}")
+            
             if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):  # 1mon and 2mon from velocity datasets
+                if not parts:
+                    raise ValueError(f"Invalid sex found in filename and no fallback available: {sex}")
                 sex = parts.pop().upper()
 
             if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):

@@ -52,7 +52,7 @@ def get_patient_data(patient: Patient, age_group: AgeGroupType, measurement_type
         measurement_type: Measurement alias.
 
     Returns:
-        DataFrame with columns "x" and "child".
+        DataFrame with columns "x" and "patient".
     """
     config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
     lower_limit, upper_limit = config.limits
@@ -75,7 +75,7 @@ def get_patient_data(patient: Patient, age_group: AgeGroupType, measurement_type
     x = [item[0] for item in filtered_measurements]
     y = [item[1] for item in filtered_measurements]
 
-    return pd.DataFrame({"x": x, "child": y})
+    return pd.DataFrame({"x": x, "patient": y})
 
 
 # TODO: Refactor to share call for growth and development plots

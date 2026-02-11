@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-# [0.2.0](https://github.com/Yannngn/pygrowthstandards/compare/v0.1.3...v0.2.0) (2026-02-09)
+## [0.2.0](https://github.com/Yannngn/pygrowthstandards/compare/v0.1.3...v0.2.0) (2026-02-09)
 
 
 ### Features
@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2025-12-02
 
 ### Notes
-- Published from a branch that was not merged into `main` at the time; this release is superseded by the next `main`-based release (v0.1.4+).
+- Published from a branch that was not merged into `main` at the time; this release is superseded by the next `main`-based release (v0.2.0+).
 
 ### Changed
 - Simplified imports

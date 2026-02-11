@@ -22,7 +22,7 @@ from pygrowthstandards.config.growth import (
 )
 from pygrowthstandards.utils.constants import WEEK, YEAR
 from pygrowthstandards.utils.errors import InvalidChoicesError
-from pygrowthstandards.utils.stats import numpy_calculate_value_for_z_score
+from pygrowthstandards.utils.stats import interpolate_lms, numpy_calculate_value_for_z_score
 
 
 @dataclass
@@ -106,7 +106,7 @@ class KeyObject:
         return "U"
 
     @staticmethod
-    def _resolve_x_and_type(age_days: int | None, gestational_age: int | None) -> tuple[DataXTypeType, float]:
+    def _resolve_x_and_type(age_days: int | None, gestational_age: int | None) -> tuple[DataXTypeType, int | float]:
         """Resolve the x axis type and value from age inputs.
 
         Args:
@@ -299,7 +299,7 @@ class KeyObject:
 
 
 # TODO: Age Group == array of strs?
-# TODO: make another layer of abstraction for the growth table and separate standards and child data
+# TODO: make another layer of abstraction for the growth table and separate standards and patient data
 @dataclass
 class GrowthTable:
     """Structured LMS arrays for a single measurement and cohort.
@@ -331,6 +331,8 @@ class GrowthTable:
     is_derived: np.ndarray
 
     y: np.ndarray = field(init=False, repr=False)
+    _patient_x: np.ndarray = field(init=False, repr=False, default_factory=lambda: np.array([]))
+    _patient_y: np.ndarray = field(init=False, repr=False, default_factory=lambda: np.array([]))
 
     @staticmethod
     def filter_by_keys(data: pd.DataFrame, keys: KeyObject) -> pd.DataFrame:
@@ -411,11 +413,12 @@ class GrowthTable:
             z_scores: Z-scores to compute. Defaults to [-3, -2, 0, 2, 3].
 
         Returns:
-            DataFrame of x values and computed curves.
+            DataFrame of x values and computed curves. Includes reference curves and patient data if available.
         """
         if not z_scores:
             z_scores = [-3, -2, 0, 2, 3]
 
+        # Build reference data using original arrays
         data = pd.DataFrame(
             {
                 "x": self.x,
@@ -424,35 +427,55 @@ class GrowthTable:
             }
         )
 
+        # Add patient data row if available
+        if len(self._patient_x) > 0:
+            patient_rows = []
+            for patient_x, patient_y in zip(self._patient_x, self._patient_y, strict=False):
+                # Try to interpolate L, M, S for the patient x value
+                row = {
+                    "x": patient_x,
+                    "is_derived": False,
+                    "y": patient_y,
+                }
+
+                try:
+                    results = interpolate_lms(patient_x, self.x, self.L, self.M, self.S)
+                    # Add computed curve values for this patient point
+                    for z in z_scores:
+                        row[str(z)] = numpy_calculate_value_for_z_score(z, *map(lambda v: np.array(v), results))
+                except ValueError:
+                    # If patient x is out of bounds, still include the point but with NaN for curves
+                    for z in z_scores:
+                        row[str(z)] = np.nan
+
+                patient_rows.append(row)
+
+            # Append patient data rows to the dataframe
+            if patient_rows:
+                patient_df = pd.DataFrame(patient_rows)
+                # Ensure column order matches when concatenating
+                data = pd.concat([data, patient_df], ignore_index=True, sort=False)
+
         if hasattr(self, "y"):
             data["y"] = self.y
 
         return data
 
-    def add_child_data(self, child_data: pd.DataFrame) -> None:
-        """Merge child observations into the table for plotting.
+    def add_patient_data(self, patient_data: pd.DataFrame) -> None:
+        """Store patient observations separately for use in conversions and plotting.
 
         Args:
-            child_data: DataFrame with columns 'x' and 'child'.
+            patient_data: DataFrame with columns 'x' and 'patient'.
 
         Raises:
             ValueError: If the data is missing required columns.
         """
-        if not isinstance(child_data, pd.DataFrame) or not all(col in child_data.columns for col in ["x", "child"]):
-            raise ValueError("child_data must be a DataFrame with 'x' and 'child' columns.")
+        if not isinstance(patient_data, pd.DataFrame) or not all(col in patient_data.columns for col in ["x", "patient"]):
+            raise ValueError("patient_data must be a DataFrame with 'x' and 'patient' columns.")
 
-        # Add new x values from child_data to self.x
-        x = child_data["x"].to_numpy()
-        y = child_data["child"].to_numpy()
-
-        self.x = np.unique(np.sort(np.concatenate([self.x, x])))
-        self.y = np.full_like(self.x, fill_value=None, dtype=object)
-
-        x_indices = {val: idx for idx, val in enumerate(self.x)}
-        for x_val, y_val in zip(x, y, strict=True):
-            idx = x_indices.get(x_val)
-            if idx is not None:
-                self.y[idx] = y_val
+        # Store patient x and y values separately without modifying reference arrays
+        self._patient_x = patient_data["x"].to_numpy()
+        self._patient_y = patient_data["patient"].to_numpy()
 
     def cut_data(self, lower_limit: float, upper_limit: float) -> None:
         """Trim the table arrays to the provided x range.
@@ -467,6 +490,14 @@ class GrowthTable:
         self.M = self.M[mask]
         self.S = self.S[mask]
         self.is_derived = self.is_derived[mask]
+        if hasattr(self, "y"):
+            self.y = self.y[mask]
+
+        # Filter patient data to the same x range
+        if len(self._patient_x) > 0:
+            patient_mask = (self._patient_x >= lower_limit) & (self._patient_x <= upper_limit)
+            self._patient_x = self._patient_x[patient_mask]
+            self._patient_y = self._patient_y[patient_mask]
 
 
 def load_reference():

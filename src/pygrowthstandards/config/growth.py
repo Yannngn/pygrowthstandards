@@ -184,7 +184,7 @@ class MeasurementConfig:
         Returns:
             True when the alias matches.
         """
-        return alias.lower() in self.aliases or alias == self.unit
+        return alias.lower() in self.aliases or alias.lower() == self.unit.lower()
 
 
 # Configuration mappings
