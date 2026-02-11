@@ -2,21 +2,26 @@
 
 from typing import Self
 
+from pygrowthstandards.config.development import DevelopmentGoalType
 from pygrowthstandards.config.growth import DataSexType
-from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.oop.development.data import DevelopmentGoalGroup
+from pygrowthstandards.oop.growth import MeasurementGroup
 from pygrowthstandards.oop.patient import Patient
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 
 
+# Consider removing this builder in favor of direct Fluent Patient construction
 class PatientBuilder:
     """Builder class for creating Patient instances with a fluent interface."""
 
     patient: Patient
     measurements: list[MeasurementGroup]
+    development_goals: list[DevelopmentGoalGroup]
 
     def __init__(self):
         """Initialize an empty builder state."""
         self.measurements = []
+        self.development_goals = []
 
     def build(self) -> Self:
         """Create a Patient from the current builder state.
@@ -98,7 +103,7 @@ class PatientBuilder:
 
     def measured_at(
         self,
-        date: DateInputType,
+        date: DateInputType | None = None,
         weight: float | None = None,
         stature: float | None = None,
         head_circumference: float | None = None,
@@ -124,4 +129,31 @@ class PatientBuilder:
         )
 
         self.measurements.append(measurement_group)
+        return self
+
+    # TODO: functions for individual measurements (e.g. weight, stature) for better user experience
+
+    # FIXME: This function has poor user experience due to the need to specify/know the development goal slug
+    def assessed_at(
+        self,
+        *development_goals: DevelopmentGoalType,
+        assessment_date: DateInputType | None = None,
+    ) -> Self:
+        """Add a development goal group recorded on a specific date.
+
+        Args:
+            development_goals: Development goals that were assessed.
+            assessment_date: Assessment date.
+
+        Returns:
+            Self for chaining.
+        """
+        assessment_date = handle_date_input(assessment_date)
+
+        development_group = DevelopmentGoalGroup.from_achieved_goals(
+            *development_goals,
+            date=assessment_date,
+        )
+
+        self.development_goals.append(development_group)
         return self

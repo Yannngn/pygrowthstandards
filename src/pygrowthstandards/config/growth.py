@@ -311,6 +311,54 @@ def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
     return result
 
 
+def infer_table_name(
+    measurement: MeasurementAliasType,
+    *,
+    age_days: int | None = None,
+    gestational_age: int | None = None,
+) -> TableNameType:
+    """Infer the reference table name from measurement and age inputs.
+
+    Args:
+        measurement: Measurement alias.
+        age_days: Chronological age in days.
+        gestational_age: Gestational age in days.
+
+    Returns:
+        Table name identifier.
+
+    Raises:
+        ValueError: If the inputs are inconsistent with available data.
+    """
+    if age_days is not None:
+        if gestational_age is not None and gestational_age < 28 * WEEK:
+            post_menstrual_age = age_days + gestational_age
+            if post_menstrual_age <= 64 * WEEK:
+                return "postnatal_growth_preterm"
+        x_var_type = "age"
+    elif gestational_age is not None:
+        x_var_type = "gestational_age"
+    else:
+        raise ValueError("Either age_days or gestational_age must be provided.")
+
+    if x_var_type == "gestational_age":
+        if measurement in ["body_mass_index"]:
+            raise ValueError(f"No reference for {measurement} at birth or fetal age.")
+        if gestational_age is not None:
+            return "newborn" if gestational_age > 28 * WEEK else "very_preterm_newborn"
+
+    if age_days is None:
+        raise ValueError("age_days is required for age tables.")
+
+    if measurement in ["head_circumference", "weight_stature_ratio"] and age_days > 5 * YEAR:
+        raise ValueError(f"No reference for {measurement} after 5 years.")
+
+    if measurement in ["weight"] and age_days > 10 * YEAR:
+        raise ValueError(f"No reference for {measurement} after 10 years.")
+
+    return "growth" if age_days > 5 * YEAR else "child_growth"
+
+
 # Backward compatibility - keep existing variables
 DATA_SEX_CHOICES = frozenset(["M", "F", "U"])
 AGE_GROUP_CHOICES = frozenset([e.value for e in AgeGroup])

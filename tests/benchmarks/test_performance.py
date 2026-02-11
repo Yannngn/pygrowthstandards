@@ -1,8 +1,8 @@
 import pytest
 
 from pygrowthstandards import functional as F
-from pygrowthstandards.oop.calculator import Calculator
-from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.oop.growth.calculator import Calculator
+from pygrowthstandards.oop.growth import MeasurementGroup
 
 # Benchmark the Functional Calculator for a single measurement
 

@@ -25,7 +25,6 @@ from pygrowthstandards.utils.errors import InvalidChoicesError
 from pygrowthstandards.utils.stats import numpy_calculate_value_for_z_score
 
 
-# FIXME: Move lower
 @dataclass
 class KeyObject:
     """Normalized lookup keys for reference data selection.

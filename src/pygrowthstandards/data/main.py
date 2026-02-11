@@ -3,8 +3,8 @@
 import shutil
 from pathlib import Path
 
-from pygrowthstandards.data.extract import RawTable
-from pygrowthstandards.data.transform import GrowthData
+from pygrowthstandards.data.growth.extract import RawTable
+from pygrowthstandards.data.growth.transform import GrowthData
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 RAW_ROOT = _PROJECT_ROOT / "data" / "raw"

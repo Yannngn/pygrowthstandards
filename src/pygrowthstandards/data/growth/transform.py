@@ -12,7 +12,7 @@ from pygrowthstandards.config.growth import (
     AgeGroupType,
     resolve_x_var_type,
 )
-from pygrowthstandards.data.extract import RawTable
+from pygrowthstandards.data.growth.extract import RawTable
 from pygrowthstandards.utils.constants import MONTH, WEEK, YEAR
 from pygrowthstandards.utils.version import get_package_version
 

@@ -14,19 +14,37 @@ DateInputType: TypeAlias = DateType | str
 DATE_ORDER = "DMY"  # one of: "DMY", "MDY", "ISO"
 
 
-def handle_date_input(date_input: DateInputType) -> datetime.datetime:
+def handle_date_input(date_input: DateInputType | None) -> datetime.datetime:
     """Normalize a date input to a midnight datetime.
 
+    Accepts multiple input formats and normalizes them to a datetime object at midnight.
+    Supports flexible date string parsing with configurable day/month ordering via DATE_ORDER.
+
     Args:
-        date_input: Date input as datetime/date or a string.
+        date_input: Date input as datetime, date, or string. If None, returns current datetime.
+            - datetime.datetime: Returned as-is.
+            - datetime.date: Converted to datetime at midnight.
+            - str: Parsed as ISO format (YYYY-MM-DD) or flexible format based on DATE_ORDER setting.
 
     Returns:
-        Parsed datetime at midnight.
+        Parsed datetime at midnight (00:00:00).
 
     Raises:
-        ValueError: If a string cannot be parsed as a date.
-        TypeError: If an unsupported type is provided.
+        ValueError: If a string cannot be parsed as a date, or if ISO-only mode is enabled
+            and the string is not in ISO format.
+        TypeError: If an unsupported type is provided (not datetime, date, or str).
+
+    Note:
+        - When date_input is None, returns the current datetime.
+        - String parsing respects the DATE_ORDER configuration:
+          - "ISO": Only accepts YYYY-MM-DD format.
+          - "DMY": Uses dayfirst=True for ambiguous dates.
+          - Other values: Use dayfirst=False for ambiguous dates.
     """
+
+    if date_input is None:
+        return datetime.datetime.now()
+
     if isinstance(date_input, datetime.datetime):
         return date_input
 

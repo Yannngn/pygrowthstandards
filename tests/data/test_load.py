@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from pygrowthstandards.data.load import GrowthTable, KeyObject
+from pygrowthstandards.data.growth.load import GrowthTable, KeyObject
 
 KEYS = KeyObject.from_oop(
     name="child_growth",

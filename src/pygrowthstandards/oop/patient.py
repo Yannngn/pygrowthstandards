@@ -6,9 +6,10 @@ from typing import Self
 
 from matplotlib.axes import Axes
 
-from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
-from pygrowthstandards.oop.calculator import Calculator
-from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
+from pygrowthstandards.config.development import DevelopmentGoalType
+from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType, infer_table_name
+from pygrowthstandards.oop.development import DevelopmentGoal, DevelopmentGoalGroup
+from pygrowthstandards.oop.growth import Calculator, Measurement, MeasurementGroup
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 from pygrowthstandards.utils.results import str_dataframe
 
@@ -51,10 +52,8 @@ class PatientBase:
             Age as a timedelta.
         """
         assert self.birthday_date is not None, "Patient must be born to calculate age."
-        if date is not None:
-            dt = handle_date_input(date)
-        else:
-            dt = datetime.datetime.now()
+
+        dt = handle_date_input(date)
 
         assert dt >= self._birthday_date, "Date must be after the birthday date."
 
@@ -95,19 +94,6 @@ class PatientBase:
 
         raise ValueError(f"Invalid age type: {age_type}. Use 'age', 'gestational_age', or 'post_menstrual_age'.")
 
-    def _setup(self):
-        """Populate derived fields from initial inputs."""
-        self.gestational_age = datetime.timedelta(weeks=self.gestational_age_weeks, days=self.gestational_age_days)
-
-        if self.birthday_date is not None:
-            self.is_born = True
-            # FIXME: Use private attribute to handle the type checks?
-            self._birthday_date = handle_date_input(self.birthday_date)
-            self.is_very_preterm = self.gestational_age_weeks < 32
-        else:
-            self.is_born = False
-            self.is_very_preterm = False
-
     def _chronological_age_days(self, date: datetime.date | None = None) -> int | None:
         """Return chronological age in days if the patient is born.
 
@@ -120,6 +106,19 @@ class PatientBase:
         if self.birthday_date is None:
             return None
         return self.age(date).days
+
+    def _setup(self):
+        """Populate derived fields from initial inputs."""
+        self.gestational_age = datetime.timedelta(weeks=self.gestational_age_weeks, days=self.gestational_age_days)
+
+        if self.birthday_date is not None:
+            self.is_born = True
+            # FIXME: Use private attribute to handle the type checks?
+            self._birthday_date = handle_date_input(self.birthday_date)
+            self.is_very_preterm = self.gestational_age_weeks < 32
+        else:
+            self.is_born = False
+            self.is_very_preterm = False
 
 
 @dataclass
@@ -170,16 +169,42 @@ class AddMeasurementPatientMixin:
 
 
 @dataclass
-class Patient(AddMeasurementPatientMixin, PatientBase):
+class AddDevelopmentPatientMixin:
+    """Mixin that stores and updates developmental goal groups."""
+
+    development_goals: list[DevelopmentGoalGroup] = field(default_factory=list)
+
+    def add_development_goal(self, goal: DevelopmentGoal) -> Self:
+        """Add a single developmental goal to the appropriate group.
+
+        Args:
+            goal: Developmental goal to add.
+
+        Returns:
+            Self for chaining.
+        """
+        for group in self.development_goals:
+            if group.date != goal.date:
+                continue
+
+            group.goals.append(goal)
+            return self
+
+        new_group = DevelopmentGoalGroup(date=goal.date, goals=[goal])
+        self.development_goals.append(new_group)
+
+        return self
+
+
+@dataclass
+class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBase):
     """Patient model with measurement tracking and z-score calculations."""
 
     z_scores: list[MeasurementGroup] = field(default_factory=list, init=False)
 
-    # TODO: Simplify UX by calculating table_name based on birthdate and date of measurement.
     def measured_at(
         self,
         date: DateInputType | None = None,
-        table_name: TableNameType = "growth",
         weight: float | None = None,
         stature: float | None = None,
         head_circumference: float | None = None,
@@ -196,13 +221,10 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         Returns:
             Self for chaining.
         """
-        if date is not None:
-            date = handle_date_input(date)
-        else:
-            date = datetime.datetime.now()
+        dt = handle_date_input(date)
 
         for group in self.measurements:
-            if group.date != date:
+            if group.date != dt:
                 continue
 
             if weight is not None:
@@ -215,14 +237,59 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
             group._setup()
             return self
 
+        measurement_types: list[MeasurementAliasType] = []
+        if weight is not None:
+            measurement_types.append("weight")
+        if stature is not None:
+            measurement_types.append("stature")
+        if head_circumference is not None:
+            measurement_types.append("head_circumference")
+
+        if not measurement_types:
+            raise ValueError("At least one measurement value must be provided.")
+
+        age_days = self._chronological_age_days(dt)
+        gestational_age_days = self.gestational_age.days
+
+        inferred_tables: set[TableNameType] = {
+            infer_table_name(
+                measurement,
+                age_days=age_days,
+                gestational_age=gestational_age_days,
+            )
+            for measurement in measurement_types
+        }
+
+        if len(inferred_tables) != 1:
+            raise ValueError("Measurements map to different reference tables. Record them as separate measurement groups.")
+
+        table_name = inferred_tables.pop()
+
         new_group = MeasurementGroup(
             table_name=table_name,
-            date=date,
+            date=dt,
             weight=weight,
             stature=stature,
             head_circumference=head_circumference,
         )
         self.measurements.append(new_group)
+
+        return self
+
+    def goal_identified_at(self, goal: DevelopmentGoalType, date: DateInputType | None = None) -> Self:
+        """Record a developmental goal achievement on a specific date.
+
+        Args:
+            goal: Developmental goal achieved.
+            date: Date of achievement. Defaults to now.
+
+        Returns:
+            Self for chaining.
+        """
+        dt = handle_date_input(date)
+
+        dev_goal = DevelopmentGoal(goal=goal, date=dt)
+        self.add_development_goal(dev_goal)
 
         return self
 
@@ -263,7 +330,7 @@ class Patient(AddMeasurementPatientMixin, PatientBase):
         Returns:
             Matplotlib Axes object.
         """
-        from pygrowthstandards.oop.plotter import Plotter
+        from pygrowthstandards.oop.plots.plotter import Plotter
 
         plotter = Plotter(self)
 

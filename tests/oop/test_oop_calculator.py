@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from pygrowthstandards.oop.measurement import Measurement, MeasurementGroup
+from pygrowthstandards.oop.growth import Measurement, MeasurementGroup
 from pygrowthstandards.oop.patient import Patient
 
 

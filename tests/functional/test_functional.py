@@ -1,4 +1,5 @@
-from pygrowthstandards.functional import data, percentile, zscore
+from pygrowthstandards.functional import percentile, zscore
+from pygrowthstandards.functional.growth import data
 
 
 class TestFunctionalCalculator:

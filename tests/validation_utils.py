@@ -2,8 +2,8 @@ from typing import Any
 
 import pandas as pd
 
-from pygrowthstandards.data.load import load_reference
-from pygrowthstandards.oop.measurement import MeasurementGroup
+from pygrowthstandards.data.growth.load import load_reference
+from pygrowthstandards.oop.growth import MeasurementGroup
 from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 
 

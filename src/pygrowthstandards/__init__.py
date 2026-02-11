@@ -45,7 +45,7 @@ def check_data():
     """
     if data_exists():
         print(f"✓ Reference data is available at: {get_data_path()}")
-        from .data.load import load_reference
+        from pygrowthstandards.data.growth.load import load_reference
 
         try:
             data = load_reference()

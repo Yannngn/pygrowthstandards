@@ -1,7 +1,7 @@
 import pytest
 
 from pygrowthstandards.functional import zscore
-from pygrowthstandards.oop.calculator import Calculator
+from pygrowthstandards.oop.growth.calculator import Calculator
 from pygrowthstandards.config.growth import MeasurementAliasType
 from pygrowthstandards.utils.stats import calculate_z_score
 from tests.validation_utils import (
