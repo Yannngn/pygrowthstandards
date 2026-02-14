@@ -1,5 +1,5 @@
 from pygrowthstandards.functional import percentile, zscore
-from pygrowthstandards.functional.growth import data
+from pygrowthstandards.functional.growth import load
 
 
 class TestFunctionalCalculator:
@@ -22,13 +22,13 @@ class TestFunctionalCalculator:
 
 class TestFunctionalData:
     def test_get_keys_age(self):
-        keys = data.KeyObject.from_functional("stature", sex="M", age_days=365)
+        keys = load.KeyObject.from_functional("stature", sex="M", age_days=365)
         assert keys.x_var_type == "age"
 
     def test_get_keys_gestational_age(self):
-        keys = data.KeyObject.from_functional("weight", sex="F", gestational_age=280)
+        keys = load.KeyObject.from_functional("weight", sex="F", gestational_age=280)
         assert keys.x_var_type == "gestational_age"
 
     def test_normalized_measurement_alias(self):
-        keys = data.KeyObject.from_functional("wfa", sex="M", age_days=365)
+        keys = load.KeyObject.from_functional("wfa", sex="M", age_days=365)
         assert keys.measurement_type == "weight"

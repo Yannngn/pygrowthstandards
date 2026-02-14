@@ -6,8 +6,8 @@ from typing import cast
 import pandas as pd
 
 from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
-from pygrowthstandards.data.growth.load import KeyObject, load_reference
-from pygrowthstandards.functional.growth.data import get_lms, get_table
+from pygrowthstandards.data.growth.load import KeyObject
+from pygrowthstandards.functional.growth.load import DATA, get_lms, get_table
 from pygrowthstandards.oop.growth.data import MeasurementGroup
 from pygrowthstandards.utils import stats
 from pygrowthstandards.utils.errors import InvalidChoicesError, NoReferenceDataException
@@ -20,13 +20,9 @@ class Calculator:
 
     def __init__(self):
         """Load reference data for subsequent calculations."""
-        try:
-            self.data = load_reference()
-        except FileNotFoundError as exc:
-            logging.error(str(exc))
-            self.data = None
+        self.data = DATA
 
-    # TODO: use growth.load to get the reference data
+    # TODO: use oop.growth.load to get the reference data
     def calculate_z_score(
         self,
         measurement_group: MeasurementGroup,
@@ -76,7 +72,7 @@ class Calculator:
             age_value = age_days if age_days is not None else (gestational_age if gestational_age is not None else -1)
             raise NoReferenceDataException(measurement_type, "age", age_value)
 
-        table = get_table(self.data, keys=keys)
+        table = get_table(self.data, measurement=measurement_type, sex=sex, age_days=age_days, gestational_age=gestational_age)
         lms = get_lms(table, keys.x)
 
         return stats.calculate_z_score(value, *lms)

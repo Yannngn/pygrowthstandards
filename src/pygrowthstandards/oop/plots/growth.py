@@ -63,6 +63,8 @@ class GrowthPlotterMixin:
         if show:
             plt.show()
 
+        return ax
+
     def reference_plot(
         self,
         age_group: AgeGroupType,

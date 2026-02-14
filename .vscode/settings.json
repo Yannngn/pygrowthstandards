@@ -22,10 +22,4 @@
     "**/*.egg-info",
     "node_modules"
   ],
-  "files.exclude": {
-    "node_modules": true,
-    ".venv": true,
-    "**/__pycache__": true,
-    "**/*.egg-info": true
-  }
 }

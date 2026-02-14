@@ -1,8 +1,8 @@
 import pytest
 
+from pygrowthstandards.config.growth import MeasurementAliasType
 from pygrowthstandards.functional import zscore
 from pygrowthstandards.oop.growth.calculator import Calculator
-from pygrowthstandards.config.growth import MeasurementAliasType
 from pygrowthstandards.utils.stats import calculate_z_score
 from tests.validation_utils import (
     as_int_x,
@@ -23,7 +23,7 @@ if not MEASUREMENTS:
     pytest.skip("No child measurements available for validation.", allow_module_level=True)
 
 
-def _build_child_inputs(measurement_type: MeasurementAliasType):
+def _build_patient_inputs(measurement_type: MeasurementAliasType):
     row = get_reference_row(
         age_group="0-2",
         name="child_growth",
@@ -48,18 +48,18 @@ def _build_child_inputs(measurement_type: MeasurementAliasType):
 
 
 @pytest.mark.parametrize("measurement_type", MEASUREMENTS)
-def test_child_functional_matches_parquet(measurement_type: MeasurementAliasType):
-    _, age_days, value, expected, func, _ = _build_child_inputs(measurement_type)
+def test_patient_functional_matches_parquet(measurement_type: MeasurementAliasType):
+    _, age_days, value, expected, func, _ = _build_patient_inputs(measurement_type)
     assert func == pytest.approx(expected, rel=1e-6, abs=1e-8)
 
 
 @pytest.mark.parametrize("measurement_type", MEASUREMENTS)
-def test_child_oop_matches_parquet(measurement_type: MeasurementAliasType):
-    _, age_days, value, expected, _, oop = _build_child_inputs(measurement_type)
+def test_patient_oop_matches_parquet(measurement_type: MeasurementAliasType):
+    _, age_days, value, expected, _, oop = _build_patient_inputs(measurement_type)
     assert oop == pytest.approx(expected, rel=1e-6, abs=1e-8)
 
 
 @pytest.mark.parametrize("measurement_type", MEASUREMENTS)
-def test_child_oop_matches_functional(measurement_type: MeasurementAliasType):
-    _, age_days, value, _, func, oop = _build_child_inputs(measurement_type)
+def test_patient_oop_matches_functional(measurement_type: MeasurementAliasType):
+    _, age_days, value, _, func, oop = _build_patient_inputs(measurement_type)
     assert oop == pytest.approx(func, rel=1e-8, abs=1e-10)

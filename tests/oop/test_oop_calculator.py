@@ -131,7 +131,7 @@ def test_get_patient_data(setup_patient: Patient):
     # Verify patient data is returned
     assert isinstance(patient_data, dict) or hasattr(patient_data, "__len__")
     assert "x" in patient_data.columns
-    assert "child" in patient_data.columns
+    assert "patient" in patient_data.columns
     assert len(patient_data) > 0
 
 

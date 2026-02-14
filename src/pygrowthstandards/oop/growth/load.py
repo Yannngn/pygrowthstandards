@@ -92,5 +92,5 @@ def get_plot_data(patient: Patient, age_group: AgeGroupType, measurement_type: M
     data = get_patient_data(patient, age_group, measurement_type)
     reference_data = get_reference_data(patient, age_group, measurement_type)
 
-    reference_data.add_child_data(data)
+    reference_data.add_patient_data(data)
     return reference_data.convert_z_scores_to_values()
