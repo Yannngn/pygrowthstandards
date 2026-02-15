@@ -5,8 +5,8 @@ from typing import overload
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.data.growth.load import GrowthTable, KeyObject, load_reference
+from pygrowthstandards.typing.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.utils import stats
 
 try:

@@ -33,8 +33,8 @@ npx semantic-release --dry-run
 - Verify build & checks locally:
 
 ```bash
-uvx build
-uvx check dist/*
+uvx --from build pyproject-build
+uvx twine check dist/*
 ```
 
 - If you prefer manual publishing, create and push a tag instead of relying on `semantic-release`:

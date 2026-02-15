@@ -7,7 +7,8 @@ from typing import Self
 from matplotlib.axes import Axes
 
 from pygrowthstandards.config.development import DevelopmentGoalType
-from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType, infer_table_name
+from pygrowthstandards.typing.growth import DataSexType, MeasurementAliasType, PlotGroupType, TableNameType
+from pygrowthstandards.config.growth import infer_table_name
 from pygrowthstandards.oop.development import DevelopmentGoal, DevelopmentGoalGroup
 from pygrowthstandards.oop.growth import Calculator, Measurement, MeasurementGroup
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
@@ -325,7 +326,7 @@ class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBas
 
         return self
 
-    def plot(self, plot_group: AgeGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
+    def plot(self, plot_group: PlotGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
         """Plot measurement history against reference curves.
 
         Args:

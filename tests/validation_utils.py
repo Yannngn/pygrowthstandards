@@ -2,14 +2,14 @@ from typing import Any
 
 import pandas as pd
 
+from pygrowthstandards.typing.growth import DataSexType, MeasurementAliasType, PlotGroupType, TableNameType
 from pygrowthstandards.data.growth.load import load_reference
 from pygrowthstandards.oop.growth import MeasurementGroup
-from pygrowthstandards.config.growth import AgeGroupType, DataSexType, MeasurementAliasType, TableNameType
 
 
 def get_reference_row(
     *,
-    plot_group: AgeGroupType,
+    plot_group: PlotGroupType,
     name: TableNameType,
     measurement_type: MeasurementAliasType,
     sex: DataSexType,
@@ -39,7 +39,7 @@ def get_reference_row(
 
 def get_measurements(
     *,
-    plot_group: AgeGroupType,
+    plot_group: PlotGroupType,
     name: TableNameType,
     sex: DataSexType,
     x_var_type: str,

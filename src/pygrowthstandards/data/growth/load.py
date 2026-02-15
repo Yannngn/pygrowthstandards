@@ -8,18 +8,20 @@ import numpy as np
 import pandas as pd
 
 from pygrowthstandards.config.growth import (
-    AGE_GROUP_CHOICES,
-    DATA_SEX_CHOICES,
-    TABLE_NAME_CHOICES,
-    AgeGroupType,
     ChoiceValidator,
-    DataSexType,
-    DataSourceType,
-    DataXTypeType,
-    MeasurementAliasType,
-    TableNameType,
+    PlotGroupAlias,
+    SexAlias,
+    TableNameAlias,
     resolve_table_context,
     resolve_x_var_type,
+)
+from pygrowthstandards.typing.growth import (
+    DataSexType,
+    DataSourceType,
+    DataXVarType,
+    MeasurementAliasType,
+    PlotGroupType,
+    TableNameType,
 )
 from pygrowthstandards.utils.errors import InvalidChoicesError
 from pygrowthstandards.utils.stats import interpolate_lms, numpy_calculate_value_for_z_score
@@ -41,12 +43,12 @@ class KeyObject:
     name: str
     measurement_type: MeasurementAliasType
     sex: DataSexType
-    x_var_type: DataXTypeType
+    x_var_type: DataXVarType
     x: float | None = None
-    plot_group: AgeGroupType | None = None
+    plot_group: PlotGroupType | None = None
 
     @staticmethod
-    def _normalize_age_group(plot_group: str) -> AgeGroupType:
+    def _normalize_age_group(plot_group: str) -> PlotGroupType:
         """Normalize a human-readable plot group into a canonical key.
 
         Args:
@@ -59,10 +61,10 @@ class KeyObject:
             ValueError: If the plot group is not recognized.
         """
         normalized = plot_group.lower().replace(" ", "_")
-        if normalized in AGE_GROUP_CHOICES:
-            return cast(AgeGroupType, normalized)
+        if normalized in PlotGroupAlias:
+            return cast(PlotGroupType, normalized)
 
-        raise ValueError(f"Invalid plot group: {plot_group}. Must be one of: {sorted(AGE_GROUP_CHOICES)}")
+        raise ValueError(f"Invalid plot group: {plot_group}. Must be one of: {sorted(PlotGroupAlias)}")
 
     @staticmethod
     def _normalize_measurement(measurement: str) -> MeasurementAliasType:
@@ -98,7 +100,7 @@ class KeyObject:
             return "U"
 
         normalized = sex.upper()
-        if normalized in DATA_SEX_CHOICES:
+        if normalized in SexAlias:
             return cast(DataSexType, normalized)
 
         logging.warning(f"Unrecognized sex value {sex}, defaulting to 'U'.")
@@ -106,7 +108,7 @@ class KeyObject:
         return "U"
 
     @staticmethod
-    def _normalize_x_var_type(x_var_type: str) -> DataXTypeType:
+    def _normalize_x_var_type(x_var_type: str) -> DataXVarType:
         """Normalize an x_var_type alias to its canonical value.
 
         Args:
@@ -131,10 +133,10 @@ class KeyObject:
             ValueError: If the table name is not recognized.
         """
         normalized = name.lower().replace(" ", "_")
-        if normalized in TABLE_NAME_CHOICES:
+        if normalized in TableNameAlias:
             return cast(TableNameType, normalized)
 
-        raise ValueError(f"Invalid table name: {name}. Must be one of: {sorted(TABLE_NAME_CHOICES)}")
+        raise ValueError(f"Invalid table name: {name}. Must be one of: {sorted(TableNameAlias)}")
 
     @staticmethod
     def _normalize_x(x_value: float | None) -> float:
@@ -202,8 +204,8 @@ class KeyObject:
         cls,
         name: str,
         measurement_type: MeasurementAliasType,
-        plot_group: AgeGroupType,
-        x_var_type: DataXTypeType,
+        plot_group: PlotGroupType,
+        x_var_type: DataXVarType,
         sex: DataSexType | None = None,
     ) -> "KeyObject":
         """Build a KeyObject from object-oriented API inputs.
@@ -250,10 +252,10 @@ class GrowthTable:
 
     source: DataSourceType
     name: TableNameType
-    plot_group: AgeGroupType | None  # helper column, not required
+    plot_group: PlotGroupType | None  # helper column, not required
     measurement_type: MeasurementAliasType
     sex: DataSexType
-    x_var_type: DataXTypeType
+    x_var_type: DataXVarType
     x: np.ndarray
     L: np.ndarray
     M: np.ndarray

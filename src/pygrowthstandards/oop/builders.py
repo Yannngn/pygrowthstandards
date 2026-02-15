@@ -3,10 +3,10 @@
 from typing import Self
 
 from pygrowthstandards.config.development import DevelopmentGoalType
-from pygrowthstandards.config.growth import DataSexType
 from pygrowthstandards.oop.development.data import DevelopmentGoalGroup
 from pygrowthstandards.oop.growth import MeasurementGroup
 from pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.typing.growth import DataSexType
 from pygrowthstandards.utils.date import DateInputType, handle_date_input
 
 

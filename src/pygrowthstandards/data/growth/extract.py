@@ -9,9 +9,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from pygrowthstandards.config.growth import (
-    DATA_SEX_CHOICES,
-    ChoiceValidator,
+from pygrowthstandards.config.growth import ChoiceValidator, SexAlias
+from pygrowthstandards.typing.growth import (
     DataSexType,
     DataSourceType,
     MeasurementAliasType,
@@ -152,7 +151,7 @@ class RawTable:
             raise ValueError("Points must be a list of DataPoint instances.")
 
         # Validate using the new config system
-        if not ChoiceValidator.validate_choice(self.sex, DATA_SEX_CHOICES):
+        if not ChoiceValidator.validate_choice(self.sex, SexAlias):
             raise ValueError(f"Invalid sex: {self.sex}")
 
     def to_dict(self) -> dict[str, str | list]:
@@ -292,12 +291,12 @@ class RawTable:
             if not parts:
                 raise ValueError(f"Filename missing sex component: {filename}")
 
-            if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):  # 1mon and 2mon from velocity datasets
+            if not ChoiceValidator.validate_choice(sex, SexAlias):  # 1mon and 2mon from velocity datasets
                 if not parts:
                     raise ValueError(f"Invalid sex found in filename and no fallback available: {sex}")
                 sex = parts.pop().upper()
 
-            if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):
+            if not ChoiceValidator.validate_choice(sex, SexAlias):
                 raise ValueError(f"Invalid sex found in filename: {sex}")
 
             return sex
@@ -360,16 +359,20 @@ class RawTable:
     ):
         """Build kwargs for weight-for-length/height tables.
 
+        Weight-for-length/height tables are assigned to plot groups based on x_var_type:
+        - length (0-120cm): plot group "0-2"
+        - height (120-200cm): plot group "2-5"
+
         Args:
             source: Data source identifier.
             table_name: Table name identifier.
             sex: Sex identifier.
-            measurement_type: Measurement alias.
-            x_var_type: Axis type.
+            measurement_type: Measurement alias (should be "weight" for weight-for-length).
+            x_var_type: Axis type ("length" or "height").
             **kwargs: Ignored extra fields.
 
         Returns:
-            Dictionary of normalized kwargs.
+            Dictionary of normalized kwargs for RawTable initialization.
         """
         # Resolve measurement alias if needed
         resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_type)

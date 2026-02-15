@@ -8,8 +8,8 @@ from typing import cast
 import pandas as pd
 
 from pygrowthstandards.config.growth import (
-    AGE_GROUP_CHOICES,
-    AgeGroupType,
+    PlotGroupAlias,
+    PlotGroupType,
     resolve_x_var_type,
 )
 from pygrowthstandards.data.growth.extract import RawTable
@@ -54,14 +54,15 @@ class GrowthData:
             points = table_dict.pop("points")
 
             for point in points:
-                assert isinstance(point, dict)
+                if not isinstance(point, dict):
+                    raise ValueError(f"Expected point to be a dict, got {type(point)}")
                 record = {**table_dict, **point}
                 records.append(record)
 
         df = pd.DataFrame(records)
 
         df["plot_group"] = df.apply(
-            lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x_var_type"], r["x"]),
+            lambda r: self._extract_plot_group(r["name"], r["measurement_type"], r["x_var_type"], r["x"]),
             axis=1,
         )
 
@@ -70,7 +71,6 @@ class GrowthData:
         # ensure required columns exist
         required = [
             "source",
-            "plot_group",
             "name",
             "sex",
             "measurement_type",
@@ -80,6 +80,7 @@ class GrowthData:
             "m",
             "s",
             "is_derived",
+            "plot_group",
         ]
 
         return df[required]
@@ -125,7 +126,7 @@ class GrowthData:
         return data
 
     @staticmethod
-    def _extract_age_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> AgeGroupType:
+    def _extract_plot_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> PlotGroupType:
         """Determine the plot group for a given data point.
 
         Args:
@@ -135,17 +136,21 @@ class GrowthData:
             age: Age in days.
 
         Returns:
-            Age group key.
+            Plot group key (e.g., "0-2", "2-5", "newborn").
         """
+        # Weight for length/height - infer plot group from measurement axis
         if x_var_type in {"height", "length"}:
-            return "0-2" if x_var_type == "length" else "2-5"
+            return cast(PlotGroupType, f"weight_for_{x_var_type}")
 
-        if table_name in AGE_GROUP_CHOICES:
-            return cast(AgeGroupType, table_name)
-
+        # Velocity datasets assigned to appropriate plot groups
         if measurement_type.endswith("velocity"):
-            return "0-2"
+            return "velocity"
 
+        # Special plot groups (newborn, preterm, etc.) map directly
+        if table_name in PlotGroupAlias:
+            return cast(PlotGroupType, table_name)
+
+        # Standard age-based assignment
         if age < 2 * YEAR:
             return "0-2"
         if age < 5 * YEAR:

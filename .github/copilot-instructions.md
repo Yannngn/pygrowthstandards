@@ -1,14 +1,14 @@
 # PyGrowthStandards AI Coding Instructions
 
 ## Project Overview
-PyGrowthStandards is a Python library for calculating child growth z-scores and percentiles using WHO and INTERGROWTH-21st standards. It provides both object-oriented and functional APIs for anthropometric calculations and visualization.
+PyGrowthStandards is a Python library for calculating child growth z-scores and percentiles using WHO and INTERGROWTH-21st standards. It provides both object-oriented and functional APIs for anthropometric calculations and visualization. It will also provide CDC's and Brazilian Health Card's development milestones data in the future.
 
 ## Architecture & Data Flow
 
 ### Core Components
 - **`src/data/`**: ETL pipeline (extract → transform → load) for growth reference data
 - **`src/functional/`**: Stateless API for direct z-score/percentile calculations  
-- **`src/oop/`**: Object-oriented API for patient tracking and visualization
+- **`src/oop/`**: Object-oriented Fluent API for patient tracking and visualization
 - **`src/utils/`**: Configuration, statistical functions, and plotting utilities
 
 ### Data Processing Pipeline
@@ -25,17 +25,17 @@ All calculations use the LMS (Lambda-Mu-Sigma) method:
 
 ## Configuration System
 
-### Type System (`src/utils/config.py`)
-Use the centralized config system instead of magic strings:
+### Type System (`src/pygrowthstandards/typing/growth.py`)
+Use the centralized typing and config systems instead of magic strings:
 ```python
-from pygrowthstandards.utils.config import MeasurementTypeType, DataSexType, AgeGroupType
-from pygrowthstandards.utils.config import PLOT_GROUP_CONFIG, MEASUREMENT_CONFIG
+from pygrowthstandards.typing.growth import MeasurementTypeType, DataSexType, PlotGroupType
+from pygrowthstandards.config.growth import PlotGroupAlias, MeasurementAliasType
 ```
 
 ### Plot Group Resolution
 ```python
 # Get age limits and x_var_type from config
-config = PLOT_GROUP_CONFIG["0-2"]
+config = PlotGroupAlias["0-2"]
 limits = config.limits  # (0, 730)
 x_type = config.x_type  # "age"
 ```

@@ -5,7 +5,7 @@ from functools import partial
 from typing import Literal
 
 from pygrowthstandards import functional as F
-from pygrowthstandards.config.growth import DataSexType
+from pygrowthstandards.typing.growth import DataSexType
 from pygrowthstandards.utils.date import DateInputType
 
 

@@ -5,7 +5,7 @@ from typing import cast
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import DataSexType, MeasurementAliasType
+from pygrowthstandards.typing.growth import DataSexType, MeasurementAliasType
 from pygrowthstandards.data.growth.load import KeyObject
 from pygrowthstandards.functional.growth.load import DATA, get_lms, get_table
 from pygrowthstandards.oop.growth.data import MeasurementGroup

@@ -2,7 +2,7 @@ import datetime
 from typing import cast
 
 from pygrowthstandards import MeasurementGroup, Patient
-from pygrowthstandards.config.growth import AgeGroupType, MeasurementAliasType
+from pygrowthstandards.config.growth import MeasurementAliasType, PlotGroupType
 from pygrowthstandards.utils.errors import InvalidChoicesError
 
 
@@ -134,7 +134,7 @@ def main():
         ]:
             try:
                 patient.plot(
-                    cast(AgeGroupType, plot_group),
+                    cast(PlotGroupType, plot_group),
                     cast(MeasurementAliasType, measurement_type),
                     output_path=f"results/user_table_{plot_group}_{measurement_type}.png",
                 )

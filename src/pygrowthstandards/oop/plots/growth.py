@@ -6,11 +6,11 @@ from matplotlib.axes import Axes
 from pygrowthstandards.config.growth import (
     MEASUREMENT_CONFIG,
     PLOT_GROUP_CONFIG,
-    AgeGroupType,
     ChoiceValidator,
     MeasurementAliasType,
     MeasurementType,
     PlotGroup,
+    PlotGroupType,
 )
 from pygrowthstandards.oop.growth.load import get_patient_data, get_reference_data
 from pygrowthstandards.oop.patient import Patient
@@ -26,7 +26,7 @@ class GrowthPlotterMixin:
 
     def plot(
         self,
-        plot_group: AgeGroupType,
+        plot_group: PlotGroupType,
         measurement_type: MeasurementAliasType,
         ax: Axes | None = None,
         show: bool = False,
@@ -67,7 +67,7 @@ class GrowthPlotterMixin:
 
     def reference_plot(
         self,
-        plot_group: AgeGroupType,
+        plot_group: PlotGroupType,
         measurement_type: MeasurementAliasType,
         ax: Axes | None = None,
         show: bool = False,
@@ -101,7 +101,7 @@ class GrowthPlotterMixin:
         # Use a guaranteed string for label formatting
         measurement_str = str(resolved_measurement)
 
-        x_label = config.x_type.replace("_", " ").title()
+        x_label = config.x_var_type.replace("_", " ").title()
         y_label = f"{measurement_str.replace('_', ' ').title()} ({measurement_config.unit})"
 
         for z in [-3, -2, 0, 2, 3]:

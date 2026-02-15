@@ -2,13 +2,13 @@
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import PLOT_GROUP_CONFIG, AgeGroupType, MeasurementAliasType, PlotGroup
+from pygrowthstandards.config.growth import PLOT_GROUP_CONFIG, MeasurementAliasType, PlotGroup, PlotGroupType
 from pygrowthstandards.data.growth.load import GrowthTable, KeyObject
 from pygrowthstandards.oop.patient import Patient
 
 
 # TODO: Refactor to separate data retrieval from plotting
-def get_reference_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> GrowthTable:
+def get_reference_data(patient: Patient, plot_group: PlotGroupType, measurement_type: MeasurementAliasType) -> GrowthTable:
     """Load reference data for a given plot group and measurement.
 
     Args:
@@ -36,7 +36,7 @@ def get_reference_data(patient: Patient, plot_group: AgeGroupType, measurement_t
         plot_group=plot_group,
         measurement_type=measurement_type,
         sex=patient.sex,
-        x_var_type=config.x_type,
+        x_var_type=config.x_var_type,
     )
     data = GrowthTable.from_data(patient.calculator.data, keys=keys)
 
@@ -44,7 +44,7 @@ def get_reference_data(patient: Patient, plot_group: AgeGroupType, measurement_t
 
 
 # TODO: Refactor to separate data retrieval from plotting
-def get_patient_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+def get_patient_data(patient: Patient, plot_group: PlotGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
     """Return user measurements for a given plot group and measurement.
 
     Args:
@@ -56,7 +56,7 @@ def get_patient_data(patient: Patient, plot_group: AgeGroupType, measurement_typ
     """
     config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
     lower_limit, upper_limit = config.limits
-    x_var_type = config.x_type
+    x_var_type = config.x_var_type
 
     filtered_measurements = []
     for entry in patient.measurements:
@@ -79,7 +79,7 @@ def get_patient_data(patient: Patient, plot_group: AgeGroupType, measurement_typ
 
 
 # TODO: Refactor to share call for growth and development plots
-def get_plot_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+def get_plot_data(patient: Patient, plot_group: PlotGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
     """Return combined reference and patient data for plotting.
 
     Args:
