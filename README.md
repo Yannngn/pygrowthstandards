@@ -89,7 +89,7 @@ patient = builder.build_and_calculate()
 print(patient.display_measurements())
 
 patient.plot(
-    age_group="0-2",
+    plot_group="0-2",
     measurement_type="stature",
     show=False,
     output_path="stature_growth_chart.png"

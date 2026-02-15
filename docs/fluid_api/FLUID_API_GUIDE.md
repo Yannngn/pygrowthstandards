@@ -61,7 +61,7 @@ patient.add_measurements(MeasurementGroup(...))
 patient.add_measurements(MeasurementGroup(...))
 patient.calculate_all()
 plotter = Plotter(patient)
-plotter.plot("weight", age_group="0-2", show=False)
+plotter.plot("weight", plot_group="0-2", show=False)
 ```
 
 ### Proposed API (Method Chaining)
@@ -72,7 +72,7 @@ patient = (Patient(sex="M", birthday_date=datetime.date(2022, 1, 1))
     .measured_at(date2, weight=10.2, stature=75.7)
     .measured_at(date3, weight=12.6, stature=87.8)
     .calculate_all()
-    .plot("weight", age_group="0-2", show=False))
+    .plot("weight", plot_group="0-2", show=False))
 ```
 
 ---

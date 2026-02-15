@@ -12,7 +12,7 @@ from tests.validation_utils import (
 )
 
 MEASUREMENTS = get_measurements(
-    age_group="0-2",
+    plot_group="0-2",
     name="child_growth",
     sex="M",
     x_var_type="age",
@@ -25,7 +25,7 @@ if not MEASUREMENTS:
 
 def _build_patient_inputs(measurement_type: MeasurementAliasType):
     row = get_reference_row(
-        age_group="0-2",
+        plot_group="0-2",
         name="child_growth",
         measurement_type=measurement_type,
         sex="M",

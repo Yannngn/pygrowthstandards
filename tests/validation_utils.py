@@ -9,7 +9,7 @@ from pygrowthstandards.config.growth import AgeGroupType, DataSexType, Measureme
 
 def get_reference_row(
     *,
-    age_group: AgeGroupType,
+    plot_group: AgeGroupType,
     name: TableNameType,
     measurement_type: MeasurementAliasType,
     sex: DataSexType,
@@ -19,7 +19,7 @@ def get_reference_row(
 ) -> pd.Series:
     data = load_reference()
     filtered = data[
-        (data["age_group"] == age_group)
+        (data["plot_group"] == plot_group)
         & (data["name"] == name)
         & (data["measurement_type"] == measurement_type)
         & (data["sex"].str.upper() == sex.upper())
@@ -39,7 +39,7 @@ def get_reference_row(
 
 def get_measurements(
     *,
-    age_group: AgeGroupType,
+    plot_group: AgeGroupType,
     name: TableNameType,
     sex: DataSexType,
     x_var_type: str,
@@ -47,7 +47,7 @@ def get_measurements(
 ) -> list[str]:
     data = load_reference()
     filtered = data[
-        (data["age_group"] == age_group)
+        (data["plot_group"] == plot_group)
         & (data["name"] == name)
         & (data["sex"].str.upper() == sex.upper())
         & (data["x_var_type"] == x_var_type)

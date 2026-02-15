@@ -33,14 +33,14 @@ class NoReferenceDataException(Exception):
 
 
 class InvalidChoicesError(KeyError):
-    """Raised when a measurement is invalid for an age group."""
+    """Raised when a measurement is invalid for an plot group."""
 
-    def __init__(self, measurement_type: str | None, age_group: str | None) -> None:
+    def __init__(self, measurement_type: str | None, plot_group: str | None) -> None:
         """Initialize the error message.
 
         Args:
             measurement_type: Measurement alias.
-            age_group: Age group identifier.
+            plot_group: Age group identifier.
         """
-        message = f"Invalid measurement type '{measurement_type}' for age group '{age_group}'"
+        message = f"Invalid measurement type '{measurement_type}' for plot group '{plot_group}'"
         super().__init__(message)

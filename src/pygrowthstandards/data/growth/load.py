@@ -35,7 +35,7 @@ class KeyObject:
         sex: Sex identifier.
         x_var_type: Axis type identifier.
         x: Axis value for lookup.
-        age_group: Optional age group identifier.
+        plot_group: Optional plot group identifier.
     """
 
     name: str
@@ -43,26 +43,26 @@ class KeyObject:
     sex: DataSexType
     x_var_type: DataXTypeType
     x: float | None = None
-    age_group: AgeGroupType | None = None
+    plot_group: AgeGroupType | None = None
 
     @staticmethod
-    def _normalize_age_group(age_group: str) -> AgeGroupType:
-        """Normalize a human-readable age group into a canonical key.
+    def _normalize_age_group(plot_group: str) -> AgeGroupType:
+        """Normalize a human-readable plot group into a canonical key.
 
         Args:
-            age_group: Input age group string.
+            plot_group: Input plot group string.
 
         Returns:
-            Canonical age group key.
+            Canonical plot group key.
 
         Raises:
-            ValueError: If the age group is not recognized.
+            ValueError: If the plot group is not recognized.
         """
-        normalized = age_group.lower().replace(" ", "_")
+        normalized = plot_group.lower().replace(" ", "_")
         if normalized in AGE_GROUP_CHOICES:
             return cast(AgeGroupType, normalized)
 
-        raise ValueError(f"Invalid age group: {age_group}. Must be one of: {sorted(AGE_GROUP_CHOICES)}")
+        raise ValueError(f"Invalid plot group: {plot_group}. Must be one of: {sorted(AGE_GROUP_CHOICES)}")
 
     @staticmethod
     def _normalize_measurement(measurement: str) -> MeasurementAliasType:
@@ -202,7 +202,7 @@ class KeyObject:
         cls,
         name: str,
         measurement_type: MeasurementAliasType,
-        age_group: AgeGroupType,
+        plot_group: AgeGroupType,
         x_var_type: DataXTypeType,
         sex: DataSexType | None = None,
     ) -> "KeyObject":
@@ -211,7 +211,7 @@ class KeyObject:
         Args:
             name: Table name identifier.
             measurement_type: Measurement alias.
-            age_group: Age group identifier.
+            plot_group: Age group identifier.
             x_var_type: Axis type.
             sex: Sex identifier.
 
@@ -224,11 +224,11 @@ class KeyObject:
             cls._normalize_sex(sex),
             cls._normalize_x_var_type(x_var_type),
             None,  # X
-            cls._normalize_age_group(age_group),
+            cls._normalize_age_group(plot_group),
         )
 
 
-# TODO: Age Group == array of strs?
+# TODO: Plot Group == array of strs?
 # TODO: make another layer of abstraction for the growth table and separate standards and patient data
 @dataclass
 class GrowthTable:
@@ -237,7 +237,7 @@ class GrowthTable:
     Attributes:
         source: Data source identifier.
         name: Table name identifier.
-        age_group: Age group identifier.
+        plot_group: Age group identifier.
         measurement_type: Measurement alias.
         sex: Sex identifier.
         x_var_type: Axis type identifier.
@@ -250,7 +250,7 @@ class GrowthTable:
 
     source: DataSourceType
     name: TableNameType
-    age_group: AgeGroupType | None  # helper column, not required
+    plot_group: AgeGroupType | None  # helper column, not required
     measurement_type: MeasurementAliasType
     sex: DataSexType
     x_var_type: DataXTypeType
@@ -280,8 +280,8 @@ class GrowthTable:
         """
         filtered = data.copy()
         filtered = filtered[(filtered["name"] == keys.name)]
-        if keys.age_group is not None:
-            filtered = filtered[(filtered["age_group"] == keys.age_group)]
+        if keys.plot_group is not None:
+            filtered = filtered[(filtered["plot_group"] == keys.plot_group)]
         filtered = filtered[(filtered["x_var_type"] == keys.x_var_type)]
         filtered = filtered[(filtered["measurement_type"] == keys.measurement_type)]
 
@@ -297,7 +297,7 @@ class GrowthTable:
             filtered = filtered[(filtered["sex"].str.upper() == keys.sex)]
 
         if filtered.empty:
-            raise InvalidChoicesError(keys.measurement_type, keys.age_group)
+            raise InvalidChoicesError(keys.measurement_type, keys.plot_group)
 
         return filtered
 
@@ -318,17 +318,17 @@ class GrowthTable:
 
         source = filtered["source"].unique()[0]
         name = filtered["name"].unique()[0]
-        age_groups = filtered["age_group"].dropna().unique()
+        age_groups = filtered["plot_group"].dropna().unique()
         if len(age_groups) > 1:
-            raise ValueError("Multiple age groups found for keys; provide age_group to disambiguate.")
-        age_group = age_groups[0] if len(age_groups) == 1 else None
+            raise ValueError("Multiple age groups found for keys; provide plot_group to disambiguate.")
+        plot_group = age_groups[0] if len(age_groups) == 1 else None
         x_var_type = filtered["x_var_type"].unique()[0]
 
         # FIXME: if x_var_type_unique > 1 causes problems
         return cls(
             source=source,
             name=name,
-            age_group=age_group,
+            plot_group=plot_group,
             measurement_type=keys.measurement_type,
             sex=keys.sex,
             x_var_type=x_var_type,

@@ -29,7 +29,7 @@ patient.add_measurements(MeasurementGroup(...))
 patient.calculate_all()
 plotter = Plotter(patient)
 plotter = Plotter(patient)
-plotter.plot("weight", age_group="0-2")
+plotter.plot("weight", plot_group="0-2")
 # (abbreviated here) full pre-refactor example (~15-20 lines) in the research docs
 ```
 
@@ -39,7 +39,7 @@ patient = (Patient(sex="M", birthday_date=datetime.date(2022, 1, 1))
     .measured_at(date1, weight=8.6, stature=68.4)
     .measured_at(date2, weight=10.2, stature=75.7)
     .calculate_all()
-    .plot("weight", age_group="0-2"))
+    .plot("weight", plot_group="0-2"))
 # ~5-7 lines (example condensed here; ~60% reduction vs. full pre-refactor example)
 ```
 

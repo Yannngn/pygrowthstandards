@@ -125,7 +125,7 @@ def main():
     )
     patient.calculate_all()
 
-    for age_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
+    for plot_group in ["0-2", "2-5", "5-10", "10-19", "newborn"]:
         for measurement_type in [
             "stature",
             "weight",
@@ -134,9 +134,9 @@ def main():
         ]:
             try:
                 patient.plot(
-                    cast(AgeGroupType, age_group),
+                    cast(AgeGroupType, plot_group),
                     cast(MeasurementAliasType, measurement_type),
-                    output_path=f"results/user_table_{age_group}_{measurement_type}.png",
+                    output_path=f"results/user_table_{plot_group}_{measurement_type}.png",
                 )
             except InvalidChoicesError as e:
                 print(e)

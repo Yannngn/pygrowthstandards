@@ -12,7 +12,7 @@ from tests.validation_utils import (
 )
 
 MEASUREMENTS = get_measurements(
-    age_group="very_preterm_newborn",
+    plot_group="very_preterm_newborn",
     name="very_preterm_newborn",
     sex="M",
     x_var_type="gestational_age",
@@ -25,7 +25,7 @@ if not MEASUREMENTS:
 
 def _build_very_preterm_newborn_inputs(measurement_type: MeasurementAliasType):
     row = get_reference_row(
-        age_group="very_preterm_newborn",
+        plot_group="very_preterm_newborn",
         name="very_preterm_newborn",
         measurement_type=measurement_type,
         sex="M",

@@ -6,7 +6,7 @@ from pygrowthstandards.data.growth.load import GrowthTable, KeyObject
 KEYS = KeyObject.from_oop(
     name="child_growth",
     measurement_type="stature",
-    age_group="0-2",
+    plot_group="0-2",
     x_var_type="age",
     sex="M",
 )
@@ -19,7 +19,7 @@ def make_dummy_df():
             {
                 "source": "who",
                 "name": "child_growth",
-                "age_group": "0-2",
+                "plot_group": "0-2",
                 "measurement_type": "stature",
                 "sex": "M",
                 "x_var_type": "age",
@@ -33,7 +33,7 @@ def make_dummy_df():
             {
                 "source": "who",
                 "name": "child_growth",
-                "age_group": "0-2",
+                "plot_group": "0-2",
                 "measurement_type": "stature",
                 "sex": "M",
                 "x_var_type": "chronological_age",
@@ -47,7 +47,7 @@ def make_dummy_df():
             {
                 "source": "who",
                 "name": "child_growth",
-                "age_group": "0-2",
+                "plot_group": "0-2",
                 "measurement_type": "stature",
                 "sex": "M",
                 "x_var_type": "chronological_age",

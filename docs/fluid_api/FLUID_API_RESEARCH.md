@@ -433,7 +433,7 @@ class Patient:
     .add_measurements(MeasurementGroup(...))
     .add_measurements(MeasurementGroup(...))
     .calculate_all()
-    .plot("weight", age_group="0-2"))
+    .plot("weight", plot_group="0-2"))
 ```
 
 **Pros:**
@@ -604,7 +604,7 @@ add_measurements = ops.AddMeasurements([
 ])
 calculate_zscores = ops.CalculateZScores(method="zscore")
 filter_outliers = ops.FilterOutliers(threshold=3)
-generate_plot = ops.GeneratePlot(measurement="weight", age_group="0-2")
+generate_plot = ops.GeneratePlot(measurement="weight", plot_group="0-2")
 
 # Compose pipeline
 pipeline = Pipeline([
@@ -762,14 +762,14 @@ class FluentPatient(Patient):
         self.add_measurements(group)
         return self
     
-    def plot(self, measurement_type: str, age_group: str | None = None, 
+    def plot(self, measurement_type: str, plot_group: str | None = None, 
              **kwargs: Any) -> "FluentPatient":
         """
         Plot growth chart and return self for chaining.
         
         Args:
             measurement_type: Type of measurement to plot
-            age_group: Age group for chart (optional)
+            plot_group: Age group for chart (optional)
             **kwargs: Additional plotting options
         
         Returns:
@@ -779,7 +779,7 @@ class FluentPatient(Patient):
         plotter = Plotter(self)
         plotter.plot(
             measurement_type=measurement_type,
-            age_group=age_group or self._infer_age_group(),
+            plot_group=plot_group or self._infer_age_group(),
             **kwargs
         )
         return self
@@ -806,7 +806,7 @@ class FluentPatient(Patient):
         return self
     
     def _infer_age_group(self) -> str:
-        """Infer appropriate age group from patient's current age."""
+        """Infer appropriate plot group from patient's current age."""
         if not self.measurements:
             return "0-2"
         
@@ -1278,7 +1278,7 @@ print(patient_old.display_measurements())
 
 plotter_old = pgs.Plotter(patient_old)
 plotter_old.plot(
-    age_group="0-2",
+    plot_group="0-2",
     measurement_type="weight",
     show=False,
     output_path="weight_chart_old.png"
@@ -1294,7 +1294,7 @@ patient_fluent = (FluentPatient(sex="M", birthday_date=datetime.date(2022, 1, 1)
     .measured_at(datetime.date(2023, 1, 1), weight=10.2, stature=75.7)
     .measured_at(datetime.date(2024, 1, 1), weight=12.6, stature=87.8)
     .calculate_all()
-    .plot("weight", age_group="0-2", show=False, output_path="weight_chart_fluent.png"))
+    .plot("weight", plot_group="0-2", show=False, output_path="weight_chart_fluent.png"))
 
 print(patient_fluent.display_measurements())
 
@@ -1315,7 +1315,7 @@ print(patient_builder.display_measurements())
 
 plotter_builder = pgs.Plotter(patient_builder)
 plotter_builder.plot(
-    age_group="0-2",
+    plot_group="0-2",
     measurement_type="weight",
     show=False,
     output_path="weight_chart_builder.png"

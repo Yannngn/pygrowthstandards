@@ -12,7 +12,7 @@ from tests.validation_utils import (
 )
 
 MEASUREMENTS = get_measurements(
-    age_group="newborn",
+    plot_group="newborn",
     name="newborn",
     sex="M",
     x_var_type="gestational_age",
@@ -26,7 +26,7 @@ if not MEASUREMENTS:
 @pytest.mark.parametrize("measurement_type", MEASUREMENTS)
 def _build_newborn_inputs(measurement_type: MeasurementAliasType):
     row = get_reference_row(
-        age_group="newborn",
+        plot_group="newborn",
         name="newborn",
         measurement_type=measurement_type,
         sex="M",

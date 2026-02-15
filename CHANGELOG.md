@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Dual API Design**: Both functional and object-oriented interfaces
 - **Multiple Growth Standards**: WHO and INTERGROWTH-21st support
-- **Age Group Handling**: Automatic age group detection and validation
+- **Plot Group Handling**: Automatic plot group detection and validation
 - **Measurement Aliases**: Flexible input with common abbreviations (e.g., "wfa" → "weight")
 - **Data Visualization**: Matplotlib-based growth chart generation
 - **Performance Optimized**: Parquet-based data storage and NumPy operations

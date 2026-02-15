@@ -29,13 +29,13 @@ All calculations use the LMS (Lambda-Mu-Sigma) method:
 Use the centralized config system instead of magic strings:
 ```python
 from pygrowthstandards.utils.config import MeasurementTypeType, DataSexType, AgeGroupType
-from pygrowthstandards.utils.config import AGE_GROUP_CONFIG, MEASUREMENT_CONFIG
+from pygrowthstandards.utils.config import PLOT_GROUP_CONFIG, MEASUREMENT_CONFIG
 ```
 
-### Age Group Resolution
+### Plot Group Resolution
 ```python
 # Get age limits and x_var_type from config
-config = AGE_GROUP_CONFIG["0-2"]
+config = PLOT_GROUP_CONFIG["0-2"]
 limits = config.limits  # (0, 730)
 x_type = config.x_type  # "age"
 ```

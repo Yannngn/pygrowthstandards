@@ -325,11 +325,11 @@ class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBas
 
         return self
 
-    def plot(self, age_group: AgeGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
+    def plot(self, plot_group: AgeGroupType, measurement_type: MeasurementAliasType, show: bool = True, output_path: str = "") -> Axes:
         """Plot measurement history against reference curves.
 
         Args:
-            age_group: Age group identifier.
+            plot_group: Age group identifier.
             measurement_type: Measurement alias.
             show: Whether to show the plot.
             output_path: Optional output file path.
@@ -341,7 +341,7 @@ class Patient(AddMeasurementPatientMixin, AddDevelopmentPatientMixin, PatientBas
 
         plotter = Plotter(self)
 
-        ax = plotter.plot(age_group=age_group, measurement_type=measurement_type, show=show, output_path=output_path)
+        ax = plotter.plot(plot_group=plot_group, measurement_type=measurement_type, show=show, output_path=output_path)
 
         return ax
 

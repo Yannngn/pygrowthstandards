@@ -125,8 +125,8 @@ def build_newborn_patient(gestational_weeks, gestational_days, birth_date, weigh
     return patient
 
 
-def save_plot(patient: Patient, age_group, measurement_type, filename, dpi=150):
-    ax = patient.plot(age_group=age_group, measurement_type=measurement_type, show=False, output_path="")
+def save_plot(patient: Patient, plot_group, measurement_type, filename, dpi=150):
+    ax = patient.plot(plot_group=plot_group, measurement_type=measurement_type, show=False, output_path="")
     output_path = RESULTS_DIR / filename
     cast(Figure, ax.figure).savefig(output_path, dpi=dpi, bbox_inches="tight")
     plt.close(cast(Figure, ax.figure))

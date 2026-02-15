@@ -12,7 +12,7 @@ from tests.validation_utils import (
 )
 
 MEASUREMENTS = get_measurements(
-    age_group="postnatal_growth_preterm",
+    plot_group="postnatal_growth_preterm",
     name="postnatal_growth_preterm",
     sex="F",
     x_var_type="post_menstrual_age",
@@ -27,7 +27,7 @@ if not MEASUREMENTS:
 def test_preterm_postnatal_matches_parquet(measurement_type: MeasurementAliasType):
     gestational_age = 27 * WEEK
     row = get_reference_row(
-        age_group="postnatal_growth_preterm",
+        plot_group="postnatal_growth_preterm",
         name="postnatal_growth_preterm",
         measurement_type=measurement_type,
         sex="F",

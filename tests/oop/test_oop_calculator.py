@@ -110,8 +110,8 @@ def test_get_reference_data(setup_patient: Patient):
     """Test loading reference data for a patient."""
     patient = setup_patient
 
-    # Load reference data for a specific age group
-    ref_data = get_reference_data(patient, age_group="0-2", measurement_type="weight")
+    # Load reference data for a specific plot group
+    ref_data = get_reference_data(patient, plot_group="0-2", measurement_type="weight")
 
     # Verify reference data is loaded
     assert ref_data is not None
@@ -122,11 +122,11 @@ def test_get_reference_data(setup_patient: Patient):
 
 
 def test_get_patient_data(setup_patient: Patient):
-    """Test filtering patient measurements for a specific age group."""
+    """Test filtering patient measurements for a specific plot group."""
     patient = setup_patient
 
-    # Get patient data for 0-2 age group
-    patient_data = get_patient_data(patient, age_group="0-2", measurement_type="weight")
+    # Get patient data for 0-2 plot group
+    patient_data = get_patient_data(patient, plot_group="0-2", measurement_type="weight")
 
     # Verify patient data is returned
     assert isinstance(patient_data, dict) or hasattr(patient_data, "__len__")
@@ -139,8 +139,8 @@ def test_get_plot_data_with_patient_measurements(setup_patient: Patient):
     """Test plot data generation combines reference curves with patient measurements."""
     patient = setup_patient
 
-    # Get plot data for weight in 0-2 age group
-    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="weight")
+    # Get plot data for weight in 0-2 plot group
+    plot_data = get_plot_data(patient, plot_group="0-2", measurement_type="weight")
 
     # Verify plot data includes reference curves
     assert "x" in plot_data.columns
@@ -160,7 +160,7 @@ def test_get_plot_data_interpolation(setup_patient: Patient):
     patient = setup_patient
 
     # Get plot data
-    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="weight")
+    plot_data = get_plot_data(patient, plot_group="0-2", measurement_type="weight")
 
     # Find rows with child data
     child_rows = plot_data[plot_data["y"].notna()]
@@ -179,7 +179,7 @@ def test_get_plot_data_stature(setup_patient: Patient):
     patient = setup_patient
 
     # Get plot data for stature
-    plot_data = get_plot_data(patient, age_group="0-2", measurement_type="stature")
+    plot_data = get_plot_data(patient, plot_group="0-2", measurement_type="stature")
 
     # Verify plot data structure
     assert "x" in plot_data.columns
@@ -193,7 +193,7 @@ def test_plot_growth_chart(setup_patient: Patient):
     patient = setup_patient
 
     # Call the plot method (without showing or saving)
-    ax = patient.plot(age_group="0-2", measurement_type="weight", show=False)
+    ax = patient.plot(plot_group="0-2", measurement_type="weight", show=False)
 
     # Verify a matplotlib Axes object is returned
     assert ax is not None
@@ -205,7 +205,7 @@ def test_reference_plot(setup_patient: Patient):
     patient = setup_patient
 
     # Call the reference plot method
-    ax = Plotter(patient).reference_plot(age_group="0-2", measurement_type="weight", show=False)
+    ax = Plotter(patient).reference_plot(plot_group="0-2", measurement_type="weight", show=False)
 
     # Verify a matplotlib Axes object is returned
     assert ax is not None

@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
 from pygrowthstandards.config.growth import (
-    AGE_GROUP_CONFIG,
     MEASUREMENT_CONFIG,
-    AgeGroup,
+    PLOT_GROUP_CONFIG,
     AgeGroupType,
     ChoiceValidator,
     MeasurementAliasType,
     MeasurementType,
+    PlotGroup,
 )
 from pygrowthstandards.oop.growth.load import get_patient_data, get_reference_data
 from pygrowthstandards.oop.patient import Patient
@@ -26,7 +26,7 @@ class GrowthPlotterMixin:
 
     def plot(
         self,
-        age_group: AgeGroupType,
+        plot_group: AgeGroupType,
         measurement_type: MeasurementAliasType,
         ax: Axes | None = None,
         show: bool = False,
@@ -35,7 +35,7 @@ class GrowthPlotterMixin:
         """Plot patient measurements over reference curves.
 
         Args:
-            age_group: Age group identifier.
+            plot_group: Age group identifier.
             measurement_type: Measurement alias.
             ax: Optional Axes to draw into.
             show: Whether to display the plot.
@@ -44,8 +44,8 @@ class GrowthPlotterMixin:
         Returns:
             Matplotlib Axes object.
         """
-        patient_data = get_patient_data(self.patient, age_group, measurement_type)
-        ax = self.reference_plot(age_group, measurement_type, ax, False, "")
+        patient_data = get_patient_data(self.patient, plot_group, measurement_type)
+        ax = self.reference_plot(plot_group, measurement_type, ax, False, "")
 
         ax.plot(
             patient_data["x"],
@@ -54,7 +54,7 @@ class GrowthPlotterMixin:
             **style.get_label_style("patient"),
         )
 
-        config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
+        config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
         set_xticks_by_range(ax, *config.limits)
 
         if output_path:
@@ -67,7 +67,7 @@ class GrowthPlotterMixin:
 
     def reference_plot(
         self,
-        age_group: AgeGroupType,
+        plot_group: AgeGroupType,
         measurement_type: MeasurementAliasType,
         ax: Axes | None = None,
         show: bool = False,
@@ -76,7 +76,7 @@ class GrowthPlotterMixin:
         """Plot only the reference curves.
 
         Args:
-            age_group: Age group identifier.
+            plot_group: Age group identifier.
             measurement_type: Measurement alias.
             ax: Optional Axes to draw into.
             show: Whether to display the plot.
@@ -85,13 +85,13 @@ class GrowthPlotterMixin:
         Returns:
             Matplotlib Axes object.
         """
-        plot_data = get_reference_data(self.patient, age_group, measurement_type).convert_z_scores_to_values()
+        plot_data = get_reference_data(self.patient, plot_group, measurement_type).convert_z_scores_to_values()
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
-        config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
+        config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
 
         # Ensure measurement_type is treated as a string for formatting and lookup
         measurement_raw_str = str(measurement_type)

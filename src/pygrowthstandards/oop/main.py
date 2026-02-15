@@ -108,19 +108,19 @@ def main():
     patient.calculate_all()
 
     patient.plot(
-        age_group="0-2",
+        plot_group="0-2",
         measurement_type="stature",
         show=False,
         output_path="results/user_table_0_2_staturepatient.png",
     )
     patient.plot(
-        age_group="5-10",
+        plot_group="5-10",
         measurement_type="stature",
         show=False,
         output_path="results/user_table_5_10_stature.png",
     )
     patient.plot(
-        age_group="10-19",
+        plot_group="10-19",
         measurement_type="stature",
         show=False,
         output_path="results/user_table_10_19_stature.png",

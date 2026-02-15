@@ -15,7 +15,7 @@ pygrowthstandards.config.growth
 
    .. autosummary::
    
-      AgeGroup
+      PlotGroup
       AgeGroupConfig
       ChoiceValidator
       MeasurementConfig

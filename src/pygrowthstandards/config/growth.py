@@ -20,8 +20,8 @@ class MeasurementType(StrEnum):
     HEAD_CIRCUMFERENCE_VELOCITY = "head_circumference_velocity"
 
 
-class AgeGroup(StrEnum):
-    """Supported age group identifiers."""
+class PlotGroup(StrEnum):
+    """Supported plot group identifiers."""
 
     ZERO_ONE = "0-1"
     ZERO_TWO = "0-2"
@@ -134,11 +134,11 @@ TableNameType = Literal["growth", "child_growth", "postnatal_growth_preterm", "v
 
 
 @dataclass(frozen=True)
-class AgeGroupConfig:
-    """Configuration for an age group slice of reference data.
+class PlotGroupConfig:
+    """Configuration for an plot group slice of reference data.
 
     Attributes:
-        name: Canonical age group key.
+        name: Canonical plot group key.
         limits: Inclusive min/max bounds in days.
         x_type: Axis type associated with the group.
         table_name: Reference table name.
@@ -188,17 +188,19 @@ class MeasurementConfig:
 
 
 # Configuration mappings
-AGE_GROUP_CONFIG: dict[AgeGroup, AgeGroupConfig] = {
-    AgeGroup.VERY_PRETERM_NEWBORN: AgeGroupConfig(AgeGroup.VERY_PRETERM_NEWBORN.value, (168, 230), "gestational_age", "very_preterm_newborn"),
-    AgeGroup.NEWBORN: AgeGroupConfig(AgeGroup.NEWBORN.value, (230, 300), "gestational_age", "newborn"),
-    AgeGroup.POSTNATAL_GROWTH_PRETERM: AgeGroupConfig(
-        AgeGroup.POSTNATAL_GROWTH_PRETERM.value, (27 * WEEK, 64 * WEEK), "post_menstrual_age", "postnatal_growth_preterm"
+PLOT_GROUP_CONFIG: dict[PlotGroup, PlotGroupConfig] = {
+    PlotGroup.VERY_PRETERM_NEWBORN: PlotGroupConfig(
+        PlotGroup.VERY_PRETERM_NEWBORN.value, (168, 230), "gestational_age", "very_preterm_newborn"
     ),
-    AgeGroup.ZERO_ONE: AgeGroupConfig(AgeGroup.ZERO_ONE.value, (0, int(round(1 * YEAR))), "age", "child_growth"),
-    AgeGroup.ZERO_TWO: AgeGroupConfig(AgeGroup.ZERO_TWO.value, (0, int(round(2 * YEAR))), "age", "child_growth"),
-    AgeGroup.TWO_FIVE: AgeGroupConfig(AgeGroup.TWO_FIVE.value, (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"),
-    AgeGroup.FIVE_TEN: AgeGroupConfig(AgeGroup.FIVE_TEN.value, (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"),
-    AgeGroup.TEN_NINETEEN: AgeGroupConfig(AgeGroup.TEN_NINETEEN.value, (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"),
+    PlotGroup.NEWBORN: PlotGroupConfig(PlotGroup.NEWBORN.value, (230, 300), "gestational_age", "newborn"),
+    PlotGroup.POSTNATAL_GROWTH_PRETERM: PlotGroupConfig(
+        PlotGroup.POSTNATAL_GROWTH_PRETERM.value, (27 * WEEK, 64 * WEEK), "post_menstrual_age", "postnatal_growth_preterm"
+    ),
+    PlotGroup.ZERO_ONE: PlotGroupConfig(PlotGroup.ZERO_ONE.value, (0, int(round(1 * YEAR))), "age", "child_growth"),
+    PlotGroup.ZERO_TWO: PlotGroupConfig(PlotGroup.ZERO_TWO.value, (0, int(round(2 * YEAR))), "age", "child_growth"),
+    PlotGroup.TWO_FIVE: PlotGroupConfig(PlotGroup.TWO_FIVE.value, (int(round(2 * YEAR)) + 1, int(round(5 * YEAR))), "age", "child_growth"),
+    PlotGroup.FIVE_TEN: PlotGroupConfig(PlotGroup.FIVE_TEN.value, (int(round(5 * YEAR)) + 1, int(round(10 * YEAR))), "age", "growth"),
+    PlotGroup.TEN_NINETEEN: PlotGroupConfig(PlotGroup.TEN_NINETEEN.value, (int(round(10 * YEAR)) + 1, int(round(19 * YEAR))), "age", "growth"),
 }
 
 MEASUREMENT_CONFIG: dict[MeasurementType, MeasurementConfig] = {
@@ -241,7 +243,7 @@ class ChoiceValidator:
 
     @staticmethod
     def get_age_group_for_age(age: int, x_type: DataXTypeType) -> AgeGroupType | None:
-        """Return the matching age group for the given age and x_type.
+        """Return the matching plot group for the given age and x_type.
 
         Args:
             age: Age in days.
@@ -250,8 +252,8 @@ class ChoiceValidator:
         Returns:
             Age group key if found, otherwise None.
         """
-        candidates: list[AgeGroupConfig] = []
-        for config in AGE_GROUP_CONFIG.values():
+        candidates: list[PlotGroupConfig] = []
+        for config in PLOT_GROUP_CONFIG.values():
             if config.x_type == x_type and config.contains_age(age):
                 candidates.append(config)
 
@@ -299,21 +301,21 @@ def resolve_x_var_type(x_type: str) -> DataXTypeType:
 
 
 def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
-    """Return the configured age group for the given age and x_type.
+    """Return the configured plot group for the given age and x_type.
 
     Args:
         age: Age in days.
         x_type: Axis type to match.
 
     Returns:
-        The resolved age group.
+        The resolved plot group.
 
     Raises:
-        ValueError: If no matching age group exists.
+        ValueError: If no matching plot group exists.
     """
     result = ChoiceValidator.get_age_group_for_age(age, x_type)
     if result is None:
-        raise ValueError(f"No age group found for age {age} with x_type {x_type}")
+        raise ValueError(f"No plot group found for age {age} with x_type {x_type}")
     return result
 
 
@@ -324,7 +326,7 @@ def resolve_table_context(
     gestational_age: int | None = None,
     x_var_type: str | None = None,
     x_value: float | None = None,
-    age_group: AgeGroupType | None = None,
+    plot_group: AgeGroupType | None = None,
 ) -> tuple[TableNameType, DataXTypeType, float | None, AgeGroupType | None]:
     """Resolve table selection context and derive missing keys.
 
@@ -334,10 +336,10 @@ def resolve_table_context(
         gestational_age: Gestational age in days.
         x_var_type: Explicit axis type when providing x_value.
         x_value: Explicit axis value.
-        age_group: Optional age group override.
+        plot_group: Optional plot group override.
 
     Returns:
-        Tuple of (table name, x_var_type, x_value, age_group).
+        Tuple of (table name, x_var_type, x_value, plot_group).
 
     Raises:
         ValueError: If the inputs are inconsistent with available data.
@@ -385,7 +387,7 @@ def resolve_table_context(
             raise ValueError(f"No reference for {resolved_measurement} after 10 years.")
         table_name = "growth" if age_value > 5 * YEAR else "child_growth"
 
-    resolved_age_group = age_group
+    resolved_age_group = plot_group
     if resolved_age_group is None:
         if resolved_x_var_type == "stature":
             if age_days is not None:
@@ -393,7 +395,7 @@ def resolve_table_context(
         else:
             age_group_candidate = ChoiceValidator.get_age_group_for_age(int(resolved_x_value), resolved_x_var_type)
             if age_group_candidate is None:
-                raise ValueError(f"No age group found for age {resolved_x_value} with x_type {resolved_x_var_type}")
+                raise ValueError(f"No plot group found for age {resolved_x_value} with x_type {resolved_x_var_type}")
             resolved_age_group = age_group_candidate
 
     return table_name, resolved_x_var_type, resolved_x_value, resolved_age_group
@@ -428,5 +430,5 @@ def infer_table_name(
 
 # Backward compatibility - keep existing variables
 DATA_SEX_CHOICES = frozenset(["M", "F", "U"])
-AGE_GROUP_CHOICES = frozenset([e.value for e in AgeGroup])
+AGE_GROUP_CHOICES = frozenset([e.value for e in PlotGroup])
 TABLE_NAME_CHOICES = frozenset(["growth", "child_growth", "postnatal_growth_preterm", "very_preterm_newborn", "newborn"])

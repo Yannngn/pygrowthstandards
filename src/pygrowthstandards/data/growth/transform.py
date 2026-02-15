@@ -60,7 +60,7 @@ class GrowthData:
 
         df = pd.DataFrame(records)
 
-        df["age_group"] = df.apply(
+        df["plot_group"] = df.apply(
             lambda r: self._extract_age_group(r["name"], r["measurement_type"], r["x_var_type"], r["x"]),
             axis=1,
         )
@@ -70,7 +70,7 @@ class GrowthData:
         # ensure required columns exist
         required = [
             "source",
-            "age_group",
+            "plot_group",
             "name",
             "sex",
             "measurement_type",
@@ -126,7 +126,7 @@ class GrowthData:
 
     @staticmethod
     def _extract_age_group(table_name: str, measurement_type: str, x_var_type: str, age: int) -> AgeGroupType:
-        """Determine the age group for a given data point.
+        """Determine the plot group for a given data point.
 
         Args:
             table_name: Source table name.

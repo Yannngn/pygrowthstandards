@@ -2,38 +2,38 @@
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import AGE_GROUP_CONFIG, AgeGroup, AgeGroupType, MeasurementAliasType
+from pygrowthstandards.config.growth import PLOT_GROUP_CONFIG, AgeGroupType, MeasurementAliasType, PlotGroup
 from pygrowthstandards.data.growth.load import GrowthTable, KeyObject
 from pygrowthstandards.oop.patient import Patient
 
 
 # TODO: Refactor to separate data retrieval from plotting
-def get_reference_data(patient: Patient, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> GrowthTable:
-    """Load reference data for a given age group and measurement.
+def get_reference_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> GrowthTable:
+    """Load reference data for a given plot group and measurement.
 
     Args:
-        age_group: Age group identifier.
+        plot_group: Age group identifier.
         measurement_type: Measurement alias.
 
     Returns:
         GrowthTable containing reference LMS data.
 
     Raises:
-        ValueError: If age_group is invalid or data is unavailable.
+        ValueError: If plot_group is invalid or data is unavailable.
     """
     try:
-        age_group_enum = AgeGroup(age_group)
+        age_group_enum = PlotGroup(plot_group)
     except ValueError as exc:
-        raise ValueError(f"Invalid age group: {age_group}") from exc
+        raise ValueError(f"Invalid plot group: {plot_group}") from exc
 
-    config = AGE_GROUP_CONFIG[age_group_enum]
+    config = PLOT_GROUP_CONFIG[age_group_enum]
 
     if patient.calculator.data is None:
         raise ValueError("Reference data is not available. Ensure the data file is present.")
 
     keys = KeyObject.from_oop(
         config.table_name,
-        age_group=age_group,
+        plot_group=plot_group,
         measurement_type=measurement_type,
         sex=patient.sex,
         x_var_type=config.x_type,
@@ -44,23 +44,23 @@ def get_reference_data(patient: Patient, age_group: AgeGroupType, measurement_ty
 
 
 # TODO: Refactor to separate data retrieval from plotting
-def get_patient_data(patient: Patient, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
-    """Return user measurements for a given age group and measurement.
+def get_patient_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+    """Return user measurements for a given plot group and measurement.
 
     Args:
-        age_group: Age group identifier.
+        plot_group: Age group identifier.
         measurement_type: Measurement alias.
 
     Returns:
         DataFrame with columns "x" and "patient".
     """
-    config = AGE_GROUP_CONFIG[AgeGroup(age_group)]
+    config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
     lower_limit, upper_limit = config.limits
     x_var_type = config.x_type
 
     filtered_measurements = []
     for entry in patient.measurements:
-        if age_group in {"newborn", "very_preterm_newborn"}:
+        if plot_group in {"newborn", "very_preterm_newborn"}:
             if patient.get_age("age", entry.date) != 0:
                 continue
 
@@ -79,18 +79,18 @@ def get_patient_data(patient: Patient, age_group: AgeGroupType, measurement_type
 
 
 # TODO: Refactor to share call for growth and development plots
-def get_plot_data(patient: Patient, age_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
+def get_plot_data(patient: Patient, plot_group: AgeGroupType, measurement_type: MeasurementAliasType) -> pd.DataFrame:
     """Return combined reference and patient data for plotting.
 
     Args:
-        age_group: Age group identifier.
+        plot_group: Age group identifier.
         measurement_type: Measurement alias.
 
     Returns:
         DataFrame with reference curves and patient data.
     """
-    data = get_patient_data(patient, age_group, measurement_type)
-    reference_data = get_reference_data(patient, age_group, measurement_type)
+    data = get_patient_data(patient, plot_group, measurement_type)
+    reference_data = get_reference_data(patient, plot_group, measurement_type)
 
     reference_data.add_patient_data(data)
     return reference_data.convert_z_scores_to_values()
