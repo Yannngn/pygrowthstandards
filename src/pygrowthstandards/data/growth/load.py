@@ -19,8 +19,8 @@ from pygrowthstandards.config.growth import (
     MeasurementAliasType,
     TableNameType,
     resolve_x_var_type,
+    resolve_table_context,
 )
-from pygrowthstandards.utils.constants import WEEK, YEAR
 from pygrowthstandards.utils.errors import InvalidChoicesError
 from pygrowthstandards.utils.stats import interpolate_lms, numpy_calculate_value_for_z_score
 
@@ -106,32 +106,6 @@ class KeyObject:
         return "U"
 
     @staticmethod
-    def _resolve_x_and_type(age_days: int | None, gestational_age: int | None) -> tuple[DataXTypeType, int | float]:
-        """Resolve the x axis type and value from age inputs.
-
-        Args:
-            age_days: Chronological age in days.
-            gestational_age: Gestational age in days.
-
-        Returns:
-            Tuple of x_var_type and x value.
-
-        Raises:
-            ValueError: If no age inputs are provided.
-        """
-        if age_days is not None:
-            if gestational_age is not None and gestational_age < 28 * WEEK:
-                post_menstrual_age = age_days + gestational_age
-                if post_menstrual_age <= 64 * WEEK:
-                    return "post_menstrual_age", post_menstrual_age
-            return "age", float(age_days)
-
-        if gestational_age is not None:
-            return "gestational_age", float(gestational_age)
-
-        raise ValueError("Either age_days or gestational_age must be provided.")
-
-    @staticmethod
     def _normalize_x_var_type(x_var_type: str) -> DataXTypeType:
         """Normalize an x_var_type alias to its canonical value.
 
@@ -142,52 +116,6 @@ class KeyObject:
             Canonical axis type.
         """
         return resolve_x_var_type(x_var_type)
-
-    # TODO: Move to utils.config
-    @staticmethod
-    def _get_name(
-        measurement: MeasurementAliasType,
-        x_var_type: DataXTypeType,
-        age_days: int | None,
-        gestational_age: int | None,
-    ) -> TableNameType:
-        """Determine the reference table name for the given inputs.
-
-        Args:
-            measurement: Measurement alias.
-            x_var_type: Axis type.
-            age_days: Chronological age in days.
-            gestational_age: Gestational age in days.
-
-        Returns:
-            Table name identifier.
-
-        Raises:
-            ValueError: If the inputs are inconsistent with available data.
-        """
-        if x_var_type == "post_menstrual_age":
-            return "postnatal_growth_preterm"
-
-        if x_var_type == "gestational_age":
-            if measurement in ["body_mass_index"]:
-                raise ValueError(f"No reference for {measurement} at birth or fetal age.")
-            if gestational_age is None:
-                raise ValueError("gestational_age is required for gestational_age tables.")
-            return "newborn" if gestational_age > 28 * WEEK else "very_preterm_newborn"
-
-        if x_var_type == "stature":
-            return "child_growth"
-
-        if age_days is None:
-            raise ValueError("age_days is required for age tables.")
-
-        if measurement in ["head_circumference", "weight_stature_ratio"] and age_days > 5 * YEAR:
-            raise ValueError(f"No reference for {measurement} after 5 years.")
-
-        if measurement in ["weight"] and age_days > 10 * YEAR:
-            raise ValueError(f"No reference for {measurement} after 10 years.")
-
-        return "growth" if age_days > 5 * YEAR else "child_growth"
 
     @staticmethod
     def _normalize_name(name: str) -> TableNameType:
@@ -249,22 +177,24 @@ class KeyObject:
             KeyObject for reference lookup.
         """
         normalized_measurement = cls._normalize_measurement(measurement)
-        if x_var_type is not None:
-            resolved_x_var_type = cls._normalize_x_var_type(x_var_type)
-            x_value = cls._normalize_x(x_value)
-        else:
-            resolved_x_var_type, x_value = cls._resolve_x_and_type(age_days, gestational_age)
+        name, resolved_x_var_type, resolved_x_value, resolved_age_group = resolve_table_context(
+            normalized_measurement,
+            age_days=age_days,
+            gestational_age=gestational_age,
+            x_var_type=x_var_type,
+            x_value=x_value,
+        )
 
         if resolved_x_var_type == "stature" and normalized_measurement != "weight":
             raise ValueError("x_var_type='stature' is only supported for weight-for-stature calculations.")
 
         return cls(
-            cls._get_name(normalized_measurement, resolved_x_var_type, age_days, gestational_age),
+            name,
             normalized_measurement,
             cls._normalize_sex(sex),
             resolved_x_var_type,
-            x_value,
-            None,
+            resolved_x_value,
+            resolved_age_group,
         )
 
     @classmethod
@@ -388,7 +318,10 @@ class GrowthTable:
 
         source = filtered["source"].unique()[0]
         name = filtered["name"].unique()[0]
-        age_group = filtered["age_group"].unique()[0]
+        age_groups = filtered["age_group"].dropna().unique()
+        if len(age_groups) > 1:
+            raise ValueError("Multiple age groups found for keys; provide age_group to disambiguate.")
+        age_group = age_groups[0] if len(age_groups) == 1 else None
         x_var_type = filtered["x_var_type"].unique()[0]
 
         # FIXME: if x_var_type_unique > 1 causes problems

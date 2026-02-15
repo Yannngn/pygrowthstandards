@@ -250,10 +250,16 @@ class ChoiceValidator:
         Returns:
             Age group key if found, otherwise None.
         """
+        candidates: list[AgeGroupConfig] = []
         for config in AGE_GROUP_CONFIG.values():
             if config.x_type == x_type and config.contains_age(age):
-                return config.name
-        return None
+                candidates.append(config)
+
+        if not candidates:
+            return None
+
+        candidates.sort(key=lambda item: item.limits[1] - item.limits[0], reverse=True)
+        return candidates[0].name
 
     @staticmethod
     def validate_choice(value: str, choices: frozenset[str]) -> bool:
@@ -311,6 +317,88 @@ def get_age_group(age: int, x_type: DataXTypeType = "age") -> AgeGroupType:
     return result
 
 
+def resolve_table_context(
+    measurement: MeasurementAliasType,
+    *,
+    age_days: int | None = None,
+    gestational_age: int | None = None,
+    x_var_type: str | None = None,
+    x_value: float | None = None,
+    age_group: AgeGroupType | None = None,
+) -> tuple[TableNameType, DataXTypeType, float | None, AgeGroupType | None]:
+    """Resolve table selection context and derive missing keys.
+
+    Args:
+        measurement: Measurement alias.
+        age_days: Chronological age in days.
+        gestational_age: Gestational age in days.
+        x_var_type: Explicit axis type when providing x_value.
+        x_value: Explicit axis value.
+        age_group: Optional age group override.
+
+    Returns:
+        Tuple of (table name, x_var_type, x_value, age_group).
+
+    Raises:
+        ValueError: If the inputs are inconsistent with available data.
+    """
+    resolved_measurement = ChoiceValidator.resolve_measurement_alias(str(measurement)) or measurement
+
+    if x_var_type is not None:
+        resolved_x_var_type = resolve_x_var_type(x_var_type)
+        if x_value is None:
+            raise ValueError("x_value is required when x_var_type is provided.")
+        resolved_x_value = float(x_value)
+    else:
+        if age_days is not None:
+            if gestational_age is not None and gestational_age < 28 * WEEK:
+                post_menstrual_age = age_days + gestational_age
+                if post_menstrual_age <= 64 * WEEK:
+                    resolved_x_var_type = "post_menstrual_age"
+                    resolved_x_value = float(post_menstrual_age)
+                else:
+                    resolved_x_var_type = "age"
+                    resolved_x_value = float(age_days)
+            else:
+                resolved_x_var_type = "age"
+                resolved_x_value = float(age_days)
+        elif gestational_age is not None:
+            resolved_x_var_type = "gestational_age"
+            resolved_x_value = float(gestational_age)
+        else:
+            raise ValueError("Either age_days or gestational_age must be provided.")
+
+    if resolved_x_var_type == "post_menstrual_age":
+        table_name = "postnatal_growth_preterm"
+    elif resolved_x_var_type == "gestational_age":
+        if resolved_measurement in ["body_mass_index"]:
+            raise ValueError(f"No reference for {resolved_measurement} at birth or fetal age.")
+        gestational_days = gestational_age if gestational_age is not None else int(resolved_x_value)
+        table_name = "newborn" if gestational_days > 28 * WEEK else "very_preterm_newborn"
+    elif resolved_x_var_type == "stature":
+        table_name = "child_growth"
+    else:
+        age_value = age_days if age_days is not None else int(resolved_x_value)
+        if resolved_measurement in ["head_circumference", "weight_stature_ratio"] and age_value > 5 * YEAR:
+            raise ValueError(f"No reference for {resolved_measurement} after 5 years.")
+        if resolved_measurement in ["weight"] and age_value > 10 * YEAR:
+            raise ValueError(f"No reference for {resolved_measurement} after 10 years.")
+        table_name = "growth" if age_value > 5 * YEAR else "child_growth"
+
+    resolved_age_group = age_group
+    if resolved_age_group is None:
+        if resolved_x_var_type == "stature":
+            if age_days is not None:
+                resolved_age_group = ChoiceValidator.get_age_group_for_age(age_days, "age")
+        else:
+            age_group_candidate = ChoiceValidator.get_age_group_for_age(int(resolved_x_value), resolved_x_var_type)
+            if age_group_candidate is None:
+                raise ValueError(f"No age group found for age {resolved_x_value} with x_type {resolved_x_var_type}")
+            resolved_age_group = age_group_candidate
+
+    return table_name, resolved_x_var_type, resolved_x_value, resolved_age_group
+
+
 def infer_table_name(
     measurement: MeasurementAliasType,
     *,
@@ -330,33 +418,12 @@ def infer_table_name(
     Raises:
         ValueError: If the inputs are inconsistent with available data.
     """
-    if age_days is not None:
-        if gestational_age is not None and gestational_age < 28 * WEEK:
-            post_menstrual_age = age_days + gestational_age
-            if post_menstrual_age <= 64 * WEEK:
-                return "postnatal_growth_preterm"
-        x_var_type = "age"
-    elif gestational_age is not None:
-        x_var_type = "gestational_age"
-    else:
-        raise ValueError("Either age_days or gestational_age must be provided.")
-
-    if x_var_type == "gestational_age":
-        if measurement in ["body_mass_index"]:
-            raise ValueError(f"No reference for {measurement} at birth or fetal age.")
-        if gestational_age is not None:
-            return "newborn" if gestational_age > 28 * WEEK else "very_preterm_newborn"
-
-    if age_days is None:
-        raise ValueError("age_days is required for age tables.")
-
-    if measurement in ["head_circumference", "weight_stature_ratio"] and age_days > 5 * YEAR:
-        raise ValueError(f"No reference for {measurement} after 5 years.")
-
-    if measurement in ["weight"] and age_days > 10 * YEAR:
-        raise ValueError(f"No reference for {measurement} after 10 years.")
-
-    return "growth" if age_days > 5 * YEAR else "child_growth"
+    table_name, _, _, _ = resolve_table_context(
+        measurement,
+        age_days=age_days,
+        gestational_age=gestational_age,
+    )
+    return table_name
 
 
 # Backward compatibility - keep existing variables

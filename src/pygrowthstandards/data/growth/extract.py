@@ -182,6 +182,7 @@ class RawTable:
             Parsed RawTable instance.
         """
         df = pd.read_csv(csv_path, dtype=str, encoding="utf-8")
+        filename = Path(csv_path).stem
 
         raw_kwargs = cls._process_path(csv_path)
 
@@ -191,7 +192,7 @@ class RawTable:
 
         # Weight for Length/Height/Stature datasets
         if x_column in {"length", "height", "stature"}:
-            df["x"] = df[x_column]
+            df["x"] = df[x_column].astype(float)
 
             clean_dict = cls._handle_weight_for_length(**raw_kwargs)
 
@@ -211,6 +212,12 @@ class RawTable:
                 interval_max_list.append(cls._parse_interval(max_part))
 
             df["x"] = interval_min_list
+
+            # Prefer 1-month windows for 0-12 months and 2-month windows afterward.
+            if "1mon" in filename:
+                df = df[df["x"].astype(float) < 12 * MONTH]
+            elif "2mon" in filename:
+                df = df[df["x"].astype(float) >= 12 * MONTH]
             clean_dict = cls._handle_velocity(**raw_kwargs)
 
         # Measurement for age datasets

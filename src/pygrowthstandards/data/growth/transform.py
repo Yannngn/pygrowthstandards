@@ -144,8 +144,7 @@ class GrowthData:
             return cast(AgeGroupType, table_name)
 
         if measurement_type.endswith("velocity"):
-            if age < 1 * YEAR:
-                return "0-1"
+            return "0-2"
 
         if age < 2 * YEAR:
             return "0-2"

@@ -97,6 +97,13 @@ def get_lms(table: GrowthTable, x: float) -> tuple[float, float, float]:
     Raises:
         ValueError: If interpolation is attempted out of range.
     """
+    if table.measurement_type.endswith("velocity"):
+        x_values = sorted(table.x)
+        floor_candidates = [value for value in x_values if value <= x]
+        if not floor_candidates:
+            raise ValueError("X value is below the minimum available interval for velocity lookup.")
+        x = floor_candidates[-1]
+
     if x not in table.x:
         return stats.interpolate_lms(x, table.x, table.L, table.M, table.S)
 
