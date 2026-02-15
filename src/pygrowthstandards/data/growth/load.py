@@ -18,8 +18,8 @@ from pygrowthstandards.config.growth import (
     DataXTypeType,
     MeasurementAliasType,
     TableNameType,
-    resolve_x_var_type,
     resolve_table_context,
+    resolve_x_var_type,
 )
 from pygrowthstandards.utils.errors import InvalidChoicesError
 from pygrowthstandards.utils.stats import interpolate_lms, numpy_calculate_value_for_z_score

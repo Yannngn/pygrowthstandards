@@ -291,7 +291,7 @@ class RawTable:
             sex = parts.pop().upper()
             if not parts:
                 raise ValueError(f"Filename missing sex component: {filename}")
-            
+
             if not ChoiceValidator.validate_choice(sex, DATA_SEX_CHOICES):  # 1mon and 2mon from velocity datasets
                 if not parts:
                     raise ValueError(f"Invalid sex found in filename and no fallback available: {sex}")
