@@ -19,5 +19,5 @@ pygrowthstandards.config.growth
       AgeGroupConfig
       ChoiceValidator
       MeasurementConfig
-      MeasurementType
+      Measurements
    

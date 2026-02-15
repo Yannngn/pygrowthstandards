@@ -43,6 +43,7 @@ dev = [
     { include-group = "tools" },
     { include-group = "test" },
     { include-group = "build" },
+    "setuptools>=82.0.0",
 ]
 
 optional = [

@@ -1,5 +1,7 @@
 """Plotting utilities for the OOP API."""
 
+from typing import cast
+
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
@@ -7,15 +9,17 @@ from pygrowthstandards.config.growth import (
     MEASUREMENT_CONFIG,
     PLOT_GROUP_CONFIG,
     ChoiceValidator,
-    MeasurementAliasType,
-    MeasurementType,
+    Measurements,
     PlotGroup,
-    PlotGroupType,
 )
 from pygrowthstandards.oop.growth.load import get_patient_data, get_reference_data
 from pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.typing.growth import (
+    MeasurementAliasType,
+    PlotGroupType,
+)
 from pygrowthstandards.utils.plot import style
-from pygrowthstandards.utils.plot.xticks import set_xticks_by_range
+from pygrowthstandards.utils.plot.xticks import set_velocity_xticks, set_xticks_by_range
 
 
 # TODO: review if the heavy use of config in this mixin is appropriate
@@ -23,6 +27,46 @@ class GrowthPlotterMixin:
     """Create reference and patient plots for growth data."""
 
     patient: Patient
+
+    def _resolve_plot_group(self, plot_group: str, measurement_type: str) -> tuple[PlotGroupType, MeasurementAliasType]:
+        measurement_raw_str = str(measurement_type)
+        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_raw_str) or measurement_raw_str
+
+        if str(resolved_measurement).endswith("_velocity"):
+            return PlotGroup.VELOCITY.value, cast(MeasurementAliasType, resolved_measurement)
+
+        # TODO: Add validation to ensure the plot group is valid
+
+        return cast(PlotGroupType, plot_group), cast(MeasurementAliasType, resolved_measurement)
+
+    def _format_x_label(self, config, plot_group: PlotGroupType) -> str:
+        if plot_group == PlotGroup.VELOCITY.value:
+            return "Age Interval"
+
+        if config.x_var_type in {"length", "height"}:
+            return f"{config.x_var_type.title()} (cm)"
+
+        return config.x_var_type.replace("_", " ").title()
+
+    def _format_title(self, plot_group: PlotGroupType, measurement_display: str) -> str:
+        if plot_group == PlotGroup.WEIGHT_FOR_LENGTH.value:
+            return f"Weight for Length ({self.patient.sex})"
+        if plot_group == PlotGroup.WEIGHT_FOR_HEIGHT.value:
+            return f"Weight for Height ({self.patient.sex})"
+        return f"{measurement_display} Reference Plot ({self.patient.sex})"
+
+    def _apply_xticks(self, ax: Axes, config, plot_group: PlotGroupType, x_values) -> None:
+        if plot_group == PlotGroup.VELOCITY.value:
+            set_velocity_xticks(ax, x_values)
+            return
+
+        set_xticks_by_range(ax, *config.limits)
+
+    def _plot_series(self, ax: Axes, x_values, y_values, plot_group: PlotGroupType, **style_kwargs):
+        if plot_group == PlotGroup.VELOCITY.value:
+            return ax.step(x_values, y_values, where="post", **style_kwargs)
+
+        return ax.plot(x_values, y_values, **style_kwargs)
 
     def plot(
         self,
@@ -44,18 +88,19 @@ class GrowthPlotterMixin:
         Returns:
             Matplotlib Axes object.
         """
-        patient_data = get_patient_data(self.patient, plot_group, measurement_type)
-        ax = self.reference_plot(plot_group, measurement_type, ax, False, "")
+        resolved_plot_group, resolved_measurement = self._resolve_plot_group(plot_group, measurement_type)
 
-        ax.plot(
+        patient_data = get_patient_data(self.patient, resolved_plot_group, resolved_measurement)
+        ax = self.reference_plot(resolved_plot_group, resolved_measurement, ax, False, "")
+
+        self._plot_series(
+            ax,
             patient_data["x"],
             patient_data["patient"],
+            resolved_plot_group,
             label="patient",
-            **style.get_label_style("patient"),
+            **style.get_group_label_style(resolved_plot_group, "patient"),
         )
-
-        config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
-        set_xticks_by_range(ax, *config.limits)
 
         if output_path:
             plt.savefig(output_path)
@@ -85,38 +130,37 @@ class GrowthPlotterMixin:
         Returns:
             Matplotlib Axes object.
         """
-        plot_data = get_reference_data(self.patient, plot_group, measurement_type).convert_z_scores_to_values()
+        resolved_plot_group, resolved_measurement = self._resolve_plot_group(plot_group, measurement_type)
+        plot_data = get_reference_data(self.patient, resolved_plot_group, resolved_measurement).convert_z_scores_to_values()
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 6))
             style.set_style(fig, ax)
 
-        config = PLOT_GROUP_CONFIG[PlotGroup(plot_group)]
+        config = PLOT_GROUP_CONFIG[PlotGroup(resolved_plot_group)]
 
-        # Ensure measurement_type is treated as a string for formatting and lookup
-        measurement_raw_str = str(measurement_type)
-        resolved_measurement = ChoiceValidator.resolve_measurement_alias(measurement_raw_str) or measurement_raw_str
-        measurement_config = MEASUREMENT_CONFIG[MeasurementType(resolved_measurement)]
-
-        # Use a guaranteed string for label formatting
+        measurement_config = MEASUREMENT_CONFIG[Measurements(resolved_measurement)]
         measurement_str = str(resolved_measurement)
+        measurement_display = measurement_str.replace("_", " ").title()
 
-        x_label = config.x_var_type.replace("_", " ").title()
-        y_label = f"{measurement_str.replace('_', ' ').title()} ({measurement_config.unit})"
+        x_label = self._format_x_label(config, resolved_plot_group)
+        y_label = f"{measurement_display} ({measurement_config.unit})"
 
         for z in [-3, -2, 0, 2, 3]:
             label = style.get_label_name(z)
-            ax.plot(
+            self._plot_series(
+                ax,
                 plot_data["x"],
                 plot_data[z],
+                resolved_plot_group,
                 label=f"{measurement_str.replace('_', ' ').title()} (Z={z})",
-                **style.get_label_style(label),
+                **style.get_group_label_style(resolved_plot_group, label),
             )
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(f"{measurement_str.replace('_', ' ').title()} Reference Plot ({self.patient.sex})")
-        set_xticks_by_range(ax, *config.limits)
+        ax.set_title(self._format_title(resolved_plot_group, measurement_display))
+        self._apply_xticks(ax, config, resolved_plot_group, plot_data["x"])
 
         if show:
             plt.show()

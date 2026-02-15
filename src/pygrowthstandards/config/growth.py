@@ -30,7 +30,7 @@ PlotGroupAlias = frozenset(
 )
 
 
-class MeasurementType(StrEnum):
+class Measurements(StrEnum):
     """Canonical measurement identifiers used across the library."""
 
     STATURE = "stature"
@@ -187,20 +187,18 @@ PLOT_GROUP_CONFIG: dict[PlotGroup, PlotGroupConfig] = {
     ),  # velocity data only available for 0-2 age group
 }
 
-MEASUREMENT_CONFIG: dict[MeasurementType, MeasurementConfig] = {
-    MeasurementType.STATURE: MeasurementConfig(MeasurementType.STATURE.value, "cm", StatureAlias),
-    MeasurementType.WEIGHT: MeasurementConfig(MeasurementType.WEIGHT.value, "kg", WeightAlias),
-    MeasurementType.HEAD_CIRCUMFERENCE: MeasurementConfig(MeasurementType.HEAD_CIRCUMFERENCE.value, "cm", HeadCircumferenceAlias),
-    MeasurementType.BODY_MASS_INDEX: MeasurementConfig(MeasurementType.BODY_MASS_INDEX.value, "kg/m²", BodyMassIndexAlias),
-    MeasurementType.WEIGHT_STATURE_RATIO: MeasurementConfig(MeasurementType.WEIGHT_STATURE_RATIO.value, "kg/cm", WeightStatureAlias),
-    MeasurementType.STATURE_VELOCITY: MeasurementConfig(
-        MeasurementType.STATURE_VELOCITY.value, "cm/month", aliases=frozenset(["length_velocity", "height_velocity", "stature_velocity"])
+MEASUREMENT_CONFIG: dict[Measurements, MeasurementConfig] = {
+    Measurements.STATURE: MeasurementConfig(Measurements.STATURE.value, "cm", StatureAlias),
+    Measurements.WEIGHT: MeasurementConfig(Measurements.WEIGHT.value, "kg", WeightAlias),
+    Measurements.HEAD_CIRCUMFERENCE: MeasurementConfig(Measurements.HEAD_CIRCUMFERENCE.value, "cm", HeadCircumferenceAlias),
+    Measurements.BODY_MASS_INDEX: MeasurementConfig(Measurements.BODY_MASS_INDEX.value, "kg/m²", BodyMassIndexAlias),
+    Measurements.WEIGHT_STATURE_RATIO: MeasurementConfig(Measurements.WEIGHT_STATURE_RATIO.value, "kg/cm", WeightStatureAlias),
+    Measurements.STATURE_VELOCITY: MeasurementConfig(
+        Measurements.STATURE_VELOCITY.value, "cm/month", aliases=frozenset(["length_velocity", "height_velocity", "stature_velocity"])
     ),
-    MeasurementType.WEIGHT_VELOCITY: MeasurementConfig(
-        MeasurementType.WEIGHT_VELOCITY.value, "kg/month", aliases=frozenset(["weight_velocity"])
-    ),
-    MeasurementType.HEAD_CIRCUMFERENCE_VELOCITY: MeasurementConfig(
-        MeasurementType.HEAD_CIRCUMFERENCE_VELOCITY.value, "cm/month", aliases=frozenset(["head_circumference_velocity"])
+    Measurements.WEIGHT_VELOCITY: MeasurementConfig(Measurements.WEIGHT_VELOCITY.value, "kg/month", aliases=frozenset(["weight_velocity"])),
+    Measurements.HEAD_CIRCUMFERENCE_VELOCITY: MeasurementConfig(
+        Measurements.HEAD_CIRCUMFERENCE_VELOCITY.value, "cm/month", aliases=frozenset(["head_circumference_velocity"])
     ),
 }
 
@@ -386,6 +384,9 @@ def resolve_table_context(
         resolved_plot_group = plot_group
         if resolved_plot_group is not None:
             return resolved_plot_group
+
+        if str(resolved_measurement).endswith("_velocity"):
+            return PlotGroup.VELOCITY.value
 
         if resolved_x_var_type == "stature":
             if age_days is not None:

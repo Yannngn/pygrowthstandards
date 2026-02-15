@@ -1,4 +1,5 @@
 {
+  "python.defaultInterpreterPath": "/home/yannn/projects/Yannngn/pygrowthstandards/.venv/bin/python",
   "python.testing.pytestArgs": [
     "tests"
   ],

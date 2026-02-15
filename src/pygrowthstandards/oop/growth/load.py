@@ -2,9 +2,10 @@
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import PLOT_GROUP_CONFIG, MeasurementAliasType, PlotGroup, PlotGroupType
+from pygrowthstandards.config.growth import PLOT_GROUP_CONFIG, PlotGroup
 from pygrowthstandards.data.growth.load import GrowthTable, KeyObject
 from pygrowthstandards.oop.patient import Patient
+from pygrowthstandards.typing.growth import MeasurementAliasType, PlotGroupType
 
 
 # TODO: Refactor to separate data retrieval from plotting
@@ -66,8 +67,13 @@ def get_patient_data(patient: Patient, plot_group: PlotGroupType, measurement_ty
 
         if x_var_type in {"gestational_age", "age", "post_menstrual_age"}:
             x_value = patient.get_age(x_var_type, entry.date)
+        elif x_var_type in {"length", "height"}:
+            x_value = entry.stature
         else:
             x_value = getattr(entry, x_var_type)
+
+        if x_value is None:
+            continue
 
         if lower_limit <= x_value <= upper_limit and hasattr(entry, measurement_type) and getattr(entry, measurement_type) is not None:
             filtered_measurements.append((x_value, getattr(entry, measurement_type)))

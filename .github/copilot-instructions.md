@@ -29,7 +29,7 @@ All calculations use the LMS (Lambda-Mu-Sigma) method:
 Use the centralized typing and config systems instead of magic strings:
 ```python
 from pygrowthstandards.typing.growth import MeasurementTypeType, DataSexType, PlotGroupType
-from pygrowthstandards.config.growth import PlotGroupAlias, MeasurementAliasType
+from pygrowthstandards.config.growth import PlotGroupAlias
 ```
 
 ### Plot Group Resolution

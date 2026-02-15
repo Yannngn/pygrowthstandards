@@ -7,12 +7,9 @@ from typing import cast
 
 import pandas as pd
 
-from pygrowthstandards.config.growth import (
-    PlotGroupAlias,
-    PlotGroupType,
-    resolve_x_var_type,
-)
+from pygrowthstandards.config.growth import PlotGroupAlias, resolve_x_var_type
 from pygrowthstandards.data.growth.extract import RawTable
+from pygrowthstandards.typing.growth import PlotGroupType
 from pygrowthstandards.utils.constants import MONTH, WEEK, YEAR
 from pygrowthstandards.utils.version import get_package_version
 

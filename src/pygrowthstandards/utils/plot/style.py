@@ -55,6 +55,16 @@ FIG_AXES_STYLE = {
     "lines.antialiased": True,
 }
 
+WEIGHT_STATURE_GROUPS = {"weight_for_length", "weight_for_height"}
+WEIGHT_STATURE_STYLE_OVERRIDES = {
+    "patient": {"color": "#6d4c41", "marker": "s", "linestyle": "solid", "linewidth": 2},
+    "sd0": {"color": "#00897b", "linewidth": 2.2},
+    "sd2": {"color": "#0097a7"},
+    "sd2neg": {"color": "#0097a7"},
+    "sd3": {"color": "#00796b"},
+    "sd3neg": {"color": "#00796b"},
+}
+
 
 def set_style(fig: Figure, ax: Axes, style: dict = FIG_AXES_STYLE):
     """Apply the style dictionary to a matplotlib figure and axes.
@@ -126,3 +136,23 @@ def get_label_style(key):
     if key in PERCENTILE_STYLES:
         return PERCENTILE_STYLES[key]
     return {"color": "#cccccc", "linestyle": "solid", "linewidth": 1}
+
+
+def get_group_label_style(plot_group: str, key):
+    """Return style dict for a group-aware SD or percentile key.
+
+    Args:
+        plot_group: Plot group identifier.
+        key: Style label key.
+
+    Returns:
+        Style dictionary for plotting.
+    """
+    base_style = dict(get_label_style(key))
+
+    if plot_group in WEIGHT_STATURE_GROUPS:
+        override = WEIGHT_STATURE_STYLE_OVERRIDES.get(key)
+        if override:
+            base_style.update(override)
+
+    return base_style
