@@ -35,6 +35,7 @@ class PatientBuilder:
             getattr(self, "gestational_age_weeks", 40),
             getattr(self, "gestational_age_days", 0),
             measurements=self.measurements,
+            development_goals=self.development_goals,
         )
         return self
 

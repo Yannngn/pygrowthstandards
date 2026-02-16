@@ -1,13 +1,17 @@
 """
-PyGrowthStandards: A Python library for calculating child growth z-scores and percentiles.
+PyGrowthStandards: A Python library for calculating child growth z-scores and percentiles,
+and tracking developmental milestones.
 
-This library provides tools for calculating z-scores and percentiles for common
-anthropometric measurements using WHO and INTERGROWTH-21st growth standards.
+This library provides tools for:
+- Calculating z-scores and percentiles for common anthropometric measurements using WHO
+  and INTERGROWTH-21st growth standards
+- Tracking and assessing developmental milestones using CDC and Brazilian Ministry of
+  Health standards
 
-The package includes pre-processed reference data from WHO and INTERGROWTH-21st
-standards, so no additional data files need to be downloaded.
+The package includes pre-processed reference data from WHO, INTERGROWTH-21st, CDC, and
+Brazilian standards, so no additional data files need to be downloaded.
 
-Example usage:
+Example usage (growth):
     >>> import pygrowthstandards as pgs
     >>> # Functional API
     >>> z_score = pgs.functional.zscore("weight", 10.5, "M", age_days=365)
@@ -17,6 +21,17 @@ Example usage:
     >>> patient = pgs.Patient(sex="M", birthday_date="2020-01-01")
     >>> patient.add_measurements(pgs.MeasurementGroup(weight=10.5, stature=75))
     >>> patient.calculate_all()
+
+Example usage (milestones):
+    >>> import pygrowthstandards as pgs
+    >>> # Functional API
+    >>> milestones = pgs.functional.get_milestones_for_age(180, source="brazil")
+    >>> expected = pgs.functional.check_milestone_expected("MOTOR-SITS", 210, "brazil")
+    >>>
+    >>> # Object-oriented API
+    >>> tracker = pgs.MilestoneTracker(patient_id="P001", age_days=180, source="brazil")
+    >>> tracker.record_achievement("MOTOR-SITS", "achieved", datetime.now(), 180)
+    >>> summary = tracker.get_achievement_summary()
 """
 
 from pygrowthstandards.utils.version import get_package_version
@@ -32,6 +47,7 @@ from pygrowthstandards.oop import (
     Calculator,
     Measurement,
     MeasurementGroup,
+    MilestoneTracker,
     Patient,
     Plotter,
 )
@@ -72,6 +88,7 @@ __all__ = [
     "Calculator",
     "Measurement",
     "MeasurementGroup",
+    "MilestoneTracker",
     "Patient",
     "Plotter",
     # Utility functions

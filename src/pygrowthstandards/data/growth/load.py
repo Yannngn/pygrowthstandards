@@ -262,7 +262,7 @@ class GrowthTable:
     S: np.ndarray
     is_derived: np.ndarray
 
-    y: np.ndarray = field(init=False, repr=False)
+    y: np.ndarray = field(init=False, repr=False, default_factory=lambda: np.array([]))
     _patient_x: np.ndarray = field(init=False, repr=False, default_factory=lambda: np.array([]))
     _patient_y: np.ndarray = field(init=False, repr=False, default_factory=lambda: np.array([]))
 

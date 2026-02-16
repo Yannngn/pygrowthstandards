@@ -28,7 +28,7 @@ patient.add_measurements(MeasurementGroup(...))
 patient.add_measurements(MeasurementGroup(...))
 patient.calculate_all()
 plotter = Plotter(patient)
-plotter = Plotter(patient)
+plotter.plot("weight", plot_group="0-2")
 plotter.plot("weight", plot_group="0-2")
 # (abbreviated here) full pre-refactor example (~15-20 lines) in the research docs
 ```

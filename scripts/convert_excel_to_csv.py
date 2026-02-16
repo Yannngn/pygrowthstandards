@@ -30,23 +30,23 @@ def _safe_sheet_name(name: str) -> str:
 def convert_excel_file(path: Path, overwrite: bool) -> list[Path]:
     written: list[Path] = []
 
-    xls = pd.ExcelFile(path)
-    sheet_names = list(xls.sheet_names)
+    with pd.ExcelFile(path) as xls:
+        sheet_names = list(xls.sheet_names)
 
-    for sheet_name in sheet_names:
-        df = pd.read_excel(xls, sheet_name=sheet_name)
+        for sheet_name in sheet_names:
+            df = pd.read_excel(xls, sheet_name=sheet_name)
 
-        if len(sheet_names) == 1:
-            out_path = path.with_suffix(".csv")
-        else:
-            out_path = path.with_name(f"{path.stem}__{_safe_sheet_name(str(sheet_name))}.csv")
+            if len(sheet_names) == 1:
+                out_path = path.with_suffix(".csv")
+            else:
+                out_path = path.with_name(f"{path.stem}__{_safe_sheet_name(str(sheet_name))}.csv")
 
-        if out_path.exists() and not overwrite:
-            continue
+            if out_path.exists() and not overwrite:
+                continue
 
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(out_path, index=False)
-        written.append(out_path)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(out_path, index=False)
+            written.append(out_path)
 
     return written
 
